@@ -1,0 +1,116 @@
+# ==============================
+# HomeLab Docker Repository
+# ==============================
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Docker
+# ==============================
+
+# Docker overrides
+docker-compose.override.yml
+
+# Docker runtime data
+**/docker-data/
+**/data/
+
+# Container logs
+**/*.log
+logs/
+
+# ==============================
+# Databases
+# ==============================
+
+# PostgreSQL
+**/postgres/
+**/postgresql/
+**/pgdata/
+
+# Redis / cache data
+**/redis/
+**/cache/
+
+# SQLite databases
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+
+# ==============================
+# Application Persistent Data
+# ==============================
+
+# Immich generated data
+media/immich/library/
+media/immich/upload/
+media/immich/thumbs/
+media/immich/encoded-video/
+
+# AMP game server data
+media/amp/datastore/
+
+# Home Assistant runtime files
+automation/config/.storage/
+automation/config/home-assistant.log*
+automation/config/*.db
+automation/config/*.db-shm
+automation/config/*.db-wal
+
+# Pi-hole generated data
+network/etc-pihole/*.db
+network/etc-pihole/*.log
+network/etc-pihole/gravity.db
+
+# Nginx Proxy Manager certificates and runtime data
+network/npm/letsencrypt/
+network/npm/logs/
+
+# ==============================
+# Backups
+# ==============================
+
+backup/
+backups/
+*.bak
+*.backup
+*.tar
+*.tar.gz
+
+# ==============================
+# OS / Editor Files
+# ==============================
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+
+*.swp
+*.swo
+*~
+
+# ==============================
+# Secrets / Certificates
+# ==============================
+
+*.pem
+*.key
+*.crt
+*.p12
+*.secret
+
+# ==============================
+# Temporary Files
+# ==============================
+
+tmp/
+temp/
+.cache/
+
+# Keep example configuration files
+!.env.example
