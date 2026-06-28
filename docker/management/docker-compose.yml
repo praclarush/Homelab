@@ -1,0 +1,41 @@
+version: '3.8'
+
+networks:
+  proxy_net:
+    external: true
+
+services:
+  dockge:
+    container_name: dockge
+    image: louislam/dockge:1
+    ports:
+      - "5001:5001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/docker:/app/stacks # Points to your root docker folder
+      - ./dockge/data:/app/data
+    environment:
+      - DOCKGE_STACKS_DIR=~/docker
+    restart: unless-stopped
+
+  homepage:
+    container_name: homepage
+    image: ghcr.io/gethomepage/homepage:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./homepage/config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Allows homepage to see docker stats
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400 # Checks for updates once every 24 hours
+    restart: unless-stopped

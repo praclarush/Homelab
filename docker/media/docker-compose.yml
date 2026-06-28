@@ -1,0 +1,50 @@
+version: '3.8'
+
+networks:
+  proxy_net:
+    external: true
+
+services:
+  amp:
+    container_name: amp
+    image: cubecoders/amp:latest
+    ports:
+      - "8081:8081" # AMP Web UI
+      - "25565:25565" # Example Minecraft port (add more as you make game servers)
+    volumes:
+      - ./amp/datastore:/home/amp/.ampdata
+    restart: unless-stopped
+    environment:
+      - UID=1000
+      - GID=1000
+
+  # Note: Immich officially prefers their specific multi-container stack. 
+  # This is the streamlined version using their official images.
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:release
+    volumes:
+      - /mnt/synology/immich:/usr/src/app/upload # YOUR SYNOLOGY NFS MOUNT
+      - ./immich/cache:/usr/src/app/cache
+    env_file:
+      - .env
+    ports:
+      - "2283:2283"
+    devices:
+      - /dev/dri:/dev/dri # Intel Hardware Acceleration
+    depends_on:
+      - immich-database
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  immich-database:
+    container_name: immich_postgres
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    environment:
+      POSTGRES_PASSWORD: 'SetAStrongDBPassword'
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
+    volumes:
+      - ./immich/postgres:/var/lib/postgresql/data # Keep DB local on Mini PC SSD!
+    restart: unless-stopped
