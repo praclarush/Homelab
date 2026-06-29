@@ -40,15 +40,16 @@ All stacks are stored under:
 │
 ├── infrastructure-networking/
 │   ├── compose.yaml             # Pi-hole, Nginx Proxy Manager, Watchtower
+│   ├── .env                     # Pi-hole admin password (gitignored)
 │   ├── pihole/config/           # Pi-hole persistent configuration
 │   ├── pihole/dnsmasq/          # Local DNS rules
 │   └── npm/                     # Proxy Manager data and certificates
 │
 └── media-gaming/
     ├── compose.yaml             # AMP and Immich services
-    ├── .env                     # Database credentials
+    ├── .env                     # Database credentials (gitignored)
     ├── amp/datastore/           # Game server data
-    └── immich/                  # Immich cache and database
+    └── immich/                  # Immich cache, database, ML model cache, Redis
 ```
 
 Dockge manages stacks at `/opt/docker/stacks` on the host.
@@ -146,6 +147,17 @@ Location:
 /opt/docker/infrastructure-networking/
 ```
 
+### Environment Variables
+
+Create a `.env` file in this directory before starting the stack:
+
+``` text
+PIHOLE_PASSWORD=your-secure-password-here
+```
+
+This sets the Pi-hole web interface admin password. The file is
+gitignored and must be created manually on each host.
+
 Deploy:
 
 ``` bash
@@ -158,6 +170,7 @@ Services:
     -   Network-wide DNS filtering
     -   Web interface available on port `8080`
     -   Requires port 53 (TCP and UDP) for DNS
+    -   Requires `NET_ADMIN` capability for DNS and iptables management
 -   **Nginx Proxy Manager**
     -   Handles HTTP/HTTPS routing and SSL termination
     -   Admin interface available on port `81`
@@ -166,6 +179,9 @@ Services:
     -   Automated container image updates
     -   Polls every 24 hours (`86400` seconds)
     -   Cleans up old images after updates
+    -   Only updates containers with the label
+        `com.centurylinklabs.watchtower.enable=true`; add that label to
+        any service you want auto-updated
 
 ------------------------------------------------------------------------
 
@@ -176,6 +192,20 @@ Location:
 ``` bash
 /opt/docker/media-gaming/
 ```
+
+### Environment Variables
+
+Create a `.env` file in this directory before starting the stack:
+
+``` text
+DB_USERNAME=
+DB_PASSWORD=
+DB_DATABASE_NAME=
+```
+
+These values are used by both the Immich server and the PostgreSQL
+container. The file is gitignored and must be created manually on each
+host.
 
 Deploy:
 
@@ -193,7 +223,10 @@ Services:
     -   Photo and video management platform
     -   Available on port `2283`
     -   Uses Intel Quick Sync (`/dev/dri`) for hardware transcoding
-    -   Backed by PostgreSQL with vector search (`pgvecto-rs`) and Redis
+    -   Backed by PostgreSQL with vector search and Redis
+    -   Smart search and face recognition powered by the
+        `immich-machine-learning` sidecar; ML models are cached at
+        `./immich/model-cache`
 
 ### Storage Notes
 
@@ -206,15 +239,11 @@ Recommended:
 
 This avoids database performance issues caused by network latency.
 
-### Environment Variables
+### Startup Order
 
-The media-gaming stack requires a `.env` file with:
-
-``` text
-DB_USERNAME=
-DB_PASSWORD=
-DB_DATABASE_NAME=
-```
+`immich-server` waits for both `immich-database` and `immich-redis` to
+pass their health checks before starting. On a cold start this takes
+10-30 seconds. This is expected behavior.
 
 ------------------------------------------------------------------------
 
