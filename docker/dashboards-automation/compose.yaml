@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   proxy_net:
     name: proxy_net
@@ -24,6 +22,8 @@ services:
     volumes:
       - ./homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=America/Chicago
     ports:
       - "8123:8123"
     restart: unless-stopped

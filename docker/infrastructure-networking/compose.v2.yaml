@@ -1,0 +1,78 @@
+networks:
+  proxy_net:
+    external: true
+
+services:
+  nginx-proxy-manager:
+    container_name: nginx_proxy_manager
+    image: 'jc21/nginx-proxy-manager:latest'
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "${VLAN11_IP}:81:81"
+    volumes:
+      - ./npm/data:/data
+      - ./npm/letsencrypt:/etc/letsencrypt
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "0.0.0.0:53:53/tcp"
+      - "0.0.0.0:53:53/udp"
+      - "${VLAN11_IP}:8080:80/tcp"
+    environment:
+      - TZ=America/Chicago
+      - FTLCONF_webserver_api_password=${PIHOLE_PASSWORD}
+      - FTLCONF_dns_listeningMode=all
+    volumes:
+      - ./pihole/config:/etc/pihole
+      - ./pihole/dnsmasq:/etc/dnsmasq.d
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_NOTIFICATION_URL=ntfy://ntfy/${WATCHTOWER_NTFY_TOPIC}
+    restart: unless-stopped
+
+  ntfy:
+    container_name: ntfy
+    image: binwiederhier/ntfy:latest
+    command: serve
+    volumes:
+      - ./ntfy/cache:/var/cache/ntfy
+      - ./ntfy/config:/etc/ntfy
+    ports:
+      - "${VLAN11_IP}:8082:80"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  tailscale:
+    container_name: tailscale
+    image: tailscale/tailscale:latest
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    volumes:
+      - ./tailscale/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+    restart: unless-stopped

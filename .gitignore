@@ -114,3 +114,4 @@ temp/
 
 # Keep example configuration files
 !.env.example
+/.vs

@@ -1,0 +1,109 @@
+networks:
+  proxy_net:
+    external: true
+
+services:
+  wikijs:
+    container_name: wikijs
+    image: ghcr.io/requarks/wiki:2
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=wikijs_postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+    ports:
+      - "${VLAN11_IP}:3003:3000"
+    depends_on:
+      wikijs-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  wikijs-postgres:
+    container_name: wikijs_postgres
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    ports:
+      - "${VLAN11_IP}:5050:80"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  stirling-pdf:
+    container_name: stirling_pdf
+    image: stirlingtools/stirling-pdf:latest
+    volumes:
+      - ./stirling-pdf/data:/usr/share/tesseract-ocr/5/tessdata
+      - ./stirling-pdf/configs:/configs
+    ports:
+      - "${VLAN11_IP}:8083:8080"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  mealie:
+    container_name: mealie
+    image: ghcr.io/mealie-recipes/mealie:latest
+    environment:
+      - ALLOW_SIGNUP=false
+      - TZ=America/Chicago
+      - BASE_URL=https://mealie.home.bremmer.zone
+    volumes:
+      - ./mealie:/app/data
+    ports:
+      - "${VLAN11_IP}:9925:9000"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  n8n:
+    container_name: n8n
+    image: n8nio/n8n:latest
+    environment:
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_HOST=n8n.home.bremmer.zone
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.home.bremmer.zone/
+      - GENERIC_TIMEZONE=America/Chicago
+    volumes:
+      - ./n8n:/home/node/.n8n
+    ports:
+      - "${VLAN11_IP}:5678:5678"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  it-tools:
+    container_name: it_tools
+    image: corentinth/it-tools:latest
+    ports:
+      - "${VLAN11_IP}:8084:80"
+    restart: unless-stopped
+    networks:
+      - proxy_net
