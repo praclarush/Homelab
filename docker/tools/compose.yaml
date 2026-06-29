@@ -1,0 +1,41 @@
+networks:
+  proxy_net:
+    external: true
+
+services:
+  wikijs:
+    container_name: wikijs
+    image: ghcr.io/requarks/wiki:2
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=wikijs_postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+    ports:
+      - "${VLAN11_IP}:3003:3000"
+    depends_on:
+      wikijs-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  wikijs-postgres:
+    container_name: wikijs_postgres
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net

@@ -1,0 +1,102 @@
+networks:
+  proxy_net:
+    external: true
+
+services:
+  amp:
+    container_name: amp
+    image: cubecoders/amp:latest
+    ports:
+      - "${VLAN61_IP}:8081:8081"
+      - "${VLAN61_IP}:25565:25565"
+    volumes:
+      - ./amp/datastore:/home/amp/.ampdata
+    restart: unless-stopped
+    environment:
+      - UID=1000
+      - GID=1000
+    networks:
+      - proxy_net
+
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:release
+    volumes:
+      - /mnt/synology/immich:/usr/src/app/upload
+      - ./immich/cache:/usr/src/app/cache
+    env_file:
+      - .env
+    environment:
+      - DB_HOSTNAME=immich_postgres
+      - REDIS_HOSTNAME=immich_redis
+      - MACHINE_LEARNING_URL=http://immich_machine_learning:3003
+    ports:
+      - "${VLAN61_IP}:2283:2283"
+    devices:
+      - /dev/dri:/dev/dri
+    depends_on:
+      immich-database:
+        condition: service_healthy
+      immich-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    volumes:
+      - ./immich/model-cache:/cache
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  immich-database:
+    container_name: immich_postgres
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE_NAME}
+    volumes:
+      - ./immich/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  immich-redis:
+    container_name: immich_redis
+    image: docker.io/redis:6.2-alpine
+    volumes:
+      - ./immich/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  jellyfin:
+    container_name: jellyfin
+    image: jellyfin/jellyfin:latest
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - /mnt/synology/media:/media:ro
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "${VLAN61_IP}:8096:8096"
+    environment:
+      - TZ=America/Chicago
+    restart: unless-stopped
+    networks:
+      - proxy_net
