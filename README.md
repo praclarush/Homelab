@@ -24,49 +24,132 @@ The environment is organized into three hardware tiers:
 
 ------------------------------------------------------------------------
 
-## Directory Structure
+## Stacks
 
-All stacks are stored under:
+| Stack | Services |
+|-------|----------|
+| `dashboards-automation` | Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus |
+| `dockge` | Dockge |
+| `infrastructure-networking` | Pi-hole, Nginx Proxy Manager, Watchtower, ntfy, Tailscale |
+| `media-gaming` | AMP, Immich, Immich Machine Learning, Jellyfin |
+| `auth` | Authentik, PostgreSQL, Redis |
+| `tools` | WikiJS, PostgreSQL |
 
-``` text
-/opt/docker/
-├── dashboards-automation/
-│   ├── compose.yaml             # Homepage and Home Assistant
-│   └── homepage/config/         # Dashboard configuration
-│
-├── dockge/
-│   ├── compose.yaml             # Dockge stack manager
-│   └── data/                    # Dockge application data
-│
-├── infrastructure-networking/
-│   ├── compose.yaml             # Pi-hole, Nginx Proxy Manager, Watchtower
-│   ├── .env                     # Pi-hole admin password (gitignored)
-│   ├── pihole/config/           # Pi-hole persistent configuration
-│   ├── pihole/dnsmasq/          # Local DNS rules
-│   └── npm/                     # Proxy Manager data and certificates
-│
-└── media-gaming/
-    ├── compose.yaml             # AMP and Immich services
-    ├── .env                     # Database credentials (gitignored)
-    ├── amp/datastore/           # Game server data
-    └── immich/                  # Immich cache, database, ML model cache, Redis
-```
-
-Dockge manages stacks at `/opt/docker/stacks` on the host.
+`compose.yaml` files are the current deployed state. `compose.v2.yaml`
+files are the migration target for each stack. The `auth` stack has no
+v1 -- `compose.yaml` is its initial deployment.
 
 ------------------------------------------------------------------------
 
-# Deployment
+## Service Quick Reference
 
-Deploy stacks in the following order. `dashboards-automation` must come
-first because it creates the shared `proxy_net` Docker network that all
-other stacks attach to.
+All hosted services, their stack, access port, and purpose at a glance.
+Internal-only services (no exposed port) are marked with a dash.
+
+| Service | Stack | Port | Purpose |
+|---------|-------|------|---------|
+| Homepage | `dashboards-automation` | 3000 | Service dashboard |
+| Home Assistant | `dashboards-automation` | 8123 | Home automation |
+| Uptime Kuma | `dashboards-automation` | 3001 | Uptime monitoring |
+| Grafana | `dashboards-automation` | 3002 | Metrics dashboards |
+| Prometheus | `dashboards-automation` | 9090 | Metrics collection |
+| node-exporter | `dashboards-automation` | 9100 | Host system metrics (host network) |
+| Dockge | `dockge` | 5001 | Docker stack manager |
+| Nginx Proxy Manager | `infrastructure-networking` | 80 / 443 / 81 (admin) | Reverse proxy and SSL |
+| Pi-hole | `infrastructure-networking` | 53 (DNS), 8080 (web) | Network-wide DNS filtering |
+| Watchtower | `infrastructure-networking` | — | Automated container updates |
+| ntfy | `infrastructure-networking` | 8082 | Push notifications |
+| Tailscale | `infrastructure-networking` | — | Remote access (host network) |
+| AMP | `media-gaming` | 8081 | Game server management |
+| Immich | `media-gaming` | 2283 | Photo and video library |
+| Immich Machine Learning | `media-gaming` | — | Smart search and face recognition (internal) |
+| Immich PostgreSQL | `media-gaming` | — | Immich database (internal) |
+| Immich Redis | `media-gaming` | — | Immich job queue (internal) |
+| Jellyfin | `media-gaming` | 8096 | Media server |
+| Authentik | `auth` | 9000 / 9443 (HTTPS) | Single sign-on and identity provider |
+| Authentik PostgreSQL | `auth` | — | Authentik database (internal) |
+| Authentik Redis | `auth` | — | Authentik cache (internal) |
+| WikiJS | `tools` | 3003 | Internal wiki and documentation |
+| WikiJS PostgreSQL | `tools` | — | WikiJS database (internal) |
+
+------------------------------------------------------------------------
+
+## Directory Structure
+
+All stacks are stored under `/opt/docker/stacks/` on the host:
+
+``` text
+/opt/docker/stacks/
+├── dashboards-automation/
+│   ├── compose.yaml             # Current deployed
+│   ├── compose.v2.yaml          # Migration target
+│   ├── .env                     # Grafana password
+│   ├── prometheus/config/       # prometheus.yml (copy from repo)
+│   └── homepage/config/
+│
+├── dockge/
+│   └── compose.yaml
+│
+├── infrastructure-networking/
+│   ├── compose.yaml             # Current deployed
+│   ├── compose.v2.yaml          # Migration target
+│   ├── .env                     # Pi-hole password, Tailscale auth key, ntfy topic
+│   ├── pihole/config/
+│   ├── pihole/dnsmasq/
+│   └── npm/
+│
+├── media-gaming/
+│   ├── compose.yaml             # Current deployed
+│   ├── compose.v2.yaml          # Migration target
+│   ├── .env                     # Immich database credentials
+│   ├── amp/datastore/
+│   ├── immich/postgres/         # Keep on NVMe
+│   ├── immich/redis/
+│   ├── immich/cache/
+│   ├── immich/model-cache/
+│   └── jellyfin/
+│
+├── auth/
+│   ├── compose.yaml
+│   ├── .env                     # Authentik credentials and secret key
+│   ├── postgres/
+│   ├── redis/
+│   ├── media/
+│   └── certs/
+│
+└── tools/
+    ├── compose.yaml             # WikiJS and its PostgreSQL instance
+    ├── .env                     # WikiJS database credentials (gitignored)
+    └── postgres/                # WikiJS database data
+```
+
+------------------------------------------------------------------------
+
+## Deployment Order
+
+`dashboards-automation` must be deployed first. It creates the
+`proxy_net` Docker bridge network that all other stacks join as
+`external: true`. Bringing it down removes the network and breaks the
+other stacks.
+
+1. `dashboards-automation`
+2. `dockge`
+3. `infrastructure-networking`
+4. `media-gaming`
+5. `auth`
+6. `tools`
+
+`dockge` is standalone and can be deployed in any order.
+
+------------------------------------------------------------------------
 
 ## Prerequisites
 
 ### Disable systemd-resolved
 
-Pi-hole requires direct access to port 53.
+Pi-hole binds to port 53. `systemd-resolved` holds that port by default
+on Ubuntu/Debian and must be stopped before the
+`infrastructure-networking` stack will start cleanly.
 
 ``` bash
 sudo systemctl stop systemd-resolved
@@ -75,208 +158,226 @@ sudo systemctl disable systemd-resolved
 
 ### Mount Synology Storage
 
-Ensure NFS shares are permanently mounted through `/etc/fstab`.
+NFS shares must be permanently mounted via `/etc/fstab` before starting
+`media-gaming`. Immich uploads go to `/mnt/synology/immich` and
+Jellyfin media is served from `/mnt/synology/media`.
 
-Example:
+------------------------------------------------------------------------
+
+## Stack Reference
+
+### dashboards-automation
+
+**Ports**
+
+| Service | Port |
+|---------|------|
+| Homepage | 3000 |
+| Home Assistant | 8123 |
+| Uptime Kuma | 3001 |
+| Grafana | 3002 |
+| Prometheus | 9090 |
+| node-exporter | 9100 (host network) |
+
+**Environment file** -- `./dashboards-automation/.env`
 
 ``` text
-/mnt/synology/immich
+GRAFANA_PASSWORD=
+VLAN11_IP=
 ```
+
+**Notes**
+
+-   Prometheus requires `./prometheus/config/prometheus.yml` to exist
+    before starting. Copy it from `docker/dashboards-automation/prometheus/prometheus.yml`
+    in the repository.
+-   node-exporter runs with `network_mode: host` for accurate system
+    metrics. Prometheus reaches it via `host.docker.internal:9100`.
+-   Grafana's Prometheus data source URL (configured post-deploy):
+    `http://prometheus:9090`
 
 ------------------------------------------------------------------------
 
-## 1. Dashboards & Automation Stack
+### dockge
 
-Location:
+**Ports**
 
-``` bash
-/opt/docker/dashboards-automation/
-```
+| Service | Port |
+|---------|------|
+| Dockge | 5001 |
 
-Deploy first -- this stack creates the `proxy_net` network used by all
-other stacks.
-
-``` bash
-docker compose up -d
-```
-
-Services:
-
--   **Homepage**
-    -   Local service dashboard
-    -   Available on port `3000`
--   **Home Assistant**
-    -   Home automation platform
-    -   Available on port `8123`
+Manages stacks at `/opt/docker/stacks` on the host.
 
 ------------------------------------------------------------------------
 
-## 2. Dockge
+### infrastructure-networking
 
-Location:
+**Ports**
 
-``` bash
-/opt/docker/dockge/
-```
+| Service | Port |
+|---------|------|
+| Nginx Proxy Manager (HTTP) | 80 |
+| Nginx Proxy Manager (HTTPS) | 443 |
+| Nginx Proxy Manager (admin) | 81 |
+| Pi-hole (DNS) | 53 TCP/UDP |
+| Pi-hole (web) | 8080 |
+| ntfy | 8082 |
+| Tailscale | host network |
 
-Deploy:
-
-``` bash
-docker compose up -d
-```
-
-Services:
-
--   **Dockge**
-    -   Docker Compose management interface
-    -   Access at:
-
-        ``` text
-        http://<mini-pc-ip>:5001
-        ```
-
-    -   Manages stacks stored under `/opt/docker/stacks`
-
-------------------------------------------------------------------------
-
-## 3. Infrastructure & Networking Stack
-
-Location:
-
-``` bash
-/opt/docker/infrastructure-networking/
-```
-
-### Environment Variables
-
-Create a `.env` file in this directory before starting the stack:
+**Environment file** -- `./infrastructure-networking/.env`
 
 ``` text
-PIHOLE_PASSWORD=your-secure-password-here
+PIHOLE_PASSWORD=
+TAILSCALE_AUTHKEY=
+WATCHTOWER_NTFY_TOPIC=
+VLAN11_IP=
 ```
 
-This sets the Pi-hole web interface admin password. The file is
-gitignored and must be created manually on each host.
+**Notes**
 
-Deploy:
-
-``` bash
-docker compose up -d
-```
-
-Services:
-
--   **Pi-hole**
-    -   Network-wide DNS filtering
-    -   Web interface available on port `8080`
-    -   Requires port 53 (TCP and UDP) for DNS
-    -   Requires `NET_ADMIN` capability for DNS and iptables management
--   **Nginx Proxy Manager**
-    -   Handles HTTP/HTTPS routing and SSL termination
-    -   Admin interface available on port `81`
-    -   HTTP on port `80`, HTTPS on port `443`
--   **Watchtower**
-    -   Automated container image updates
-    -   Polls every 24 hours (`86400` seconds)
-    -   Cleans up old images after updates
-    -   Only updates containers with the label
-        `com.centurylinklabs.watchtower.enable=true`; add that label to
-        any service you want auto-updated
+-   Remote access is provided by Tailscale. No port forwarding is
+    required. See the setup guide for auth key generation.
+-   Watchtower uses ntfy for update notifications. Set
+    `WATCHTOWER_NTFY_TOPIC` to the topic name you subscribe to in the
+    ntfy app (e.g. `watchtower`).
+-   Watchtower only updates containers with the label
+    `com.centurylinklabs.watchtower.enable=true`.
 
 ------------------------------------------------------------------------
 
-## 4. Media & Gaming Stack
+### media-gaming
 
-Location:
+**Ports**
 
-``` bash
-/opt/docker/media-gaming/
-```
+| Service | Port |
+|---------|------|
+| AMP | 8081 |
+| Minecraft (example) | 25565 |
+| Immich | 2283 |
+| Jellyfin | 8096 |
 
-### Environment Variables
-
-Create a `.env` file in this directory before starting the stack:
+**Environment file** -- `./media-gaming/.env`
 
 ``` text
 DB_USERNAME=
 DB_PASSWORD=
 DB_DATABASE_NAME=
+VLAN61_IP=
 ```
 
-These values are used by both the Immich server and the PostgreSQL
-container. The file is gitignored and must be created manually on each
-host.
+**Notes**
 
-Deploy:
+-   Immich and Jellyfin both use Intel Quick Sync via `/dev/dri`.
+-   Immich database (`./immich/postgres`) must stay on local NVMe
+    storage. Media uploads (`/mnt/synology/immich`) mount from NAS.
+-   Jellyfin media library path defaults to `/mnt/synology/media`.
+    Adjust the volume mount in `compose.v2.yaml` if your NAS path
+    differs.
+-   `immich-server` waits for Postgres and Redis health checks before
+    starting. On a cold start expect 15-30 seconds before the UI is
+    available.
+-   The `immich-machine-learning` sidecar downloads models on first
+    start (requires outbound internet). Models are cached at
+    `./immich/model-cache` and do not re-download on subsequent starts.
 
-``` bash
-docker compose up -d
-```
+### Immich Database Migration (deferred)
 
-Services:
-
--   **AMP**
-    -   Game server management platform
-    -   Management UI available on port `8081`
-    -   Example: Minecraft server on port `25565`
--   **Immich**
-    -   Photo and video management platform
-    -   Available on port `2283`
-    -   Uses Intel Quick Sync (`/dev/dri`) for hardware transcoding
-    -   Backed by PostgreSQL with vector search and Redis
-    -   Smart search and face recognition powered by the
-        `immich-machine-learning` sidecar; ML models are cached at
-        `./immich/model-cache`
-
-### Storage Notes
-
-The Immich PostgreSQL database must remain on local SSD storage.
-
-Recommended:
-
--   Database (`./immich/postgres`) → Mini PC NVMe storage
--   Media uploads (`/mnt/synology/immich`) → Synology NAS mount
-
-This avoids database performance issues caused by network latency.
-
-### Startup Order
-
-`immich-server` waits for both `immich-database` and `immich-redis` to
-pass their health checks before starting. On a cold start this takes
-10-30 seconds. This is expected behavior.
+The current Postgres image (`tensorchord/pgvecto-rs:pg14-v0.2.0`) needs
+to be migrated to `ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0`
+at a planned maintenance window. This requires a dump and restore -- do
+not change the image tag in-place. See `compose-review-notes.md` for
+the procedure.
 
 ------------------------------------------------------------------------
 
-# Maintenance
+### tools
 
-## View Logs
+**Ports**
 
-Using Dockge:
+| Service | Port |
+|---------|------|
+| WikiJS | 3003 |
 
--   Open the stack
--   Select the service
--   View live logs
+**Environment file** -- `./tools/.env`
 
-CLI alternative:
+``` text
+DB_USER=wikijs
+DB_PASS=
+DB_NAME=wikijs
+VLAN11_IP=
+```
+
+**Notes**
+
+-   WikiJS supports OIDC authentication via Authentik. Configure this
+    post-deploy in the WikiJS admin panel to enable single sign-on.
+-   Initial admin account is created through the browser on first start.
+-   WikiJS and its PostgreSQL instance are isolated from the auth
+    stack's PostgreSQL.
+
+------------------------------------------------------------------------
+
+### auth
+
+**Ports**
+
+| Service | Port |
+|---------|------|
+| Authentik (HTTP) | 9000 |
+| Authentik (HTTPS) | 9443 |
+
+**Environment file** -- `./auth/.env`
+
+``` text
+PG_USER=
+PG_PASS=
+PG_DB=
+AUTHENTIK_SECRET_KEY=
+VLAN11_IP=
+```
+
+Generate `AUTHENTIK_SECRET_KEY` with:
+
+``` bash
+openssl rand -hex 32
+```
+
+**Notes**
+
+-   Initial admin account is created via the browser on first start at
+    `http://192.168.11.10:9000/if/flow/initial-setup/`
+-   Authentik integrates with Nginx Proxy Manager via forward auth to
+    gate access to proxied services.
+
+------------------------------------------------------------------------
+
+## Maintenance
+
+### Updating Stacks
+
+``` bash
+docker compose pull
+docker compose up -d
+```
+
+### Viewing Logs
 
 ``` bash
 docker compose logs -f <service_name>
 ```
 
-## Backup Strategy
+### Backup
 
-Back up:
+Back up: compose files, configuration directories, `.env` files
+(store separately from version control).
 
--   Docker Compose files
--   Configuration directories
--   Version-controlled infrastructure files
+Exclude: database volumes (`./immich/postgres`, `./auth/postgres`),
+application caches.
 
-Exclude:
+Use Synology Hyper Backup for media protection.
 
--   Database files (`./immich/postgres`)
--   `.env` secrets
--   Temporary application data
+### Immich Database Backup
 
-Recommended:
-
--   Use Synology Hyper Backup for media and asset protection
+``` bash
+docker exec immich_postgres pg_dumpall -U <DB_USERNAME> > immich_backup.sql
+```
