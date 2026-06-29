@@ -179,3 +179,56 @@ services:
     restart: unless-stopped
     networks:
       - proxy_net
+
+  linkwarden-postgres:
+    container_name: linkwarden_postgres
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${LINKWARDEN_DB_USER}
+      - POSTGRES_PASSWORD=${LINKWARDEN_DB_PASS}
+      - POSTGRES_DB=linkwarden
+    volumes:
+      - ./linkwarden/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d linkwarden -U ${LINKWARDEN_DB_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  linkwarden:
+    container_name: linkwarden
+    image: ghcr.io/linkwarden/linkwarden:latest
+    environment:
+      - DATABASE_URL=postgresql://${LINKWARDEN_DB_USER}:${LINKWARDEN_DB_PASS}@linkwarden_postgres:5432/linkwarden
+      - NEXTAUTH_SECRET=${LINKWARDEN_SECRET}
+      - NEXTAUTH_URL=https://links.home.bremmer.zone
+    volumes:
+      - ./linkwarden/data:/data/data
+    ports:
+      - "${VLAN11_IP}:3005:3000"
+    depends_on:
+      linkwarden-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  backrest:
+    container_name: backrest
+    image: garethgeorge/backrest:latest
+    environment:
+      - BACKREST_DATA=/data
+      - BACKREST_CONFIG=/data/config.json
+      - TZ=America/Chicago
+    volumes:
+      - ./backrest/data:/data
+      - /opt/docker/stacks:/opt/docker/stacks:ro
+      - /mnt/synology/backups:/backups
+    ports:
+      - "${VLAN11_IP}:9898:9898"
+    restart: unless-stopped
+    networks:
+      - proxy_net

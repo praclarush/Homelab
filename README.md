@@ -31,6 +31,13 @@ The environment is organized into three hardware tiers:
 | `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
 | `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
 | `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `tools-v2-guide.md` | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
+| `tools-v3-guide.md` | Tools stack v3 deployment (n8n, IT Tools) |
+| `tools-v4-guide.md` | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |
+| `tools-v5-guide.md` | Tools stack v5 deployment (Linkwarden, Backrest) |
+| `media-gaming-v3-guide.md` | Media-gaming stack v3 deployment (Audiobookshelf, Kavita) |
+| `dashboards-automation-v3-guide.md` | Dashboards-automation stack v3 deployment (Loki, Promtail) |
+| `infrastructure-networking-v3-guide.md` | Infrastructure-networking stack v3 deployment (CrowdSec) |
 | `llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | `compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
 
@@ -40,12 +47,12 @@ The environment is organized into three hardware tiers:
 
 | Stack | Services |
 |-------|----------|
-| `dashboards-automation` | Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus |
+| `dashboards-automation` | Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus — v3 adds Loki, Promtail |
 | `dockge` | Dockge |
-| `infrastructure-networking` | Pi-hole, Nginx Proxy Manager, Watchtower, ntfy, Tailscale |
-| `media-gaming` | AMP, Immich, Immich Machine Learning, Jellyfin |
+| `infrastructure-networking` | Pi-hole, Nginx Proxy Manager, Watchtower, ntfy, Tailscale — v3 adds CrowdSec |
+| `media-gaming` | AMP, Immich, Immich Machine Learning, Jellyfin — v3 adds Audiobookshelf, Kavita |
 | `auth` | Authentik, PostgreSQL, Redis |
-| `tools` | WikiJS, PostgreSQL — v2 adds pgAdmin, Stirling PDF, Mealie; v3 adds n8n, IT Tools; v4 adds Actual Budget, Paperless-ngx, Audiobookshelf, Grocy, Kavita |
+| `tools` | WikiJS, PostgreSQL — v2 adds pgAdmin, Stirling PDF, Mealie; v3 adds n8n, IT Tools; v4 adds Actual Budget, Paperless-ngx, Grocy; v5 adds Linkwarden, Backrest |
 | `llm` | Ollama, Open WebUI |
 
 `compose.yaml` files are the current deployed state. `compose.v2.yaml`
@@ -95,9 +102,15 @@ Internal-only services (no exposed port) are marked with a dash.
 | Paperless-ngx | `tools` | 8085 | `paperless.home.bremmer.zone` | Document management (v4) |
 | Paperless PostgreSQL | `tools` | — | — | Paperless database (v4, internal) |
 | Paperless Redis | `tools` | — | — | Paperless queue (v4, internal) |
-| Audiobookshelf | `tools` | 13378 | `abs.home.bremmer.zone` | Audiobooks and podcasts (v4) |
 | Grocy | `tools` | 9283 | `grocy.home.bremmer.zone` | Household management (v4) |
-| Kavita | `tools` | 5000 | `kavita.home.bremmer.zone` | Ebook and comic reader (v4) |
+| Linkwarden | `tools` | 3005 | `links.home.bremmer.zone` | Bookmark manager with page archiving (v5) |
+| Linkwarden PostgreSQL | `tools` | — | — | Linkwarden database (v5, internal) |
+| Backrest | `tools` | 9898 | `backrest.home.bremmer.zone` | Restic backup UI, backs up to NAS (v5) |
+| Audiobookshelf | `media-gaming` | 13378 | `abs.home.bremmer.zone` | Audiobooks and podcasts (v3) |
+| Kavita | `media-gaming` | 5000 | `kavita.home.bremmer.zone` | Ebook and comic reader (v3) |
+| Loki | `dashboards-automation` | 3100 | — | Log aggregation, queried from Grafana (v3, internal) |
+| Promtail | `dashboards-automation` | — | — | Log collector, ships to Loki (v3, internal) |
+| CrowdSec | `infrastructure-networking` | — | — | Intrusion detection, reads NPM logs (v3, internal) |
 | Ollama | `llm` | 11434 | — | LLM inference API |
 | Open WebUI | `llm` | 3004 | `llm.home.bremmer.zone` | Chat interface |
 
@@ -160,8 +173,10 @@ All stacks are stored under `/opt/docker/stacks/` on the host:
 │   ├── actual-budget/           # Actual Budget data (v4+)
 │   ├── paperless/               # Paperless-ngx data, media, postgres, redis (v4+)
 │   ├── audiobookshelf/          # Audiobookshelf config and metadata (v4+)
+│   ├── compose.v5.yaml          # Adds Linkwarden, Backrest
 │   ├── grocy/                   # Grocy config (v4+)
-│   └── kavita/                  # Kavita config (v4+)
+│   ├── linkwarden/              # Linkwarden data and postgres (v5+)
+│   └── backrest/                # Backrest config and metadata (v5+)
 │
 └── llm/
     ├── compose.yaml             # Ollama and Open WebUI
@@ -216,7 +231,9 @@ Jellyfin media is served from `/mnt/synology/media`.
 
 ### dashboards-automation
 
-**Ports**
+`compose.v3.yaml` adds Loki and Promtail. See `dashboards-automation-v3-guide.md`.
+
+**Ports (v3 full state)**
 
 | Service | Port |
 |---------|------|
@@ -226,6 +243,7 @@ Jellyfin media is served from `/mnt/synology/media`.
 | Grafana | 3002 |
 | Prometheus | 9090 |
 | node-exporter | 9100 (host network) |
+| Loki | 3100 |
 
 **Environment file** -- `./dashboards-automation/.env`
 
@@ -243,6 +261,9 @@ VLAN11_IP=192.168.11.10
     metrics. Prometheus reaches it via `host.docker.internal:9100`.
 -   Grafana's Prometheus data source URL (configured post-deploy):
     `http://prometheus:9090`
+-   Loki (v3) requires config files copied from the repo before
+    deploying. After deploy, add Loki as a Grafana data source at
+    `http://loki:3100`. See `dashboards-automation-v3-guide.md`.
 
 ------------------------------------------------------------------------
 
@@ -271,6 +292,8 @@ Manages stacks at `/opt/docker/stacks` on the host.
 ------------------------------------------------------------------------
 
 ### infrastructure-networking
+
+`compose.v3.yaml` adds CrowdSec. See `infrastructure-networking-v3-guide.md`.
 
 **Ports**
 
@@ -306,12 +329,17 @@ VLAN11_IP=192.168.11.10
     ntfy app (e.g. `watchtower`).
 -   Watchtower only updates containers with the label
     `com.centurylinklabs.watchtower.enable=true`.
+-   CrowdSec (v3) reads NPM logs from `./npm/logs` and detects attack
+    patterns. Requires the firewall bouncer installed on the host to
+    act on decisions. See `infrastructure-networking-v3-guide.md`.
 
 ------------------------------------------------------------------------
 
 ### media-gaming
 
-**Ports**
+`compose.v3.yaml` adds Audiobookshelf and Kavita. See `media-gaming-v3-guide.md`.
+
+**Ports (v3 full state)**
 
 | Service | Port |
 |---------|------|
@@ -319,6 +347,8 @@ VLAN11_IP=192.168.11.10
 | Minecraft (example) | 25565 |
 | Immich | 2283 |
 | Jellyfin | 8096 |
+| Audiobookshelf | 13378 |
+| Kavita | 5000 |
 
 **Environment file** -- `./media-gaming/.env`
 
@@ -364,7 +394,8 @@ is a complete, standalone compose file that includes all prior services.
 |---------|------|
 | `compose.v2.yaml` | pgAdmin, Stirling PDF, Mealie |
 | `compose.v3.yaml` | n8n, IT Tools |
-| `compose.v4.yaml` | Actual Budget, Paperless-ngx, Audiobookshelf, Grocy, Kavita |
+| `compose.v4.yaml` | Actual Budget, Paperless-ngx, Grocy |
+| `compose.v5.yaml` | Linkwarden, Backrest |
 
 **Ports (v4 full state)**
 
@@ -378,9 +409,9 @@ is a complete, standalone compose file that includes all prior services.
 | IT Tools | 8084 |
 | Actual Budget | 5006 |
 | Paperless-ngx | 8085 |
-| Audiobookshelf | 13378 |
 | Grocy | 9283 |
-| Kavita | 5000 |
+| Linkwarden | 3005 |
+| Backrest | 9898 |
 
 **Environment file** -- `./tools/.env`
 
@@ -422,6 +453,9 @@ openssl rand -hex 32
     deploying v4.
 -   n8n webhook URL is configured for `https://n8n.home.bremmer.zone`.
     The NPM proxy host must exist before webhooks will work.
+-   Backrest mounts `/opt/docker/stacks` read-only and
+    `/mnt/synology/backups` as the backup destination. Create the NAS
+    directory before deploying v5.
 
 ------------------------------------------------------------------------
 
