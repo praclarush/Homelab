@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   dockge:
     image: louislam/dockge:1
     restart: unless-stopped
     ports:
-      - "5001:5001"
+      - "${VLAN11_IP}:5001:5001"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/docker/stacks:/opt/docker/stacks        # <-- Pointing to /opt now

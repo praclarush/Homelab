@@ -7,8 +7,8 @@ services:
     container_name: amp
     image: cubecoders/amp:latest
     ports:
-      - "8081:8081"
-      - "25565:25565"
+      - "${VLAN61_IP}:8081:8081"
+      - "${VLAN61_IP}:25565:25565"
     volumes:
       - ./amp/datastore:/home/amp/.ampdata
     restart: unless-stopped
@@ -31,7 +31,7 @@ services:
       - REDIS_HOSTNAME=immich_redis
       - MACHINE_LEARNING_URL=http://immich_machine_learning:3003
     ports:
-      - "2283:2283"
+      - "${VLAN61_IP}:2283:2283"
     devices:
       - /dev/dri:/dev/dri
     depends_on:
@@ -80,6 +80,23 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  jellyfin:
+    container_name: jellyfin
+    image: jellyfin/jellyfin:latest
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - /mnt/synology/media:/media:ro
+    devices:
+      - /dev/dri:/dev/dri
+    ports:
+      - "${VLAN61_IP}:8096:8096"
+    environment:
+      - TZ=America/Chicago
     restart: unless-stopped
     networks:
       - proxy_net

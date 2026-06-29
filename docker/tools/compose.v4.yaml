@@ -1,0 +1,181 @@
+networks:
+  proxy_net:
+    external: true
+
+services:
+  wikijs:
+    container_name: wikijs
+    image: ghcr.io/requarks/wiki:2
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=wikijs_postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+    ports:
+      - "${VLAN11_IP}:3003:3000"
+    depends_on:
+      wikijs-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  wikijs-postgres:
+    container_name: wikijs_postgres
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    ports:
+      - "${VLAN11_IP}:5050:80"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  stirling-pdf:
+    container_name: stirling_pdf
+    image: stirlingtools/stirling-pdf:latest
+    volumes:
+      - ./stirling-pdf/data:/usr/share/tesseract-ocr/5/tessdata
+      - ./stirling-pdf/configs:/configs
+    ports:
+      - "${VLAN11_IP}:8083:8080"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  mealie:
+    container_name: mealie
+    image: ghcr.io/mealie-recipes/mealie:latest
+    environment:
+      - ALLOW_SIGNUP=false
+      - TZ=America/Chicago
+      - BASE_URL=https://mealie.home.bremmer.zone
+    volumes:
+      - ./mealie:/app/data
+    ports:
+      - "${VLAN11_IP}:9925:9000"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  n8n:
+    container_name: n8n
+    image: n8nio/n8n:latest
+    environment:
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_HOST=n8n.home.bremmer.zone
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.home.bremmer.zone/
+      - GENERIC_TIMEZONE=America/Chicago
+    volumes:
+      - ./n8n:/home/node/.n8n
+    ports:
+      - "${VLAN11_IP}:5678:5678"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  it-tools:
+    container_name: it_tools
+    image: corentinth/it-tools:latest
+    ports:
+      - "${VLAN11_IP}:8084:80"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  actual-budget:
+    container_name: actual_budget
+    image: actualbudget/actual-server:latest
+    volumes:
+      - ./actual-budget:/data
+    ports:
+      - "${VLAN11_IP}:5006:5006"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  paperless-postgres:
+    container_name: paperless_postgres
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${PAPERLESS_DB_USER}
+      - POSTGRES_PASSWORD=${PAPERLESS_DB_PASS}
+      - POSTGRES_DB=paperless
+    volumes:
+      - ./paperless/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d paperless -U ${PAPERLESS_DB_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  paperless-redis:
+    container_name: paperless_redis
+    image: redis:alpine
+    volumes:
+      - ./paperless/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  paperless-ngx:
+    container_name: paperless_ngx
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    environment:
+      - PAPERLESS_REDIS=redis://paperless_redis:6379
+      - PAPERLESS_DBHOST=paperless_postgres
+      - PAPERLESS_DBUSER=${PAPERLESS_DB_USER}
+      - PAPERLESS_DBPASS=${PAPERLESS_DB_PASS}
+      - PAPERLESS_DBNAME=paperless
+      - PAPERLESS_SECRET_KEY=${PAPERLESS_SECRET_KEY}
+      - PAPERLESS_TIME_ZONE=America/Chicago
+      - PAPERLESS_OCR_LANGUAGE=eng
+      - PAPERLESS_URL=https://paperless.home.bremmer.zone
+    volumes:
+      - ./paperless/data:/usr/src/paperless/data
+      - ./paperless/media:/usr/src/paperless/media
+      - ./paperless/export:/usr/src/paperless/export
+      - ./paperless/consume:/usr/src/paperless/consume
+    ports:
+      - "${VLAN11_IP}:8085:8000"
+    depends_on:
+      paperless-postgres:
+        condition: service_healthy
+      paperless-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
