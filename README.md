@@ -29,34 +29,37 @@ The environment is organized into three hardware tiers:
 All stacks are stored under:
 
 ``` text
-~/docker/
-├── network/
-│   ├── docker-compose.yml       # Pi-hole and Nginx Proxy Manager
-│   ├── etc-pihole/              # Pi-hole persistent configuration
-│   ├── etc-dnsmasq.d/            # Local DNS rules
-│   └── npm/                     # Proxy Manager data and certificates
-│
-├── management/
-│   ├── docker-compose.yml       # Dockge, Homepage, Watchtower
-│   ├── dockge/                  # Dockge stack data
+/opt/docker/
+├── dashboards-automation/
+│   ├── compose.yaml             # Homepage and Home Assistant
 │   └── homepage/config/         # Dashboard configuration
 │
-├── media/
-│   ├── docker-compose.yml       # AMP and Immich services
-│   ├── .env                     # Environment secrets
-│   ├── amp/datastore/           # Game server data
-│   └── immich/                  # Immich application data
+├── dockge/
+│   ├── compose.yaml             # Dockge stack manager
+│   └── data/                    # Dockge application data
 │
-└── automation/
-    ├── docker-compose.yml       # Home Assistant
-    └── config/                  # Home Assistant YAML configuration
+├── infrastructure-networking/
+│   ├── compose.yaml             # Pi-hole, Nginx Proxy Manager, Watchtower
+│   ├── pihole/config/           # Pi-hole persistent configuration
+│   ├── pihole/dnsmasq/          # Local DNS rules
+│   └── npm/                     # Proxy Manager data and certificates
+│
+└── media-gaming/
+    ├── compose.yaml             # AMP and Immich services
+    ├── .env                     # Database credentials
+    ├── amp/datastore/           # Game server data
+    └── immich/                  # Immich cache and database
 ```
+
+Dockge manages stacks at `/opt/docker/stacks` on the host.
 
 ------------------------------------------------------------------------
 
 # Deployment
 
-Deploy stacks in the following order.
+Deploy stacks in the following order. `dashboards-automation` must come
+first because it creates the shared `proxy_net` Docker network that all
+other stacks attach to.
 
 ## Prerequisites
 
@@ -81,15 +84,16 @@ Example:
 
 ------------------------------------------------------------------------
 
-## 1. Network Stack
+## 1. Dashboards & Automation Stack
 
 Location:
 
 ``` bash
-~/docker/network/
+/opt/docker/dashboards-automation/
 ```
 
-Deploy:
+Deploy first -- this stack creates the `proxy_net` network used by all
+other stacks.
 
 ``` bash
 docker compose up -d
@@ -97,21 +101,21 @@ docker compose up -d
 
 Services:
 
--   **Pi-hole**
-    -   Provides network-wide DNS filtering
-    -   Web interface available on port `8080`
--   **Nginx Proxy Manager**
-    -   Handles HTTP/HTTPS routing
-    -   Admin interface available on port `81`
+-   **Homepage**
+    -   Local service dashboard
+    -   Available on port `3000`
+-   **Home Assistant**
+    -   Home automation platform
+    -   Available on port `8123`
 
 ------------------------------------------------------------------------
 
-## 2. Management Stack
+## 2. Dockge
 
 Location:
 
 ``` bash
-~/docker/management/
+/opt/docker/dockge/
 ```
 
 Deploy:
@@ -124,25 +128,53 @@ Services:
 
 -   **Dockge**
     -   Docker Compose management interface
-
     -   Access at:
 
         ``` text
         http://<mini-pc-ip>:5001
         ```
--   **Homepage**
-    -   Local service dashboard on port `3000`
--   **Watchtower**
-    -   Performs automated container image updates
+
+    -   Manages stacks stored under `/opt/docker/stacks`
 
 ------------------------------------------------------------------------
 
-## 3. Media & Gaming Stack
+## 3. Infrastructure & Networking Stack
 
 Location:
 
 ``` bash
-~/docker/media/
+/opt/docker/infrastructure-networking/
+```
+
+Deploy:
+
+``` bash
+docker compose up -d
+```
+
+Services:
+
+-   **Pi-hole**
+    -   Network-wide DNS filtering
+    -   Web interface available on port `8080`
+    -   Requires port 53 (TCP and UDP) for DNS
+-   **Nginx Proxy Manager**
+    -   Handles HTTP/HTTPS routing and SSL termination
+    -   Admin interface available on port `81`
+    -   HTTP on port `80`, HTTPS on port `443`
+-   **Watchtower**
+    -   Automated container image updates
+    -   Polls every 24 hours (`86400` seconds)
+    -   Cleans up old images after updates
+
+------------------------------------------------------------------------
+
+## 4. Media & Gaming Stack
+
+Location:
+
+``` bash
+/opt/docker/media-gaming/
 ```
 
 Deploy:
@@ -154,44 +186,35 @@ docker compose up -d
 Services:
 
 -   **AMP**
-    -   Game server management
-    -   Example: Minecraft on port `25565`
+    -   Game server management platform
+    -   Management UI available on port `8081`
+    -   Example: Minecraft server on port `25565`
 -   **Immich**
-    -   Photo management platform
-    -   Uses PostgreSQL with vector search support
+    -   Photo and video management platform
+    -   Available on port `2283`
+    -   Uses Intel Quick Sync (`/dev/dri`) for hardware transcoding
+    -   Backed by PostgreSQL with vector search (`pgvecto-rs`) and Redis
 
 ### Storage Notes
 
-The Immich database must remain on local SSD storage.
+The Immich PostgreSQL database must remain on local SSD storage.
 
 Recommended:
 
--   Database → Mini PC NVMe storage
--   Media uploads → Synology NAS mount
+-   Database (`./immich/postgres`) → Mini PC NVMe storage
+-   Media uploads (`/mnt/synology/immich`) → Synology NAS mount
 
 This avoids database performance issues caused by network latency.
 
-------------------------------------------------------------------------
+### Environment Variables
 
-## 4. Automation Stack
+The media-gaming stack requires a `.env` file with:
 
-Location:
-
-``` bash
-~/docker/automation/
+``` text
+DB_USERNAME=
+DB_PASSWORD=
+DB_DATABASE_NAME=
 ```
-
-Deploy:
-
-``` bash
-docker compose up -d
-```
-
-Services:
-
--   **Home Assistant**
-    -   Runs using `network_mode: host`
-    -   Enables automatic discovery across the local network
 
 ------------------------------------------------------------------------
 
@@ -221,7 +244,7 @@ Back up:
 
 Exclude:
 
--   Database files
+-   Database files (`./immich/postgres`)
 -   `.env` secrets
 -   Temporary application data
 
