@@ -24,6 +24,17 @@ The environment is organized into three hardware tiers:
 
 ------------------------------------------------------------------------
 
+## Documentation
+
+| File | Purpose |
+|------|---------|
+| `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
+| `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
+| `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
+
+------------------------------------------------------------------------
+
 ## Stacks
 
 | Stack | Services |
@@ -43,34 +54,35 @@ v1 -- `compose.yaml` is its initial deployment.
 
 ## Service Quick Reference
 
-All hosted services, their stack, access port, and purpose at a glance.
+All hosted services, their stack, direct access port, and proxy URL.
+Services are available at both the direct IP:port and via NPM at `*.home.bremmer.zone`.
 Internal-only services (no exposed port) are marked with a dash.
 
-| Service | Stack | Port | Purpose |
-|---------|-------|------|---------|
-| Homepage | `dashboards-automation` | 3000 | Service dashboard |
-| Home Assistant | `dashboards-automation` | 8123 | Home automation |
-| Uptime Kuma | `dashboards-automation` | 3001 | Uptime monitoring |
-| Grafana | `dashboards-automation` | 3002 | Metrics dashboards |
-| Prometheus | `dashboards-automation` | 9090 | Metrics collection |
-| node-exporter | `dashboards-automation` | 9100 | Host system metrics (host network) |
-| Dockge | `dockge` | 5001 | Docker stack manager |
-| Nginx Proxy Manager | `infrastructure-networking` | 80 / 443 / 81 (admin) | Reverse proxy and SSL |
-| Pi-hole | `infrastructure-networking` | 53 (DNS), 8080 (web) | Network-wide DNS filtering |
-| Watchtower | `infrastructure-networking` | — | Automated container updates |
-| ntfy | `infrastructure-networking` | 8082 | Push notifications |
-| Tailscale | `infrastructure-networking` | — | Remote access (host network) |
-| AMP | `media-gaming` | 8081 | Game server management |
-| Immich | `media-gaming` | 2283 | Photo and video library |
-| Immich Machine Learning | `media-gaming` | — | Smart search and face recognition (internal) |
-| Immich PostgreSQL | `media-gaming` | — | Immich database (internal) |
-| Immich Redis | `media-gaming` | — | Immich job queue (internal) |
-| Jellyfin | `media-gaming` | 8096 | Media server |
-| Authentik | `auth` | 9000 / 9443 (HTTPS) | Single sign-on and identity provider |
-| Authentik PostgreSQL | `auth` | — | Authentik database (internal) |
-| Authentik Redis | `auth` | — | Authentik cache (internal) |
-| WikiJS | `tools` | 3003 | Internal wiki and documentation |
-| WikiJS PostgreSQL | `tools` | — | WikiJS database (internal) |
+| Service | Stack | Port | Proxy URL | Purpose |
+|---------|-------|------|-----------|---------|
+| Homepage | `dashboards-automation` | 3000 | `homepage.home.bremmer.zone` | Service dashboard |
+| Home Assistant | `dashboards-automation` | 8123 | `homeassistant.home.bremmer.zone` | Home automation |
+| Uptime Kuma | `dashboards-automation` | 3001 | `uptime.home.bremmer.zone` | Uptime monitoring |
+| Grafana | `dashboards-automation` | 3002 | `grafana.home.bremmer.zone` | Metrics dashboards |
+| Prometheus | `dashboards-automation` | 9090 | `prometheus.home.bremmer.zone` | Metrics collection |
+| node-exporter | `dashboards-automation` | 9100 | — | Host system metrics (host network) |
+| Dockge | `dockge` | 5001 | `dockge.home.bremmer.zone` | Docker stack manager |
+| Nginx Proxy Manager | `infrastructure-networking` | 80 / 443 / 81 (admin) | — | Reverse proxy and SSL (admin direct only) |
+| Pi-hole | `infrastructure-networking` | 53 (DNS), 8080 (web) | `pihole.home.bremmer.zone` | Network-wide DNS filtering |
+| Watchtower | `infrastructure-networking` | — | — | Automated container updates |
+| ntfy | `infrastructure-networking` | 8082 | `ntfy.home.bremmer.zone` | Push notifications |
+| Tailscale | `infrastructure-networking` | — | — | Remote access (host network) |
+| AMP | `media-gaming` | 8081 | `amp.home.bremmer.zone` | Game server management |
+| Immich | `media-gaming` | 2283 | `photos.home.bremmer.zone` | Photo and video library |
+| Immich Machine Learning | `media-gaming` | — | — | Smart search and face recognition (internal) |
+| Immich PostgreSQL | `media-gaming` | — | — | Immich database (internal) |
+| Immich Redis | `media-gaming` | — | — | Immich job queue (internal) |
+| Jellyfin | `media-gaming` | 8096 | `jellyfin.home.bremmer.zone` | Media server |
+| Authentik | `auth` | 9000 / 9443 | `auth.home.bremmer.zone` | Single sign-on and identity provider |
+| Authentik PostgreSQL | `auth` | — | — | Authentik database (internal) |
+| Authentik Redis | `auth` | — | — | Authentik cache (internal) |
+| WikiJS | `tools` | 3003 | `wiki.home.bremmer.zone` | Internal wiki and documentation |
+| WikiJS PostgreSQL | `tools` | — | — | WikiJS database (internal) |
 
 ------------------------------------------------------------------------
 
@@ -183,7 +195,7 @@ Jellyfin media is served from `/mnt/synology/media`.
 
 ``` text
 GRAFANA_PASSWORD=
-VLAN11_IP=
+VLAN11_IP=192.168.11.10
 ```
 
 **Notes**
@@ -206,7 +218,19 @@ VLAN11_IP=
 |---------|------|
 | Dockge | 5001 |
 
+**Environment file** -- `./dockge/.env`
+
+``` text
+VLAN11_IP=192.168.11.10
+```
+
 Manages stacks at `/opt/docker/stacks` on the host.
+
+**Notes**
+
+-   Dockge has no `networks:` configuration and is not on `proxy_net`.
+    NPM proxies it via the host IP (`192.168.11.10:5001`) rather than
+    by container name.
 
 ------------------------------------------------------------------------
 
@@ -230,13 +254,17 @@ Manages stacks at `/opt/docker/stacks` on the host.
 PIHOLE_PASSWORD=
 TAILSCALE_AUTHKEY=
 WATCHTOWER_NTFY_TOPIC=
-VLAN11_IP=
+VLAN11_IP=192.168.11.10
 ```
 
 **Notes**
 
+-   NPM is proxied via direct IP only (`192.168.11.10:81`). The admin
+    panel is intentionally not routed through NPM itself.
+-   Pi-hole wildcard DNS entry for `home.bremmer.zone` lives at
+    `./pihole/dnsmasq/02-local-dns.conf`. See `nginx-proxy-manager-guide.md`.
 -   Remote access is provided by Tailscale. No port forwarding is
-    required. See the setup guide for auth key generation.
+    required. See the v2 setup guide for auth key generation.
 -   Watchtower uses ntfy for update notifications. Set
     `WATCHTOWER_NTFY_TOPIC` to the topic name you subscribe to in the
     ntfy app (e.g. `watchtower`).
@@ -262,7 +290,7 @@ VLAN11_IP=
 DB_USERNAME=
 DB_PASSWORD=
 DB_DATABASE_NAME=
-VLAN61_IP=
+VLAN61_IP=192.168.61.10
 ```
 
 **Notes**
@@ -304,7 +332,7 @@ the procedure.
 DB_USER=wikijs
 DB_PASS=
 DB_NAME=wikijs
-VLAN11_IP=
+VLAN11_IP=192.168.11.10
 ```
 
 **Notes**
@@ -333,7 +361,7 @@ PG_USER=
 PG_PASS=
 PG_DB=
 AUTHENTIK_SECRET_KEY=
-VLAN11_IP=
+VLAN11_IP=192.168.11.10
 ```
 
 Generate `AUTHENTIK_SECRET_KEY` with:
