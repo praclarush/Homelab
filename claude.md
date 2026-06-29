@@ -20,7 +20,7 @@ docker compose logs -f <svc>  # Follow a single service
 
 ## Architecture
 
-Six stacks under `docker/`. Each stack has a `compose.yaml` (current deployed state) and where noted a `compose.v2.yaml` (migration target with VLAN bindings, new services, and additional configuration). The `auth` and `tools` stacks have no v1.
+Seven stacks under `docker/`. Each stack has a `compose.yaml` (current deployed state) and where noted a `compose.v2.yaml` (migration target with VLAN bindings, new services, and additional configuration). The `auth`, `tools`, and `llm` stacks have no v1 -- `compose.yaml` is the initial deployment for each.
 
 | Stack | Services |
 |-------|----------|
@@ -29,7 +29,8 @@ Six stacks under `docker/`. Each stack has a `compose.yaml` (current deployed st
 | `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host) |
 | `media-gaming` | AMP (8081), Immich (2283), Jellyfin (8096), Postgres, Redis |
 | `auth` | Authentik (9000/9443), Postgres, Redis |
-| `tools` | WikiJS (3003), Postgres |
+| `tools` | WikiJS (3003), Postgres — v2: pgAdmin (5050), Stirling PDF (8083), Mealie (9925) — v3: n8n (5678), IT Tools (8084) — v4: Actual Budget (5006), Paperless-ngx (8085), Audiobookshelf (13378), Grocy (9283), Kavita (5000) |
+| `llm` | Ollama (11434), Open WebUI (3004) |
 
 ## VLAN Bindings
 
@@ -64,6 +65,8 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **Immich Postgres image:** Currently on `tensorchord/pgvecto-rs:pg14-v0.2.0`. Needs migration to `ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0` via dump/restore at a maintenance window. Do not change the image tag in-place. See `compose-review-notes.md`.
 
+**LLM inference is CPU-only:** The mini PC uses Intel UHD integrated graphics. Ollama's GPU acceleration requires NVIDIA or AMD hardware. All inference runs on CPU. Model size ceiling is ~14B parameters (Q4 quantized, ~9 GB) given 16 GB total system RAM. Do not suggest models above 14B for this hardware.
+
 ## Secrets and Gitignore
 
 `.env` files are gitignored. Required `.env` contents per stack:
@@ -75,7 +78,8 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 | `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `VLAN11_IP` |
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
-| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP` |
+| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP` — v2 adds: `PGADMIN_EMAIL`, `PGADMIN_PASSWORD` — v3 adds: `N8N_ENCRYPTION_KEY` — v4 adds: `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY` |
+| `llm` | `VLAN11_IP` |
 
 All generated runtime data (databases, caches, logs, certificates) is gitignored. Only `compose.yaml` files and static configuration belong in version control.
 
@@ -87,4 +91,5 @@ All generated runtime data (databases, caches, logs, certificates) is gitignored
 | `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
 | `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
 | `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | `compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |

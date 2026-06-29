@@ -31,6 +31,7 @@ The environment is organized into three hardware tiers:
 | `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
 | `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
 | `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | `compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
 
 ------------------------------------------------------------------------
@@ -44,11 +45,13 @@ The environment is organized into three hardware tiers:
 | `infrastructure-networking` | Pi-hole, Nginx Proxy Manager, Watchtower, ntfy, Tailscale |
 | `media-gaming` | AMP, Immich, Immich Machine Learning, Jellyfin |
 | `auth` | Authentik, PostgreSQL, Redis |
-| `tools` | WikiJS, PostgreSQL |
+| `tools` | WikiJS, PostgreSQL — v2 adds pgAdmin, Stirling PDF, Mealie; v3 adds n8n, IT Tools; v4 adds Actual Budget, Paperless-ngx, Audiobookshelf, Grocy, Kavita |
+| `llm` | Ollama, Open WebUI |
 
 `compose.yaml` files are the current deployed state. `compose.v2.yaml`
-files are the migration target for each stack. The `auth` stack has no
-v1 -- `compose.yaml` is its initial deployment.
+files are the migration target for each stack. The `auth`, `tools`, and
+`llm` stacks have no v1 -- `compose.yaml` is the initial deployment for
+each.
 
 ------------------------------------------------------------------------
 
@@ -83,6 +86,20 @@ Internal-only services (no exposed port) are marked with a dash.
 | Authentik Redis | `auth` | — | — | Authentik cache (internal) |
 | WikiJS | `tools` | 3003 | `wiki.home.bremmer.zone` | Internal wiki and documentation |
 | WikiJS PostgreSQL | `tools` | — | — | WikiJS database (internal) |
+| pgAdmin | `tools` | 5050 | `pgadmin.home.bremmer.zone` | PostgreSQL web admin (v2) |
+| Stirling PDF | `tools` | 8083 | `pdf.home.bremmer.zone` | PDF tools (v2) |
+| Mealie | `tools` | 9925 | `mealie.home.bremmer.zone` | Recipe manager (v2) |
+| n8n | `tools` | 5678 | `n8n.home.bremmer.zone` | Workflow automation (v3) |
+| IT Tools | `tools` | 8084 | `it-tools.home.bremmer.zone` | Developer utilities (v3) |
+| Actual Budget | `tools` | 5006 | `budget.home.bremmer.zone` | Personal finance (v4) |
+| Paperless-ngx | `tools` | 8085 | `paperless.home.bremmer.zone` | Document management (v4) |
+| Paperless PostgreSQL | `tools` | — | — | Paperless database (v4, internal) |
+| Paperless Redis | `tools` | — | — | Paperless queue (v4, internal) |
+| Audiobookshelf | `tools` | 13378 | `abs.home.bremmer.zone` | Audiobooks and podcasts (v4) |
+| Grocy | `tools` | 9283 | `grocy.home.bremmer.zone` | Household management (v4) |
+| Kavita | `tools` | 5000 | `kavita.home.bremmer.zone` | Ebook and comic reader (v4) |
+| Ollama | `llm` | 11434 | — | LLM inference API |
+| Open WebUI | `llm` | 3004 | `llm.home.bremmer.zone` | Chat interface |
 
 ------------------------------------------------------------------------
 
@@ -129,10 +146,28 @@ All stacks are stored under `/opt/docker/stacks/` on the host:
 │   ├── media/
 │   └── certs/
 │
-└── tools/
-    ├── compose.yaml             # WikiJS and its PostgreSQL instance
-    ├── .env                     # WikiJS database credentials (gitignored)
-    └── postgres/                # WikiJS database data
+├── tools/
+│   ├── compose.yaml             # Current deployed (WikiJS + PostgreSQL)
+│   ├── compose.v2.yaml          # Adds pgAdmin, Stirling PDF, Mealie
+│   ├── compose.v3.yaml          # Adds n8n, IT Tools
+│   ├── compose.v4.yaml          # Adds Actual Budget, Paperless-ngx, Audiobookshelf, Grocy, Kavita
+│   ├── .env                     # Stack credentials (gitignored)
+│   ├── postgres/                # WikiJS database data
+│   ├── pgadmin/                 # pgAdmin data (v2+)
+│   ├── stirling-pdf/            # Stirling PDF config and OCR data (v2+)
+│   ├── mealie/                  # Mealie recipe data (v2+)
+│   ├── n8n/                     # n8n workflow data (v3+)
+│   ├── actual-budget/           # Actual Budget data (v4+)
+│   ├── paperless/               # Paperless-ngx data, media, postgres, redis (v4+)
+│   ├── audiobookshelf/          # Audiobookshelf config and metadata (v4+)
+│   ├── grocy/                   # Grocy config (v4+)
+│   └── kavita/                  # Kavita config (v4+)
+│
+└── llm/
+    ├── compose.yaml             # Ollama and Open WebUI
+    ├── .env                     # VLAN11_IP (gitignored)
+    ├── models/                  # Ollama model files (large, gitignored)
+    └── open-webui/              # Open WebUI data
 ```
 
 ------------------------------------------------------------------------
@@ -150,6 +185,7 @@ other stacks.
 4. `media-gaming`
 5. `auth`
 6. `tools`
+7. `llm`
 
 `dockge` is standalone and can be deployed in any order.
 
@@ -320,28 +356,72 @@ the procedure.
 
 ### tools
 
-**Ports**
+Four versioned compose files. `compose.yaml` is the current deployed
+state. Deploy each version in order to migrate forward -- each version
+is a complete, standalone compose file that includes all prior services.
+
+| Version | Adds |
+|---------|------|
+| `compose.v2.yaml` | pgAdmin, Stirling PDF, Mealie |
+| `compose.v3.yaml` | n8n, IT Tools |
+| `compose.v4.yaml` | Actual Budget, Paperless-ngx, Audiobookshelf, Grocy, Kavita |
+
+**Ports (v4 full state)**
 
 | Service | Port |
 |---------|------|
 | WikiJS | 3003 |
+| pgAdmin | 5050 |
+| Stirling PDF | 8083 |
+| Mealie | 9925 |
+| n8n | 5678 |
+| IT Tools | 8084 |
+| Actual Budget | 5006 |
+| Paperless-ngx | 8085 |
+| Audiobookshelf | 13378 |
+| Grocy | 9283 |
+| Kavita | 5000 |
 
 **Environment file** -- `./tools/.env`
 
 ``` text
+# v1
 DB_USER=wikijs
 DB_PASS=
 DB_NAME=wikijs
 VLAN11_IP=192.168.11.10
+# v2
+PGADMIN_EMAIL=
+PGADMIN_PASSWORD=
+# v3
+N8N_ENCRYPTION_KEY=
+# v4
+PAPERLESS_DB_USER=
+PAPERLESS_DB_PASS=
+PAPERLESS_SECRET_KEY=
+```
+
+Generate `N8N_ENCRYPTION_KEY` and `PAPERLESS_SECRET_KEY` with:
+
+``` bash
+openssl rand -hex 32
 ```
 
 **Notes**
 
 -   WikiJS supports OIDC authentication via Authentik. Configure this
     post-deploy in the WikiJS admin panel to enable single sign-on.
--   Initial admin account is created through the browser on first start.
--   WikiJS and its PostgreSQL instance are isolated from the auth
-    stack's PostgreSQL.
+-   WikiJS PostgreSQL is isolated from all other PostgreSQL containers
+    in the stack. Paperless-ngx has its own dedicated PostgreSQL and
+    Redis containers.
+-   Paperless-ngx: drop files into `./paperless/consume` to ingest
+    documents automatically.
+-   Audiobookshelf and Kavita mount from NAS at
+    `/mnt/synology/audiobooks`, `/mnt/synology/podcasts`, and
+    `/mnt/synology/books`. Create these directories on the NAS before
+    deploying v4.
+-   n8n webhook URL is configured for `https://n8n.home.bremmer.zone`.
+    The NPM proxy host must exist before webhooks will work.
 
 ------------------------------------------------------------------------
 
@@ -376,6 +456,36 @@ openssl rand -hex 32
     `http://192.168.11.10:9000/if/flow/initial-setup/`
 -   Authentik integrates with Nginx Proxy Manager via forward auth to
     gate access to proxied services.
+
+------------------------------------------------------------------------
+
+### llm
+
+**Ports**
+
+| Service | Port |
+|---------|------|
+| Ollama API | 11434 |
+| Open WebUI | 3004 |
+
+**Environment file** -- `./llm/.env`
+
+``` text
+VLAN11_IP=192.168.11.10
+```
+
+**Notes**
+
+-   Inference runs on CPU -- Intel UHD integrated graphics is not
+    supported by Ollama's GPU acceleration. Expect 3-6 tokens/second
+    for a 14B model.
+-   Models are stored in `./models` and persist across container
+    restarts and image updates.
+-   Pull models while internet-connected before air-gapped operation.
+    See `llm-stack-guide.md` for model recommendations and pull
+    commands.
+-   Recommended model for this hardware: `qwen2.5-coder:14b` (~9 GB,
+    strong at both code and general chat).
 
 ------------------------------------------------------------------------
 
