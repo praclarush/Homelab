@@ -1,31 +1,28 @@
-version: '3.8'
-
+version: "3.8"
 networks:
   proxy_net:
     external: true
-
 services:
   nginx-proxy-manager:
     container_name: nginx_proxy_manager
-    image: 'jc21/nginx-proxy-manager:latest'
+    image: jc21/nginx-proxy-manager:latest
     ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
+      - 80:80
+      - 81:81
+      - 443:443
     volumes:
       - ./npm/data:/data
       - ./npm/letsencrypt:/etc/letsencrypt
     restart: unless-stopped
     networks:
       - proxy_net
-
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "8080:80/tcp"
+      - 53:53/tcp
+      - 53:53/udp
+      - 8080:80/tcp
     environment:
       - TZ=America/Chicago
       - FTLCONF_webserver_api_password=YourSecurePasswordHere
@@ -36,7 +33,6 @@ services:
     restart: unless-stopped
     networks:
       - proxy_net
-
   watchtower:
     container_name: watchtower
     image: containrrr/watchtower:latest
@@ -45,4 +41,5 @@ services:
     environment:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_POLL_INTERVAL=86400
+      - DOCKER_API_VERSION=1.40 # force a compatible API handshake
     restart: unless-stopped
