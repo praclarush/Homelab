@@ -24,12 +24,12 @@ Seven stacks under `docker/`. Each stack has a `compose.yaml` (current deployed 
 
 | Stack | Services |
 |-------|----------|
-| `dashboards-automation` | Homepage (3000), Home Assistant (8123), Uptime Kuma (3001), Grafana (3002), Prometheus (9090), node-exporter (host) |
+| `dashboards-automation` | Homepage (3000), Home Assistant (8123), Uptime Kuma (3001), Grafana (3002), Prometheus (9090), node-exporter (host) — v3: Loki (3100), Promtail |
 | `dockge` | Dockge stack manager (5001) |
-| `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host) |
-| `media-gaming` | AMP (8081), Immich (2283), Jellyfin (8096), Postgres, Redis |
+| `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host) — v3: CrowdSec |
+| `media-gaming` | AMP (8081), Immich (2283), Jellyfin (8096), Postgres, Redis — v3: Audiobookshelf (13378), Kavita (5000) |
 | `auth` | Authentik (9000/9443), Postgres, Redis |
-| `tools` | WikiJS (3003), Postgres — v2: pgAdmin (5050), Stirling PDF (8083), Mealie (9925) — v3: n8n (5678), IT Tools (8084) — v4: Actual Budget (5006), Paperless-ngx (8085), Audiobookshelf (13378), Grocy (9283), Kavita (5000) |
+| `tools` | WikiJS (3003), Postgres — v2: pgAdmin (5050), Stirling PDF (8083), Mealie (9925) — v3: n8n (5678), IT Tools (8084) — v4: Actual Budget (5006), Paperless-ngx (8085), Grocy (9283) — v5: Linkwarden (3005), Backrest (9898) |
 | `llm` | Ollama (11434), Open WebUI (3004) |
 
 ## VLAN Bindings
@@ -78,7 +78,10 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 | `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `VLAN11_IP` |
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
-| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP` — v2 adds: `PGADMIN_EMAIL`, `PGADMIN_PASSWORD` — v3 adds: `N8N_ENCRYPTION_KEY` — v4 adds: `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY` |
+| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP` — v2 adds: `PGADMIN_EMAIL`, `PGADMIN_PASSWORD` — v3 adds: `N8N_ENCRYPTION_KEY` — v4 adds: `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY` — v5 adds: `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` |
+| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP` (no new variables for v3) |
+| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `VLAN11_IP` (no new variables for v3) |
+| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` (no new variables for v3) |
 | `llm` | `VLAN11_IP` |
 
 All generated runtime data (databases, caches, logs, certificates) is gitignored. Only `compose.yaml` files and static configuration belong in version control.
@@ -91,5 +94,12 @@ All generated runtime data (databases, caches, logs, certificates) is gitignored
 | `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
 | `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
 | `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `tools-v2-guide.md` | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
+| `tools-v3-guide.md` | Tools stack v3 deployment (n8n, IT Tools) |
+| `tools-v4-guide.md` | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |
+| `tools-v5-guide.md` | Tools stack v5 deployment (Linkwarden, Backrest) |
+| `media-gaming-v3-guide.md` | Media-gaming stack v3 deployment (Audiobookshelf, Kavita) |
+| `dashboards-automation-v3-guide.md` | Dashboards-automation stack v3 deployment (Loki, Promtail) |
+| `infrastructure-networking-v3-guide.md` | Infrastructure-networking stack v3 deployment (CrowdSec) |
 | `llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | `compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
