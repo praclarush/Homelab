@@ -57,6 +57,8 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **Dockge stack path:** Configured to manage stacks at `/opt/docker/stacks` via `DOCKGE_STACKS_DIR`. This must match the actual path on the host.
 
+**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `git-deployment-guide.md`, it resolves to `/opt/docker/repo/docker`, a clone of this repository's remote. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/opt/docker/repo`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
+
 **Immich storage split:** PostgreSQL data (`./immich/postgres`) stays on local NVMe. Media uploads mount from NAS at `/mnt/synology/immich`. Do not move the database to NFS.
 
 **Pi-hole port conflict:** Pi-hole binds to port 53. `systemd-resolved` must be stopped and disabled before the `infrastructure-networking` stack starts.
@@ -94,6 +96,8 @@ All generated runtime data (databases, caches, logs, certificates) is gitignored
 | `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
 | `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
 | `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| `git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
 | `tools-v2-guide.md` | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
 | `tools-v3-guide.md` | Tools stack v3 deployment (n8n, IT Tools) |
 | `tools-v4-guide.md` | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |

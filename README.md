@@ -31,6 +31,8 @@ The environment is organized into three hardware tiers:
 | `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
 | `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
 | `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| `git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
 | `tools-v2-guide.md` | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
 | `tools-v3-guide.md` | Tools stack v3 deployment (n8n, IT Tools) |
 | `tools-v4-guide.md` | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |
@@ -118,7 +120,11 @@ Internal-only services (no exposed port) are marked with a dash.
 
 ## Directory Structure
 
-All stacks are stored under `/opt/docker/stacks/` on the host:
+All stacks are stored under `/opt/docker/stacks/` on the host. Following
+`git-deployment-guide.md`, this path is a symlink into a clone of this
+repository at `/opt/docker/repo`, so config changes made on the host
+can be committed and pushed directly, and changes pushed elsewhere can
+be pulled and applied with `docker compose up -d`.
 
 ``` text
 /opt/docker/stacks/
