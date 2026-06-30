@@ -39,11 +39,13 @@ network:
       nameservers:
         addresses: [127.0.0.1]
 
-    # VLAN 61 (Media) -- tagged. Used by the media-gaming stack only:
-    # Immich, Jellyfin, AMP (and Audiobookshelf/Kavita from v3).
-    # No default route or nameserver entry -- this interface is
-    # reached only for media-gaming's bound services, not used for
-    # general host traffic.
+    # VLAN 61 (NAS) -- tagged. The Synology NAS lives here; media-gaming
+    # (Immich, Jellyfin, AMP, and Audiobookshelf/Kavita from v3) binds
+    # its host ports on this same VLAN for same-subnet NFS access to
+    # NAS storage. No default route or nameserver entry -- this
+    # interface is reached only for media-gaming's bound services and
+    # NAS access, not used for general host traffic. See
+    # guides/networking/vlan-reference.md.
     eth0.61:
       id: 61
       link: eth0

@@ -619,7 +619,8 @@ The short version:
 2. The mini PC should appear in the machines list with a Tailscale IP
    in the `100.x.x.x` range
 3. Advertise your local subnets so remote devices can reach everything
-   on the network -- including the NAS and any VLAN 61 media devices:
+   on the network -- including the NAS and the `media-gaming` stack's
+   services, both reachable via VLAN 61:
    ```bash
    docker exec tailscale tailscale up --advertise-routes=192.168.11.0/24,192.168.61.0/24
    ```
@@ -637,7 +638,9 @@ Configure the Ubiquiti DHCP server for each VLAN to hand out the mini
 PC's VLAN 11 IP as the DNS server. In the Ubiquiti controller:
 
 1. Go to **Settings > Networks**
-2. For each VLAN (11, 20, 30, 40, 50, 60, 61):
+2. For each VLAN (11, 20, 30, 31, 40, 50, 60, 61) -- see
+   [`guides/networking/vlan-reference.md`](../networking/vlan-reference.md)
+   for the full list:
    - Click the VLAN to edit it
    - Under **DHCP**, set **DNS Server 1** to `192.168.11.10` (your
      VLAN 11 IP)

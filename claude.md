@@ -34,12 +34,12 @@ Seven stacks under `stacks/`. Each stack has a `compose.yaml` (current deployed 
 
 ## VLAN Bindings
 
-The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables:
+The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables. `guides/networking/vlan-reference.md` is the source of truth for the full home-network VLAN plan (9 VLANs); only these two are relevant to this repo:
 
 | Variable | Value | VLAN | Services |
 |----------|-------|------|----------|
 | `VLAN11_IP` | `192.168.11.10` | VLAN 11 (Services) | All management and dashboard services |
-| `VLAN61_IP` | `192.168.61.10` | VLAN 61 (Media) | Immich, Jellyfin, AMP |
+| `VLAN61_IP` | `192.168.61.10` | VLAN 61 (NAS) | Immich, Jellyfin, AMP -- bound here for same-subnet NFS access to the Synology NAS, which also lives on VLAN 61 |
 
 `VLAN61_IP=192.168.61.10` must be reserved in Ubiquiti before deploying `media-gaming` v2. VLAN 61 is newly created.
 
