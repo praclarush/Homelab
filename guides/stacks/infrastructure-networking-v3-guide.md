@@ -44,7 +44,7 @@ No new `.env` variables are required. No NPM proxy host is needed.
 ```bash
 cd /opt/docker/stacks/infrastructure-networking
 docker compose down
-cp /path/to/repo/docker/infrastructure-networking/compose.v3.yaml compose.yaml
+cp /path/to/repo/stacks/infrastructure-networking/compose.v3.yaml compose.yaml
 docker compose up -d
 ```
 

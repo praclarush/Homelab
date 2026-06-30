@@ -50,10 +50,10 @@ containers start.
 mkdir -p /opt/docker/stacks/dashboards-automation/loki
 mkdir -p /opt/docker/stacks/dashboards-automation/promtail
 
-cp /path/to/repo/docker/dashboards-automation/loki/config.yaml \
+cp /path/to/repo/stacks/dashboards-automation/loki/config.yaml \
    /opt/docker/stacks/dashboards-automation/loki/config.yaml
 
-cp /path/to/repo/docker/dashboards-automation/promtail/config.yaml \
+cp /path/to/repo/stacks/dashboards-automation/promtail/config.yaml \
    /opt/docker/stacks/dashboards-automation/promtail/config.yaml
 ```
 
@@ -64,7 +64,7 @@ cp /path/to/repo/docker/dashboards-automation/promtail/config.yaml \
 ```bash
 cd /opt/docker/stacks/dashboards-automation
 docker compose down
-cp /path/to/repo/docker/dashboards-automation/compose.v3.yaml compose.yaml
+cp /path/to/repo/stacks/dashboards-automation/compose.v3.yaml compose.yaml
 docker compose up -d
 ```
 

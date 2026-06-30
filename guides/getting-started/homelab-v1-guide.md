@@ -288,13 +288,13 @@ Each stack directory needs its `compose.yaml` file. Copy them from the
 repository to the host. From your Windows machine:
 
 ```powershell
-scp -r C:\path\to\repo\docker\* username@192.168.11.10:/opt/docker/stacks/
+scp -r C:\path\to\repo\stacks\* username@192.168.11.10:/opt/docker/stacks/
 ```
 
 Or, if you have the repository cloned on the Linux host already:
 
 ```bash
-cp -r /path/to/repo/docker/* /opt/docker/stacks/
+cp -r /path/to/repo/stacks/* /opt/docker/stacks/
 ```
 
 Confirm the structure looks right:

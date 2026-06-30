@@ -55,7 +55,7 @@ openssl rand -hex 32
 ```bash
 cd /opt/docker/stacks/tools
 docker compose down
-cp /path/to/repo/docker/tools/compose.v4.yaml compose.yaml
+cp /path/to/repo/stacks/tools/compose.v4.yaml compose.yaml
 docker compose up -d
 ```
 

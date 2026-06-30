@@ -57,7 +57,7 @@ If your NAS paths differ, update the volume mounts in
 ```bash
 cd /opt/docker/stacks/media-gaming
 docker compose down
-cp /path/to/repo/docker/media-gaming/compose.v3.yaml compose.yaml
+cp /path/to/repo/stacks/media-gaming/compose.v3.yaml compose.yaml
 docker compose up -d
 ```
 

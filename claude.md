@@ -20,7 +20,7 @@ docker compose logs -f <svc>  # Follow a single service
 
 ## Architecture
 
-Seven stacks under `docker/`. Each stack has a `compose.yaml` (current deployed state) and where noted a `compose.v2.yaml` (migration target with VLAN bindings, new services, and additional configuration). The `auth`, `tools`, and `llm` stacks have no v1 -- `compose.yaml` is the initial deployment for each.
+Seven stacks under `stacks/`. Each stack has a `compose.yaml` (current deployed state) and where noted a `compose.v2.yaml` (migration target with VLAN bindings, new services, and additional configuration). The `auth`, `tools`, and `llm` stacks have no v1 -- `compose.yaml` is the initial deployment for each.
 
 | Stack | Services |
 |-------|----------|
@@ -57,7 +57,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **Dockge stack path:** Configured to manage stacks at `/opt/docker/stacks` via `DOCKGE_STACKS_DIR`. This must match the actual path on the host.
 
-**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `git-deployment-guide.md`, it resolves to `/opt/docker/repo/docker`, a clone of this repository's remote. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/opt/docker/repo`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
+**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `guides/operations/git-deployment-guide.md`, it resolves to `/opt/docker/repo/stacks`, a clone of this repository's remote. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/opt/docker/repo`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
 
 **Immich storage split:** PostgreSQL data (`./immich/postgres`) stays on local NVMe. Media uploads mount from NAS at `/mnt/synology/immich`. Do not move the database to NFS.
 
@@ -90,20 +90,24 @@ All generated runtime data (databases, caches, logs, certificates) is gitignored
 
 ## Documentation
 
+`guides/` is organized like a wiki (it will eventually move into the WikiJS
+stack): `guides/README.md` is the index page. See it for the full,
+categorized list. Quick reference:
+
 | File | Purpose |
 |------|---------|
 | `README.md` | Stack reference, service inventory, env file contents, deployment order |
-| `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
-| `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
-| `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
-| `pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
-| `git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
-| `tools-v2-guide.md` | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
-| `tools-v3-guide.md` | Tools stack v3 deployment (n8n, IT Tools) |
-| `tools-v4-guide.md` | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |
-| `tools-v5-guide.md` | Tools stack v5 deployment (Linkwarden, Backrest) |
-| `media-gaming-v3-guide.md` | Media-gaming stack v3 deployment (Audiobookshelf, Kavita) |
-| `dashboards-automation-v3-guide.md` | Dashboards-automation stack v3 deployment (Loki, Promtail) |
-| `infrastructure-networking-v3-guide.md` | Infrastructure-networking stack v3 deployment (CrowdSec) |
-| `llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
-| `compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
+| `guides/getting-started/homelab-v1-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
+| `guides/getting-started/homelab-v2-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
+| `guides/networking/nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `guides/networking/pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| `guides/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
+| `guides/stacks/tools-v2-guide.md` | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
+| `guides/stacks/tools-v3-guide.md` | Tools stack v3 deployment (n8n, IT Tools) |
+| `guides/stacks/tools-v4-guide.md` | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |
+| `guides/stacks/tools-v5-guide.md` | Tools stack v5 deployment (Linkwarden, Backrest) |
+| `guides/stacks/media-gaming-v3-guide.md` | Media-gaming stack v3 deployment (Audiobookshelf, Kavita) |
+| `guides/stacks/dashboards-automation-v3-guide.md` | Dashboards-automation stack v3 deployment (Loki, Promtail) |
+| `guides/stacks/infrastructure-networking-v3-guide.md` | Infrastructure-networking stack v3 deployment (CrowdSec) |
+| `guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
+| `stacks/compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |

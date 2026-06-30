@@ -6,7 +6,7 @@ configuration changes (compose files, `prometheus.yml`, the Pi-hole
 dnsmasq conf, Homepage's `services.yaml`, etc.) can be edited on either
 the server or a workstation, pushed, and pulled in either direction.
 It assumes stacks are already deployed at `/opt/docker/stacks` per
-`homelab-v1-configuration-guide.md`.
+`../getting-started/homelab-v1-guide.md`.
 
 ---
 
@@ -39,7 +39,7 @@ Two things make this riskier than a normal `git clone`:
   (`homeassistant/config/.storage/`), Ollama model files
   (`llm/models/`), Immich's ML models (`immich/model-cache/`), and
   Paperless-ngx's actual scanned documents (`paperless/media/`) all
-  live inside `docker/` alongside the compose files you do want
+  live inside `stacks/` alongside the compose files you do want
   tracked.
 
 Section 2 confirms the current `.gitignore` is safe before you touch
@@ -51,14 +51,14 @@ the live host. Do not skip it.
 
 The repository's directory layout was reorganized at one point
 (stacks moved from flat top-level folders like `network/` and
-`automation/` into `docker/<stack-name>/`). A `.gitignore` written for
+`automation/` into `stacks/<stack-name>/`). A `.gitignore` written for
 the old layout can look correct while silently not matching anything
 under the current paths -- patterns like `network/etc-pihole/*.db` or
 `media/amp/datastore/` are anchored to paths that no longer exist, so
 they ignore nothing.
 
 The repo's `.gitignore` has been updated to use `**/`-prefixed patterns
-keyed on the actual directory names under `docker/<stack>/`, so it
+keyed on the actual directory names under `stacks/<stack>/`, so it
 matches regardless of which stack a directory lives under:
 
 ```text
@@ -85,9 +85,9 @@ etc.), which still cover most database and certificate paths.
 paths in your deployment from a checkout of the repo:
 
 ```bash
-git check-ignore -v docker/infrastructure-networking/pihole/config/pihole.toml
-git check-ignore -v docker/infrastructure-networking/tailscale/state/tailscaled.state
-git check-ignore -v docker/llm/models/somefile.gguf
+git check-ignore -v stacks/infrastructure-networking/pihole/config/pihole.toml
+git check-ignore -v stacks/infrastructure-networking/tailscale/state/tailscaled.state
+git check-ignore -v stacks/llm/models/somefile.gguf
 ```
 
 Each should print a matching rule. If any prints nothing, `.gitignore`
@@ -97,8 +97,8 @@ still pass through clean (no output, and a non-zero exit code is
 expected since they're not ignored):
 
 ```bash
-git check-ignore -v docker/dashboards-automation/homepage/config/services.yaml
-git check-ignore -v docker/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf
+git check-ignore -v stacks/dashboards-automation/homepage/config/services.yaml
+git check-ignore -v stacks/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf
 ```
 
 ---
@@ -164,7 +164,7 @@ data (Postgres volumes, caches, models, Tailscale state) -- none of
 which exist in the fresh clone, since none of it is tracked:
 
 ```bash
-rsync -a --exclude='.git' /opt/docker/stacks.bak/ /opt/docker/repo/docker/
+rsync -a --exclude='.git' /opt/docker/stacks.bak/ /opt/docker/repo/stacks/
 ```
 
 Check what, if anything, has drifted between the live server and
@@ -185,7 +185,7 @@ Once satisfied, point the live path at the repo:
 
 ```bash
 sudo mv /opt/docker/stacks /opt/docker/stacks.old
-sudo ln -s /opt/docker/repo/docker /opt/docker/stacks
+sudo ln -s /opt/docker/repo/stacks /opt/docker/stacks
 ```
 
 `/opt/docker/stacks` is now a symlink into the git working tree.
@@ -272,7 +272,7 @@ same commit that adds the service -- not after the fact.
 | Deploy key authenticates | `ssh -T github-homelab` confirms as the repo |
 | Repo cloned, not into the live path directly | `/opt/docker/repo/.git` exists |
 | Live state reconciled before cutover | `git status` reviewed; no unexpected drift |
-| `/opt/docker/stacks` is a symlink | `ls -ld /opt/docker/stacks` shows `-> /opt/docker/repo/docker` |
+| `/opt/docker/stacks` is a symlink | `ls -ld /opt/docker/stacks` shows `-> /opt/docker/repo/stacks` |
 | Dockge still sees all stacks | `http://192.168.11.10:5001` lists every stack, all green |
 | All containers still running post-cutover | `docker compose ps` in every stack directory shows `running` |
 | Push from server works | Edit a tracked file, `git add -p && git commit && git push`, confirm it appears on GitHub |

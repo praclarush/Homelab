@@ -317,11 +317,11 @@ Copy the v2 compose files from the repository to the host. From your
 Windows machine:
 
 ```powershell
-scp C:\path\to\repo\docker\dashboards-automation\compose.v2.yaml username@192.168.11.10:/opt/docker/stacks/dashboards-automation/
-scp C:\path\to\repo\docker\infrastructure-networking\compose.v2.yaml username@192.168.11.10:/opt/docker/stacks/infrastructure-networking/
-scp C:\path\to\repo\docker\media-gaming\compose.v2.yaml username@192.168.11.10:/opt/docker/stacks/media-gaming/
-scp C:\path\to\repo\docker\auth\compose.yaml username@192.168.11.10:/opt/docker/stacks/auth/
-scp C:\path\to\repo\docker\tools\compose.yaml username@192.168.11.10:/opt/docker/stacks/tools/
+scp C:\path\to\repo\stacks\dashboards-automation\compose.v2.yaml username@192.168.11.10:/opt/docker/stacks/dashboards-automation/
+scp C:\path\to\repo\stacks\infrastructure-networking\compose.v2.yaml username@192.168.11.10:/opt/docker/stacks/infrastructure-networking/
+scp C:\path\to\repo\stacks\media-gaming\compose.v2.yaml username@192.168.11.10:/opt/docker/stacks/media-gaming/
+scp C:\path\to\repo\stacks\auth\compose.yaml username@192.168.11.10:/opt/docker/stacks/auth/
+scp C:\path\to\repo\stacks\tools\compose.yaml username@192.168.11.10:/opt/docker/stacks/tools/
 ```
 
 ### 5.2 Prometheus Configuration
@@ -338,7 +338,7 @@ mkdir -p /opt/docker/stacks/dashboards-automation/prometheus/config
 From your Windows machine:
 
 ```powershell
-scp C:\path\to\repo\docker\dashboards-automation\prometheus\prometheus.yml username@192.168.11.10:/opt/docker/stacks/dashboards-automation/prometheus/config/
+scp C:\path\to\repo\stacks\dashboards-automation\prometheus\prometheus.yml username@192.168.11.10:/opt/docker/stacks/dashboards-automation/prometheus/config/
 ```
 
 Confirm it arrived:
@@ -486,7 +486,7 @@ This typically takes 20-30 seconds.
 
 ## 9. First-Time Service Setup
 
-### 8.1 Uptime Kuma
+### 9.1 Uptime Kuma
 
 1. Open `http://192.168.11.10:3001`
 2. Create an admin account on the first-visit screen
@@ -508,7 +508,7 @@ This typically takes 20-30 seconds.
 | Authentik | `http://localhost:9000` |
 | ntfy | `http://localhost:8082` |
 
-### 8.2 Grafana
+### 9.2 Grafana
 
 1. Open `http://192.168.11.10:3002`
 2. Log in with username `admin` and the `GRAFANA_PASSWORD` from step 3.1
@@ -528,7 +528,7 @@ This typically takes 20-30 seconds.
    - The Node Exporter Full dashboard will appear, showing CPU, memory,
      disk, and network metrics for the host
 
-### 8.3 ntfy
+### 9.3 ntfy
 
 ntfy is a push notification server. You subscribe to a topic on your
 phone and services post to that topic when they have something to
@@ -556,7 +556,7 @@ You should receive a push notification on your phone within a few
 seconds. If nothing arrives, double-check the `WATCHTOWER_NTFY_TOPIC`
 in the `.env` file and confirm the ntfy container is running.
 
-### 8.4 Jellyfin
+### 9.4 Jellyfin
 
 1. Open `http://192.168.61.10:8096`
 2. The first-launch wizard will ask for:
@@ -580,7 +580,7 @@ in the `.env` file and confirm the ntfy container is running.
      docker restart jellyfin
      ```
 
-### 8.5 Authentik
+### 9.5 Authentik
 
 **Initial admin setup:**
 
@@ -613,7 +613,7 @@ The short version:
 3. Users visiting the service will be redirected to an Authentik login
    page before being passed through to the service
 
-### 8.6 Tailscale
+### 9.6 Tailscale
 
 1. Open `https://login.tailscale.com/admin/machines` in your browser
 2. The mini PC should appear in the machines list with a Tailscale IP
@@ -646,7 +646,7 @@ PC's VLAN 11 IP as the DNS server. In the Ubiquiti controller:
 Clients on every VLAN will now use Pi-hole for DNS automatically via
 DHCP, with no manual configuration per device.
 
-### 8.7 WikiJS
+### 9.7 WikiJS
 
 **Initial admin setup:**
 
@@ -720,7 +720,7 @@ pass before considering the v2 migration complete.
 | Grafana loads, Prometheus data source connected | `http://192.168.11.10:3002` -- Node Exporter dashboard shows data |
 | Prometheus loads, scraping targets | `http://192.168.11.10:9090` > Status > Targets -- both targets show `UP` |
 | ntfy loads | `http://192.168.11.10:8082` |
-| Watchtower notification received in ntfy app | Run test command from step 8.3 |
+| Watchtower notification received in ntfy app | Run test command from step 9.3 |
 | Jellyfin loads, media visible | `http://192.168.61.10:8096` -- library scan complete |
 | Jellyfin hardware transcoding active | Attempt playback, check Admin Dashboard > Dashboard for active transcoding sessions |
 | Authentik admin panel loads | `http://192.168.11.10:9000/if/admin/` |

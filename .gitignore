@@ -42,7 +42,7 @@ logs/
 
 # ==============================
 # Application Persistent Data
-# (paths match the current docker/<stack>/ layout)
+# (paths match the current stacks/<stack>/ layout)
 # ==============================
 
 # Immich generated data (model-cache holds multi-GB ML models)
