@@ -130,13 +130,17 @@ Open fstab:
 sudo nano /etc/fstab
 ```
 
-Add a line at the bottom in this format:
+Add two lines at the bottom in this format -- one for Immich's
+uploads, one for Jellyfin's media library:
 ```
 <nas-ip>:/volume1/immich   /mnt/synology/immich   nfs   defaults   0 0
+<nas-ip>:/volume1/media    /mnt/synology/media    nfs   defaults   0 0
 ```
 
-Replace `<nas-ip>` with your Synology's IP and `/volume1/immich` with
-the actual shared folder path. Save the file (Ctrl+X, Y, Enter).
+Replace `<nas-ip>` with your Synology's IP and the `/volume1/...`
+paths with your actual shared folder paths. Save the file (Ctrl+X, Y,
+Enter). A complete reference copy of this file as of v1 is at
+[`config/v1/fstab`](../../config/v1/fstab).
 
 Create the mount point and mount everything:
 ```bash
@@ -251,6 +255,9 @@ network:
 > **Important:** The `nameservers` entry on `eth0.11` points to
 > `127.0.0.1`. This is intentional -- once Pi-hole is running, the
 > host itself will use it for DNS. Leave this as-is.
+
+A complete reference copy of this file is at
+[`config/v1/netplan-00-installer-config.yaml`](../../config/v1/netplan-00-installer-config.yaml).
 
 Save and close. Apply the configuration:
 

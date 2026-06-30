@@ -111,3 +111,4 @@ categorized list. Quick reference:
 | `guides/stacks/infrastructure-networking-v3-guide.md` | Infrastructure-networking stack v3 deployment (CrowdSec) |
 | `guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | `stacks/compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
+| `config/README.md` | Complete, version-stepped reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `stacks/` |

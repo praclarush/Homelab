@@ -132,6 +132,9 @@ Host github-homelab
 EOF
 ```
 
+A reference copy of this block is at
+[`config/operations/ssh-config`](../../config/operations/ssh-config).
+
 Test it:
 
 ```bash

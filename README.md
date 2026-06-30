@@ -46,6 +46,7 @@ moved into the WikiJS instance this homelab runs. Start at
 | [`guides/stacks/infrastructure-networking-v3-guide.md`](guides/stacks/infrastructure-networking-v3-guide.md) | Infrastructure-networking stack v3 deployment (CrowdSec) |
 | [`guides/stacks/llm-stack-guide.md`](guides/stacks/llm-stack-guide.md) | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | [`stacks/compose-review-notes.md`](stacks/compose-review-notes.md) | Rationale for compose file changes, deferred Postgres migration procedure |
+| [`config/README.md`](config/README.md) | Complete, version-stepped reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) referenced by the guides above |
 
 ------------------------------------------------------------------------
 
@@ -378,6 +379,12 @@ VLAN61_IP=192.168.61.10
 -   Jellyfin media library path defaults to `/mnt/synology/media`.
     Adjust the volume mount in `compose.v2.yaml` if your NAS path
     differs.
+-   Audiobookshelf and Kavita (v3) mount from NAS at
+    `/mnt/synology/audiobooks`, `/mnt/synology/podcasts`, and
+    `/mnt/synology/books`. Each path must be the NAS share mounted over
+    NFS on the host, not just a folder created on the NAS -- see
+    [`guides/stacks/media-gaming-v3-guide.md`](guides/stacks/media-gaming-v3-guide.md)
+    section 2 before deploying.
 -   `immich-server` waits for Postgres and Redis health checks before
     starting. On a cold start expect 15-30 seconds before the UI is
     available.
@@ -458,15 +465,14 @@ openssl rand -hex 32
     Redis containers.
 -   Paperless-ngx: drop files into `./paperless/consume` to ingest
     documents automatically.
--   Audiobookshelf and Kavita mount from NAS at
-    `/mnt/synology/audiobooks`, `/mnt/synology/podcasts`, and
-    `/mnt/synology/books`. Create these directories on the NAS before
-    deploying v4.
 -   n8n webhook URL is configured for `https://n8n.home.bremmer.zone`.
     The NPM proxy host must exist before webhooks will work.
 -   Backrest mounts `/opt/docker/stacks` read-only and
-    `/mnt/synology/backups` as the backup destination. Create the NAS
-    directory before deploying v5.
+    `/mnt/synology/backups` as the backup destination. The latter must
+    be the NAS share mounted over NFS on the host, not just a folder
+    created on the NAS -- see
+    [`guides/stacks/tools-v5-guide.md`](guides/stacks/tools-v5-guide.md)
+    section 2 before deploying v5.
 
 ------------------------------------------------------------------------
 

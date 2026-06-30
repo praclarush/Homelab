@@ -1,0 +1,23 @@
+# /etc/fstab -- NFS lines added at homelab v1
+#
+# Reference only -- see config/README.md. These are the NFS mount
+# lines to APPEND to the host's existing /etc/fstab. Do not overwrite
+# the file; it also contains your root partition, swap, and any other
+# host-specific entries not shown here.
+#
+# Source: guides/getting-started/homelab-v1-guide.md section 2.2
+# (Confirm NFS Mounts)
+#
+# Replace <nas-ip> with your Synology's actual IP, and the
+# /volume1/... paths with your actual NAS shared folder paths if they
+# differ.
+
+<nas-ip>:/volume1/immich   /mnt/synology/immich   nfs   defaults   0 0
+# ^ media-gaming stack: Immich (immich-server) -- photo/video uploads.
+#   Mounted before the media-gaming stack's first deploy.
+
+<nas-ip>:/volume1/media    /mnt/synology/media    nfs   defaults   0 0
+# ^ media-gaming stack: Jellyfin -- media library source.
+#   The guide's example only shows the immich line explicitly, but its
+#   "mkdir -p /mnt/synology/media" + "mount -a" steps require this
+#   second line to exist too, following the same format.

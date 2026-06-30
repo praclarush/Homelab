@@ -15,6 +15,11 @@ For the service inventory, port list, and `.env` file reference, see the
 [repository root README](../README.md) instead -- it is the quick-reference
 doc, not a how-to guide.
 
+For complete, version-stepped copies of the host-level Linux config
+files these guides have you edit (`/etc/fstab`, Netplan, the CrowdSec
+bouncer config) see [`config/`](../config/README.md) -- it's a
+reference companion to the guides below, not a guide on its own.
+
 ---
 
 ## Recommended Reading Order (New Deployment)

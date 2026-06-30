@@ -1,0 +1,26 @@
+# /etc/fstab -- NFS lines, homelab v3
+#
+# Reference only -- see config/README.md. Append-only; do not
+# overwrite your host's actual /etc/fstab.
+#
+# Adds the three media-gaming v3 shares (Audiobookshelf/Kavita).
+# infrastructure-networking v3 (CrowdSec) and dashboards-automation v3
+# (Loki/Promtail) do not touch fstab.
+
+<nas-ip>:/volume1/immich   /mnt/synology/immich   nfs   defaults   0 0
+# ^ media-gaming stack: Immich -- photo/video uploads. (introduced v1)
+
+<nas-ip>:/volume1/media    /mnt/synology/media    nfs   defaults   0 0
+# ^ media-gaming stack: Jellyfin -- media library source. (introduced v1)
+
+<nas-ip>:/volume1/audiobooks   /mnt/synology/audiobooks   nfs   defaults   0 0
+# ^ media-gaming stack: Audiobookshelf -- audiobook library.
+#   Source: guides/stacks/media-gaming-v3-guide.md section 2.
+
+<nas-ip>:/volume1/podcasts     /mnt/synology/podcasts     nfs   defaults   0 0
+# ^ media-gaming stack: Audiobookshelf -- podcast library.
+#   Source: guides/stacks/media-gaming-v3-guide.md section 2.
+
+<nas-ip>:/volume1/books        /mnt/synology/books        nfs   defaults   0 0
+# ^ media-gaming stack: Kavita -- ebook/comic/manga library.
+#   Source: guides/stacks/media-gaming-v3-guide.md section 2.

@@ -11,11 +11,12 @@ Linkwarden and Backrest to the existing v4 deployment.
 ## Contents
 
 1. [What v5 Adds](#1-what-v5-adds)
-2. [Update the Environment File](#2-update-the-environment-file)
-3. [Deploy v5](#3-deploy-v5)
-4. [Configure Nginx Proxy Manager](#4-configure-nginx-proxy-manager)
-5. [First-Time Service Setup](#5-first-time-service-setup)
-6. [Verification Checklist](#6-verification-checklist)
+2. [Mount the NAS Backup Share](#2-mount-the-nas-backup-share)
+3. [Update the Environment File](#3-update-the-environment-file)
+4. [Deploy v5](#4-deploy-v5)
+5. [Configure Nginx Proxy Manager](#5-configure-nginx-proxy-manager)
+6. [First-Time Service Setup](#6-first-time-service-setup)
+7. [Verification Checklist](#7-verification-checklist)
 
 ---
 
@@ -35,7 +36,65 @@ All v4 services carry forward unchanged.
 
 ---
 
-## 2. Update the Environment File
+## 2. Mount the NAS Backup Share
+
+Backrest writes backups to the host path `/mnt/synology/backups`, which
+`compose.v5.yaml` mounts into the container as `/backups`. **That host
+path must be the actual NAS share, mounted over NFS** -- the same way
+the Immich and Jellyfin media shares were mounted in
+`../getting-started/homelab-v1-guide.md` section 2.2. If you skip this
+step, Docker silently creates an empty local folder at that path on the
+mini PC's own disk, and Backrest will happily back up to it with no
+error -- your backups simply will not be on the NAS.
+
+### 2.1 Create the Share on the Synology
+
+In DSM:
+
+1. **File Station** -- create a `backups` shared folder (or a
+   subfolder of an existing share)
+2. **Control Panel > Shared Folder > Edit > NFS Permissions** -- add a
+   rule allowing your mini PC's IP, or the whole VLAN 11 subnet
+   (`192.168.11.0/24`)
+3. Note the NFS path DSM shows for the share, e.g. `/volume1/backups`
+
+### 2.2 Mount It on the Host
+
+```bash
+sudo nano /etc/fstab
+```
+
+Add a line at the bottom, replacing `<nas-ip>` and the share path with
+your actual values:
+
+```
+<nas-ip>:/volume1/backups   /mnt/synology/backups   nfs   defaults   0 0
+```
+
+Save and close (Ctrl+X, Y, Enter). Create the mount point and mount it:
+
+```bash
+sudo mkdir -p /mnt/synology/backups
+sudo mount -a
+```
+
+Confirm it actually mounted:
+
+```bash
+df -h | grep synology
+```
+
+You should see a line for `backups`, alongside any existing Immich or
+media mounts. **Do not proceed to Section 4 until this confirms** --
+deploying Backrest before this mount exists is the most common way
+backups end up on local disk instead of the NAS.
+
+A complete reference copy of `/etc/fstab`'s NFS lines as of this
+version is at [`config/v5/fstab`](../../config/v5/fstab).
+
+---
+
+## 3. Update the Environment File
 
 Add the following to `/opt/docker/stacks/tools/.env`:
 
@@ -53,7 +112,7 @@ openssl rand -hex 32
 
 ---
 
-## 3. Deploy v5
+## 4. Deploy v5
 
 ```bash
 cd /opt/docker/stacks/tools
@@ -70,7 +129,7 @@ docker compose ps
 
 ---
 
-## 4. Configure Nginx Proxy Manager
+## 5. Configure Nginx Proxy Manager
 
 | Service | Domain | Forward Host | Port | Websockets |
 |---------|--------|-------------|------|-----------|
@@ -79,7 +138,7 @@ docker compose ps
 
 ---
 
-## 5. First-Time Service Setup
+## 6. First-Time Service Setup
 
 ### Linkwarden
 
@@ -118,16 +177,17 @@ first start.
 Run an initial backup manually from the Plans page to verify the
 configuration before relying on the schedule.
 
-> **NAS prerequisite:** The `/mnt/synology/backups` directory must
-> exist on the NAS before deploying v5. Create it on the Synology
-> before running `docker compose up -d`.
+> **If `/backups` looks empty or the repo won't initialize:** the NAS
+> mount from Section 2 likely isn't in place. Run `df -h | grep
+> synology` on the host before troubleshooting Backrest itself.
 
 ---
 
-## 6. Verification Checklist
+## 7. Verification Checklist
 
-- [ ] `/mnt/synology/backups` exists on NAS before deploy
+- [ ] NAS share created and `df -h | grep synology` shows `backups` mounted on the host (Section 2)
 - [ ] `docker compose ps` shows all containers as `Up`
 - [ ] Linkwarden accessible, account created
 - [ ] Backrest accessible, repository initialized and first backup completed
+- [ ] First manual backup run from the Plans page completed without error
 - [ ] NPM proxy hosts created for Linkwarden and Backrest
