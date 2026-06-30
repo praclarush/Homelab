@@ -49,12 +49,13 @@ Initial environment buildout. Read these in order; v2 assumes v1 is already runn
 
 ## Networking
 
-Deep-dive reference guides for the reverse proxy and DNS layer. Used for
-initial setup and as an ongoing reference (adding proxy hosts, managing
-blocklists, certificate renewal).
+Deep-dive reference guides for the network, reverse proxy, and DNS layer.
+Used for initial setup and as an ongoing reference (adding proxy hosts,
+managing blocklists, certificate renewal, looking up a VLAN).
 
 | Guide | Covers |
 |-------|--------|
+| [vlan-reference.md](networking/vlan-reference.md) | Complete VLAN ID/subnet/purpose reference sheet for the whole home network, not just the homelab |
 | [nginx-proxy-manager-guide.md](networking/nginx-proxy-manager-guide.md) | Cloudflare DNS setup, Let's Encrypt wildcard certificate, every proxy host configuration, troubleshooting (502s, cert errors) |
 | [pihole-guide.md](networking/pihole-guide.md) | Network-wide DNS handoff, local DNS records, the wildcard record backing the proxy domain, blocklist (gravity) management, Teleporter backup/restore |
 

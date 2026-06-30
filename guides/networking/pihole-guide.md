@@ -175,7 +175,8 @@ docker compose logs pihole
 In the Ubiquiti controller:
 
 1. Go to **Settings > Networks**
-2. For each VLAN (11, 20, 30, 40, 50, 60, 61):
+2. For each VLAN (11, 20, 30, 31, 40, 50, 60, 61) -- see
+   [`vlan-reference.md`](vlan-reference.md) for the full list:
    - Click the VLAN to edit it
    - Under **DHCP**, set **DNS Server 1** to `192.168.11.10` (your
      VLAN 11 IP)

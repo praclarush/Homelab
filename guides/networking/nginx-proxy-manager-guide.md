@@ -338,10 +338,14 @@ Without these steps, Home Assistant returns a 400 error for all proxied requests
 
 The NAS is not a Docker container -- NPM reaches it by IP address over the network.
 
-**Firewall prerequisite:** The mini PC is on VLAN 11. If your NAS is on a different
-VLAN (e.g., VLAN 60 Personal), you need a Ubiquiti firewall rule allowing VLAN 11 to
-reach the NAS VLAN on TCP port 5000. Add this in the Ubiquiti controller under
-**Security → Firewall Rules** before testing.
+**No firewall rule needed for this.** Per
+[`vlan-reference.md`](vlan-reference.md), the NAS lives
+on VLAN 61, and the mini PC already has a direct interface there
+(`eth0.61`) -- the same one `media-gaming`'s services bind to. NPM reaches
+the NAS over that same-subnet interface with no inter-VLAN routing or
+firewall rule required. If your NAS is reachable at a different IP than
+`192.168.61.x`, confirm it's actually on VLAN 61 before troubleshooting
+NPM itself.
 
 **NAS IP placeholders:**
 

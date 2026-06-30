@@ -193,7 +193,10 @@ automatically. You do not need to replace it.
 The mini PC needs a trunk uplink from the Ubiquiti switch so it can
 have a presence on multiple VLANs simultaneously. This must be
 configured in two places: on the Ubiquiti switch port, and on the Linux
-host.
+host. See
+[`guides/networking/vlan-reference.md`](../networking/vlan-reference.md)
+for the complete VLAN plan -- this section only configures the two
+VLANs the mini PC needs a direct interface on.
 
 **On the Ubiquiti switch:**
 
@@ -203,7 +206,9 @@ host.
 4. Change the port profile from an access port (single VLAN) to a trunk:
    - Set **Native Network** to VLAN 11 (Services) -- this is the
      untagged VLAN the host uses as its primary network
-   - Under **Tagged Networks**, add VLAN 61 (Media)
+   - Under **Tagged Networks**, add VLAN 61 (NAS) -- the
+     `media-gaming` stack binds here for same-subnet NFS access to
+     the NAS, which also lives on this VLAN
    - Apply the change
 
 **On the Linux host (Netplan):**

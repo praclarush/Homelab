@@ -29,8 +29,10 @@ network:
       nameservers:
         addresses: [127.0.0.1]
 
-    # VLAN 61 (Media). v3 adds Audiobookshelf and Kavita to
-    # media-gaming, bound here alongside Immich, Jellyfin, and AMP.
+    # VLAN 61 (NAS). The Synology NAS lives here. v3 adds Audiobookshelf
+    # and Kavita to media-gaming, bound here alongside Immich, Jellyfin,
+    # and AMP for same-subnet NFS access. See
+    # guides/networking/vlan-reference.md.
     eth0.61:
       id: 61
       link: eth0
