@@ -26,22 +26,26 @@ The environment is organized into three hardware tiers:
 
 ## Documentation
 
+The `guides/` directory is organized like a wiki -- it will eventually be
+moved into the WikiJS instance this homelab runs. Start at
+[`guides/README.md`](guides/README.md) for the full index. Quick reference:
+
 | File | Purpose |
 |------|---------|
-| `homelab-v1-configuration-guide.md` | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
-| `homelab-v2-configuration-guide.md` | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
-| `nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
-| `pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
-| `git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
-| `tools-v2-guide.md` | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
-| `tools-v3-guide.md` | Tools stack v3 deployment (n8n, IT Tools) |
-| `tools-v4-guide.md` | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |
-| `tools-v5-guide.md` | Tools stack v5 deployment (Linkwarden, Backrest) |
-| `media-gaming-v3-guide.md` | Media-gaming stack v3 deployment (Audiobookshelf, Kavita) |
-| `dashboards-automation-v3-guide.md` | Dashboards-automation stack v3 deployment (Loki, Promtail) |
-| `infrastructure-networking-v3-guide.md` | Infrastructure-networking stack v3 deployment (CrowdSec) |
-| `llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
-| `compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
+| [`guides/getting-started/homelab-v1-guide.md`](guides/getting-started/homelab-v1-guide.md) | Step-by-step setup guide for v1 stacks (Linux basics, prerequisites, initial deployment) |
+| [`guides/getting-started/homelab-v2-guide.md`](guides/getting-started/homelab-v2-guide.md) | Migration guide from v1 to v2 (VLAN bindings, new services, Authentik, WikiJS, Tailscale) |
+| [`guides/networking/nginx-proxy-manager-guide.md`](guides/networking/nginx-proxy-manager-guide.md) | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| [`guides/networking/pihole-guide.md`](guides/networking/pihole-guide.md) | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| [`guides/operations/git-deployment-guide.md`](guides/operations/git-deployment-guide.md) | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
+| [`guides/stacks/tools-v2-guide.md`](guides/stacks/tools-v2-guide.md) | Tools stack v2 deployment (pgAdmin, Stirling PDF, Mealie) |
+| [`guides/stacks/tools-v3-guide.md`](guides/stacks/tools-v3-guide.md) | Tools stack v3 deployment (n8n, IT Tools) |
+| [`guides/stacks/tools-v4-guide.md`](guides/stacks/tools-v4-guide.md) | Tools stack v4 deployment (Actual Budget, Paperless-ngx, Grocy) |
+| [`guides/stacks/tools-v5-guide.md`](guides/stacks/tools-v5-guide.md) | Tools stack v5 deployment (Linkwarden, Backrest) |
+| [`guides/stacks/media-gaming-v3-guide.md`](guides/stacks/media-gaming-v3-guide.md) | Media-gaming stack v3 deployment (Audiobookshelf, Kavita) |
+| [`guides/stacks/dashboards-automation-v3-guide.md`](guides/stacks/dashboards-automation-v3-guide.md) | Dashboards-automation stack v3 deployment (Loki, Promtail) |
+| [`guides/stacks/infrastructure-networking-v3-guide.md`](guides/stacks/infrastructure-networking-v3-guide.md) | Infrastructure-networking stack v3 deployment (CrowdSec) |
+| [`guides/stacks/llm-stack-guide.md`](guides/stacks/llm-stack-guide.md) | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
+| [`stacks/compose-review-notes.md`](stacks/compose-review-notes.md) | Rationale for compose file changes, deferred Postgres migration procedure |
 
 ------------------------------------------------------------------------
 
@@ -121,7 +125,8 @@ Internal-only services (no exposed port) are marked with a dash.
 ## Directory Structure
 
 All stacks are stored under `/opt/docker/stacks/` on the host. Following
-`git-deployment-guide.md`, this path is a symlink into a clone of this
+[`guides/operations/git-deployment-guide.md`](guides/operations/git-deployment-guide.md),
+this path is a symlink into a clone of this
 repository at `/opt/docker/repo`, so config changes made on the host
 can be committed and pushed directly, and changes pushed elsewhere can
 be pulled and applied with `docker compose up -d`.
@@ -237,7 +242,7 @@ Jellyfin media is served from `/mnt/synology/media`.
 
 ### dashboards-automation
 
-`compose.v3.yaml` adds Loki and Promtail. See `dashboards-automation-v3-guide.md`.
+`compose.v3.yaml` adds Loki and Promtail. See [`guides/stacks/dashboards-automation-v3-guide.md`](guides/stacks/dashboards-automation-v3-guide.md).
 
 **Ports (v3 full state)**
 
@@ -261,7 +266,7 @@ VLAN11_IP=192.168.11.10
 **Notes**
 
 -   Prometheus requires `./prometheus/config/prometheus.yml` to exist
-    before starting. Copy it from `docker/dashboards-automation/prometheus/prometheus.yml`
+    before starting. Copy it from `stacks/dashboards-automation/prometheus/prometheus.yml`
     in the repository.
 -   node-exporter runs with `network_mode: host` for accurate system
     metrics. Prometheus reaches it via `host.docker.internal:9100`.
@@ -269,7 +274,7 @@ VLAN11_IP=192.168.11.10
     `http://prometheus:9090`
 -   Loki (v3) requires config files copied from the repo before
     deploying. After deploy, add Loki as a Grafana data source at
-    `http://loki:3100`. See `dashboards-automation-v3-guide.md`.
+    `http://loki:3100`. See [`guides/stacks/dashboards-automation-v3-guide.md`](guides/stacks/dashboards-automation-v3-guide.md).
 
 ------------------------------------------------------------------------
 
@@ -299,7 +304,7 @@ Manages stacks at `/opt/docker/stacks` on the host.
 
 ### infrastructure-networking
 
-`compose.v3.yaml` adds CrowdSec. See `infrastructure-networking-v3-guide.md`.
+`compose.v3.yaml` adds CrowdSec. See [`guides/stacks/infrastructure-networking-v3-guide.md`](guides/stacks/infrastructure-networking-v3-guide.md).
 
 **Ports**
 
@@ -327,7 +332,7 @@ VLAN11_IP=192.168.11.10
 -   NPM is proxied via direct IP only (`192.168.11.10:81`). The admin
     panel is intentionally not routed through NPM itself.
 -   Pi-hole wildcard DNS entry for `home.bremmer.zone` lives at
-    `./pihole/dnsmasq/02-local-dns.conf`. See `nginx-proxy-manager-guide.md`.
+    `./pihole/dnsmasq/02-local-dns.conf`. See [`guides/networking/nginx-proxy-manager-guide.md`](guides/networking/nginx-proxy-manager-guide.md).
 -   Remote access is provided by Tailscale. No port forwarding is
     required. See the v2 setup guide for auth key generation.
 -   Watchtower uses ntfy for update notifications. Set
@@ -337,13 +342,13 @@ VLAN11_IP=192.168.11.10
     `com.centurylinklabs.watchtower.enable=true`.
 -   CrowdSec (v3) reads NPM logs from `./npm/logs` and detects attack
     patterns. Requires the firewall bouncer installed on the host to
-    act on decisions. See `infrastructure-networking-v3-guide.md`.
+    act on decisions. See [`guides/stacks/infrastructure-networking-v3-guide.md`](guides/stacks/infrastructure-networking-v3-guide.md).
 
 ------------------------------------------------------------------------
 
 ### media-gaming
 
-`compose.v3.yaml` adds Audiobookshelf and Kavita. See `media-gaming-v3-guide.md`.
+`compose.v3.yaml` adds Audiobookshelf and Kavita. See [`guides/stacks/media-gaming-v3-guide.md`](guides/stacks/media-gaming-v3-guide.md).
 
 **Ports (v3 full state)**
 
@@ -522,7 +527,7 @@ VLAN11_IP=192.168.11.10
 -   Models are stored in `./models` and persist across container
     restarts and image updates.
 -   Pull models while internet-connected before air-gapped operation.
-    See `llm-stack-guide.md` for model recommendations and pull
+    See [`guides/stacks/llm-stack-guide.md`](guides/stacks/llm-stack-guide.md) for model recommendations and pull
     commands.
 -   Recommended model for this hardware: `qwen2.5-coder:14b` (~9 GB,
     strong at both code and general chat).

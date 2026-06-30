@@ -76,8 +76,8 @@ process before deploying.
 
 Pi-hole's web admin port binds to `${VLAN11_IP}` specifically (not
 `0.0.0.0`). The `eth0.11` interface must already be configured with its
-static IP -- see `homelab-v1-configuration-guide.md` section 2.5 if this
-has not been done.
+static IP -- see `../getting-started/homelab-v1-guide.md` section 2.5 if
+this has not been done.
 
 ---
 

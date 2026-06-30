@@ -54,7 +54,7 @@ lost, all saved credentials in n8n will need to be re-entered.
 ```bash
 cd /opt/docker/stacks/tools
 docker compose down
-cp /path/to/repo/docker/tools/compose.v3.yaml compose.yaml
+cp /path/to/repo/stacks/tools/compose.v3.yaml compose.yaml
 docker compose up -d
 ```
 

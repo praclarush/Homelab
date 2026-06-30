@@ -53,7 +53,7 @@ Bring the stack down and back up with the v2 compose file:
 ```bash
 cd /opt/docker/stacks/tools
 docker compose down
-cp /path/to/repo/docker/tools/compose.v2.yaml compose.yaml
+cp /path/to/repo/stacks/tools/compose.v2.yaml compose.yaml
 docker compose up -d
 ```
 
