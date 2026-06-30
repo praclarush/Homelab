@@ -1,0 +1,16 @@
+# /etc/fstab -- NFS lines, homelab v2
+#
+# Reference only -- see config/README.md. Append-only; do not
+# overwrite your host's actual /etc/fstab.
+#
+# No new NFS mounts are introduced at v2 -- guides/getting-started/
+# homelab-v2-guide.md adds the auth and tools stacks plus VLAN/remote
+# access changes, none of which require new NAS shares. This file is
+# identical to v1, reproduced here for a complete snapshot at this
+# version step.
+
+<nas-ip>:/volume1/immich   /mnt/synology/immich   nfs   defaults   0 0
+# ^ media-gaming stack: Immich -- photo/video uploads. (introduced v1)
+
+<nas-ip>:/volume1/media    /mnt/synology/media    nfs   defaults   0 0
+# ^ media-gaming stack: Jellyfin -- media library source. (introduced v1)
