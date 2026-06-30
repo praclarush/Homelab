@@ -42,32 +42,39 @@ logs/
 
 # ==============================
 # Application Persistent Data
+# (paths match the current docker/<stack>/ layout)
 # ==============================
 
-# Immich generated data
-media/immich/library/
-media/immich/upload/
-media/immich/thumbs/
-media/immich/encoded-video/
+# Immich generated data (model-cache holds multi-GB ML models)
+**/immich/model-cache/
 
 # AMP game server data
-media/amp/datastore/
+**/amp/datastore/
 
-# Home Assistant runtime files
-automation/config/.storage/
-automation/config/home-assistant.log*
-automation/config/*.db
-automation/config/*.db-shm
-automation/config/*.db-wal
+# Home Assistant runtime/secret files (.storage holds auth tokens, device credentials)
+**/homeassistant/config/.storage/
+**/homeassistant/config/home-assistant.log*
 
-# Pi-hole generated data
-network/etc-pihole/*.db
-network/etc-pihole/*.log
-network/etc-pihole/gravity.db
+# Pi-hole runtime data and admin password hash (pihole.toml lives here)
+**/pihole/config/
+
+# Tailscale node identity/keys
+**/tailscale/state/
 
 # Nginx Proxy Manager certificates and runtime data
-network/npm/letsencrypt/
-network/npm/logs/
+**/npm/letsencrypt/
+**/npm/logs/
+**/npm/data/
+
+# Ollama model binaries (multi-GB, never config)
+**/llm/models/
+
+# Open WebUI uploaded files
+**/open-webui/uploads/
+
+# Paperless-ngx ingested/processed documents
+**/paperless/media/
+**/paperless/consume/
 
 # ==============================
 # Backups
