@@ -1,0 +1,32 @@
+# /etc/fstab -- NFS lines
+#
+# Reference only -- see config/README.md. These are the NFS mount
+# lines to APPEND to the host's existing /etc/fstab. Do not overwrite
+# the file; it also contains your root partition, swap, and any other
+# host-specific entries not shown here.
+#
+# Source: guides/getting-started/homelab-guide.md (NAS mounts),
+# guides/stacks/media-gaming-guide.md, guides/stacks/tools-guide.md
+#
+# Replace <nas-ip> with your Synology's actual IP, and the
+# /volume1/... paths with your actual NAS shared folder paths if they
+# differ.
+
+<nas-ip>:/volume1/immich   /mnt/synology/immich   nfs   defaults   0 0
+# ^ media-gaming stack: Immich (immich-server) -- photo/video uploads.
+
+<nas-ip>:/volume1/media    /mnt/synology/media    nfs   defaults   0 0
+# ^ media-gaming stack: Jellyfin -- media library source.
+
+<nas-ip>:/volume1/audiobooks   /mnt/synology/audiobooks   nfs   defaults   0 0
+# ^ media-gaming stack: Audiobookshelf -- audiobook library.
+
+<nas-ip>:/volume1/podcasts     /mnt/synology/podcasts     nfs   defaults   0 0
+# ^ media-gaming stack: Audiobookshelf -- podcast library.
+
+<nas-ip>:/volume1/books        /mnt/synology/books        nfs   defaults   0 0
+# ^ media-gaming stack: Kavita -- ebook/comic/manga library.
+
+<nas-ip>:/volume1/backups   /mnt/synology/backups   nfs   defaults   0 0
+# ^ tools stack: Backrest -- restic backup destination for
+#   /opt/docker/stacks.
