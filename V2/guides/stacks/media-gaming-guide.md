@@ -8,8 +8,11 @@ Audiobookshelf, and Kavita.
 
 > **Prerequisite:** The base `media-gaming` stack (AMP, Immich) must
 > already be running, per the getting-started guide. The NAS shares
-> for audiobooks, podcasts, and books must be created and mounted on
-> the host before deploying Audiobookshelf and Kavita.
+> for audiobooks, podcasts, and books should already be mounted from
+> [section 2.2 of the getting-started
+> guide](../getting-started/homelab-guide.md#22-mount-the-nas-shares),
+> which covers every NAS share this repo needs in one place -- confirm
+> before deploying Audiobookshelf and Kavita.
 
 ---
 
@@ -50,60 +53,31 @@ Audiobookshelf, and Kavita containers:
 /mnt/synology/books         # Ebooks and comics (epub, cbz, pdf, etc.)
 ```
 
-`/mnt/synology/media` should already be mounted from the
-getting-started guide's base NAS setup. **Each of these must be the
-actual NAS share, mounted over NFS.** If you only create local folders
-at these paths and skip the NFS mount, Docker will start the containers
-without error, but they will scan empty local directories instead of
-your NAS library.
-
-### 2.1 Create the Shares on the Synology
-
-In DSM, for each of `audiobooks`, `podcasts`, and `books`:
-
-1. **File Station** -- create the shared folder (or use existing
-   shares if your library is already organized that way)
-2. **Control Panel > Shared Folder > Edit > NFS Permissions** -- add a
-   rule allowing your mini PC's IP, or the VLAN 61 subnet
-   (`192.168.61.0/24`)
-3. Note the NFS path DSM shows for each share, e.g. `/volume1/audiobooks`
-
-### 2.2 Mount Them on the Host
-
-```bash
-sudo nano /etc/fstab
-```
-
-Add one line per share at the bottom, replacing `<nas-ip>` and each
-share path with your actual values:
-
-```
-<nas-ip>:/volume1/audiobooks   /mnt/synology/audiobooks   nfs   defaults   0 0
-<nas-ip>:/volume1/podcasts     /mnt/synology/podcasts     nfs   defaults   0 0
-<nas-ip>:/volume1/books        /mnt/synology/books        nfs   defaults   0 0
-```
-
-Save and close (Ctrl+X, Y, Enter). Create the mount points and mount
-everything:
-
-```bash
-sudo mkdir -p /mnt/synology/audiobooks /mnt/synology/podcasts /mnt/synology/books
-sudo mount -a
-```
-
-Confirm all three mounted:
+This should already be done -- every NAS share this repo needs,
+including these four, is created and mounted in one place as part of
+the base prerequisites in
+[section 2.2 of the getting-started
+guide](../getting-started/homelab-guide.md#22-mount-the-nas-shares),
+before `media-gaming` first deploys. Confirm before proceeding:
 
 ```bash
 df -h | grep synology
 ```
 
-You should see a line for each of `audiobooks`, `podcasts`, and
-`books`, alongside the existing `immich` and `media` mounts. **Do not
-proceed to Section 3 until all three confirm** -- this is the most
-common reason a fresh Audiobookshelf or Kavita library scan comes back
-empty.
+You should see a line for each of `media`, `audiobooks`, `podcasts`,
+and `books`, alongside `immich` and `backups`. **Do not proceed to
+Section 3 until all four confirm** -- this is the most common reason a
+fresh Audiobookshelf or Kavita library scan comes back empty. **Each
+must be the actual NAS share, mounted over NFS** -- if you only create
+local folders at these paths and skip the NFS mount, Docker will start
+the containers without error, but they will scan empty local
+directories instead of your NAS library.
 
-A complete reference copy of `/etc/fstab`'s NFS lines is at
+If any are missing, set them up now following
+[section 2.2 of the getting-started guide](../getting-started/homelab-guide.md#22-mount-the-nas-shares)
+rather than mounting them only for this stack -- `auth` and `tools`
+depend on the `backups` share from that same section. A complete
+reference copy of `/etc/fstab`'s NFS lines is at
 [`config/fstab`](../../config/fstab).
 
 If your NAS paths differ from the ones above, update the volume mounts
@@ -204,7 +178,7 @@ subdirectories of `/books` if your collection is mixed.
 
 ## 6. Verification Checklist
 
-- [ ] NAS shares created and `df -h | grep synology` shows `media`, `audiobooks`, `podcasts`, and `books` all mounted on the host (Section 2)
+- [ ] `df -h | grep synology` shows `media`, `audiobooks`, `podcasts`, and `books` all mounted on the host (created in getting-started guide section 2.2, confirmed in Section 2 here)
 - [ ] `docker compose ps` shows all containers as `Up`
 - [ ] Jellyfin accessible at `http://192.168.61.10:8096`, media library scanned, hardware transcoding enabled
 - [ ] Audiobookshelf accessible at `http://192.168.61.10:13378`, libraries configured and scan completed

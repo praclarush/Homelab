@@ -34,7 +34,7 @@ services:
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
     volumes:
-      - ./authentik-postgres-backups:/backups
+      - /mnt/synology/backups/postgres-dumps/authentik:/backups
     depends_on:
       authentik-postgres:
         condition: service_healthy

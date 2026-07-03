@@ -47,49 +47,22 @@ all of the above.
 
 ---
 
-## 2. Mount the Backup NAS Share
+## 2. Confirm the Backup NAS Share Is Mounted
 
 Backrest writes backups to the host path `/mnt/synology/backups`, which
-`compose.yaml` mounts into the container as `/backups`. **That host
-path must be the actual NAS share, mounted over NFS** -- the same way
-the Immich and Jellyfin media shares were mounted in
-[getting-started/homelab-guide.md](../getting-started/homelab-guide.md#22-mount-the-base-nas-shares).
-If you skip this step, Docker silently creates an empty local folder at
-that path on the mini PC's own disk, and Backrest will happily back up
-to it with no error -- your backups simply will not be on the NAS.
+`compose.yaml` mounts into the container as `/backups`. So do the
+`wikijs-postgres-backup`, `paperless-postgres-backup`, and
+`linkwarden-postgres-backup` sidecars in this same stack, each writing
+to their own subdirectory under
+`/mnt/synology/backups/postgres-dumps/`. **That host path must be the
+actual NAS share, mounted over NFS.**
 
-### 2.1 Create the Share on the Synology
-
-In DSM:
-
-1. **File Station** -- create a `backups` shared folder (or a
-   subfolder of an existing share)
-2. **Control Panel > Shared Folder > Edit > NFS Permissions** -- add a
-   rule allowing your mini PC's IP, or the whole VLAN 11 subnet
-   (`192.168.11.0/24`)
-3. Note the NFS path DSM shows for the share, e.g. `/volume1/backups`
-
-### 2.2 Mount It on the Host
-
-```bash
-sudo nano /etc/fstab
-```
-
-Add a line at the bottom, replacing `<nas-ip>` and the share path with
-your actual values:
-
-```
-<nas-ip>:/volume1/backups   /mnt/synology/backups   nfs   defaults   0 0
-```
-
-Save and close (Ctrl+X, Y, Enter). Create the mount point and mount it:
-
-```bash
-sudo mkdir -p /mnt/synology/backups
-sudo mount -a
-```
-
-Confirm it actually mounted:
+This should already be done -- `auth` and `media-gaming` also depend on
+this same share for their own Postgres backup sidecars, so it's now
+mounted as part of the base prerequisites in
+[getting-started/homelab-guide.md](../getting-started/homelab-guide.md#22-mount-the-nas-shares),
+before any of those three stacks first deploy. Confirm it before
+proceeding:
 
 ```bash
 df -h | grep synology
@@ -97,11 +70,15 @@ df -h | grep synology
 
 You should see a line for `backups`, alongside any existing Immich or
 media mounts. **Do not proceed to Section 4 until this confirms** --
-deploying Backrest before this mount exists is the most common way
-backups end up on local disk instead of the NAS.
+deploying Backrest (or the Postgres backup sidecars in `auth` and
+`media-gaming`) before this mount exists is the most common way backups
+end up on local disk instead of the NAS, silently and with no error.
 
-A complete reference copy of `/etc/fstab`'s NFS lines is at
-[`config/fstab`](../../config/fstab).
+If it's not mounted yet, set it up now following
+[section 2.2 of the getting-started guide](../getting-started/homelab-guide.md#22-mount-the-nas-shares)
+rather than mounting it only for this stack -- `auth` and
+`media-gaming` need it too. A complete reference copy of `/etc/fstab`'s
+NFS lines is at [`config/fstab`](../../config/fstab).
 
 ---
 
@@ -327,7 +304,7 @@ configuration before relying on the schedule.
 
 ## 7. Verification Checklist
 
-- [ ] NAS share created and `df -h | grep synology` shows `backups` mounted on the host (Section 2)
+- [ ] `df -h | grep synology` shows `backups` mounted on the host (created in getting-started guide section 2.2, confirmed in Section 2 here)
 - [ ] `docker compose ps` shows all containers as `Up`
 - [ ] pgAdmin accessible at `http://192.168.11.10:5050`
 - [ ] Stirling PDF accessible at `http://192.168.11.10:8083`

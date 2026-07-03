@@ -55,7 +55,7 @@ services:
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
     volumes:
-      - ./wikijs-postgres-backups:/backups
+      - /mnt/synology/backups/postgres-dumps/wikijs:/backups
     depends_on:
       wikijs-postgres:
         condition: service_healthy
@@ -199,7 +199,7 @@ services:
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
     volumes:
-      - ./paperless-postgres-backups:/backups
+      - /mnt/synology/backups/postgres-dumps/paperless:/backups
     depends_on:
       paperless-postgres:
         condition: service_healthy
@@ -287,7 +287,7 @@ services:
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
     volumes:
-      - ./linkwarden-postgres-backups:/backups
+      - /mnt/synology/backups/postgres-dumps/linkwarden:/backups
     depends_on:
       linkwarden-postgres:
         condition: service_healthy

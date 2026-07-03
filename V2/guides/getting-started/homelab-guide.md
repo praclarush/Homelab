@@ -126,33 +126,68 @@ sudo ss -tulnp | grep :53
 The output should be empty. If anything is still listed, find and stop
 that process before continuing.
 
-### 2.2 Mount the Base NAS Shares
+### 2.2 Mount the NAS Shares
 
-Immich stores uploaded photos on the Synology NAS and Jellyfin serves
-its media library from there too. Both NFS shares must be mounted on
-the host before starting the `media-gaming` stack, or the containers
-will create a local directory instead of writing to the NAS.
+This section mounts every NAS share any stack in this repo depends on,
+in one place, before you deploy anything. There are six:
 
-Check whether the mounts are present:
+| Share | Host path | Used by |
+|-------|-----------|---------|
+| `immich` | `/mnt/synology/immich` | `media-gaming`: Immich photo/video uploads |
+| `media` | `/mnt/synology/media` | `media-gaming`: Jellyfin media library |
+| `audiobooks` | `/mnt/synology/audiobooks` | `media-gaming`: Audiobookshelf audiobooks |
+| `podcasts` | `/mnt/synology/podcasts` | `media-gaming`: Audiobookshelf podcasts |
+| `books` | `/mnt/synology/books` | `media-gaming`: Kavita ebooks/comics |
+| `backups` | `/mnt/synology/backups` | `auth`, `media-gaming`, `tools`: nightly Postgres dumps (section 6.2) plus Backrest's restic destination |
+
+Skipping any of these doesn't produce an error -- Docker just creates
+an empty local folder at that path on the mini PC's own disk and the
+container starts normally, silently writing to local storage instead
+of the NAS. You won't notice until a library scan comes back empty or,
+worse, a "backup" turns out to have been sitting on the same disk that
+just failed.
+
+#### 2.2.1 Create the Shares on the Synology
+
+In DSM, for each of the six shares above:
+
+1. **File Station** -- create the shared folder (or use an existing
+   share/subfolder if your NAS is already organized that way)
+2. **Control Panel > Shared Folder > Edit > NFS Permissions** -- add a
+   rule allowing the mini PC's VLAN 61 IP specifically
+   (`192.168.61.10`), not a whole subnet -- the mini PC is the only NFS
+   client here. Every NAS mount from the host goes out its VLAN 61
+   interface regardless of which VLAN the Docker stack consuming that
+   share is bound to, since that's the interface on the NAS's own
+   subnet. See
+   [`networking/vlan-reference.md`](../networking/vlan-reference.md).
+3. Note the NFS path DSM shows for each share, e.g. `/volume1/immich`
+
+#### 2.2.2 Mount Them on the Host
+
+Check whether the mounts are already present:
 
 ```bash
-ls /mnt/synology/immich
-ls /mnt/synology/media
+df -h | grep synology
 ```
 
-If a path does not exist, add the NFS share to `/etc/fstab` (the Linux
-equivalent of persistent drive mappings) and mount it.
+If any are missing, add the NFS shares to `/etc/fstab` (the Linux
+equivalent of persistent drive mappings):
 
-Open fstab:
 ```bash
 sudo nano /etc/fstab
 ```
 
-Add two lines at the bottom in this format -- one for Immich's
-uploads, one for Jellyfin's media library:
+Add one line per share at the bottom, replacing `<nas-ip>` and each
+share path with your actual values:
+
 ```
-<nas-ip>:/volume1/immich   /mnt/synology/immich   nfs   defaults   0 0
-<nas-ip>:/volume1/media    /mnt/synology/media    nfs   defaults   0 0
+<nas-ip>:/volume1/immich      /mnt/synology/immich      nfs   defaults   0 0
+<nas-ip>:/volume1/media       /mnt/synology/media       nfs   defaults   0 0
+<nas-ip>:/volume1/audiobooks  /mnt/synology/audiobooks  nfs   defaults   0 0
+<nas-ip>:/volume1/podcasts    /mnt/synology/podcasts    nfs   defaults   0 0
+<nas-ip>:/volume1/books       /mnt/synology/books       nfs   defaults   0 0
+<nas-ip>:/volume1/backups     /mnt/synology/backups     nfs   defaults   0 0
 ```
 
 Replace `<nas-ip>` with your Synology's IP and the `/volume1/...`
@@ -160,25 +195,23 @@ paths with your actual shared folder paths. Save the file (Ctrl+X, Y,
 Enter). A complete reference copy of this file is at
 [`config/fstab`](../../config/fstab).
 
-Create the mount point and mount everything:
+Create the mount points and mount everything:
 ```bash
-sudo mkdir -p /mnt/synology/immich
-sudo mkdir -p /mnt/synology/media
+sudo mkdir -p /mnt/synology/immich /mnt/synology/media /mnt/synology/audiobooks /mnt/synology/podcasts /mnt/synology/books /mnt/synology/backups
 sudo mount -a
 ```
 
-Confirm the mount is active:
+Confirm every mount is active:
 ```bash
 df -h | grep synology
 ```
 
-You should see a line showing the NAS share and its available space.
-
-> Audiobookshelf, Kavita, and Backrest need additional NAS shares of
-> their own. Those are covered in
-> [media-gaming-guide.md](../stacks/media-gaming-guide.md) and
-> [tools-guide.md](../stacks/tools-guide.md) respectively -- mount them
-> when you get to those sections, not here.
+You should see all six shares listed with their available space.
+**Do not proceed past this point until all six confirm** -- this one
+check covers every stack's NAS dependency in this repo
+(`media-gaming`, `auth`, and `tools`), so it's cheaper to fix now than
+to debug an empty library scan or a backup that silently landed on
+local disk later.
 
 ### 2.3 Confirm Intel Quick Sync
 
@@ -659,6 +692,30 @@ You should see the scrape configuration with jobs for `prometheus` and
 > Loki and Promtail need their own config files, copied when you
 > deploy them -- see
 > [dashboards-automation-guide.md](../stacks/dashboards-automation-guide.md).
+
+### 6.2 Postgres Backup Destinations
+
+Every Postgres-backed service (Authentik in `auth`; Immich in
+`media-gaming`; WikiJS, Paperless-ngx, and Linkwarden in `tools`) has a
+`*-postgres-backup` sidecar that runs a nightly `pg_dump`. All five
+write directly to the NAS share mounted in section 2.2, not to local
+disk -- specifically to
+`/mnt/synology/backups/postgres-dumps/<service>/` on the host, which
+`compose.yaml` bind-mounts into each sidecar as `/backups`. This is
+deliberate: if these wrote to local disk, a dead mini PC would take out
+the live database and its "backup" at the same moment.
+
+Nothing to copy here -- Docker creates the per-service subdirectories
+under `/mnt/synology/backups/postgres-dumps/` automatically on first
+start, as long as `/mnt/synology/backups` is already mounted per
+section 2.2. If you skip that mount, Docker silently creates the same
+subdirectories on the mini PC's own disk instead, with no error, and
+you won't find out until you actually need a restore. Confirm the
+mount before deploying `auth`, `media-gaming`, or `tools`:
+
+```bash
+df -h | grep synology
+```
 
 ---
 
@@ -1175,7 +1232,7 @@ should pass before considering the deployment complete.
 | Pi-hole resolving DNS | Run `nslookup google.com 192.168.11.10` from your Windows machine -- should return an IP |
 | Watchtower running | `docker ps \| grep watchtower` shows `Up` |
 | ntfy loads, test notification received | `http://192.168.11.10:8082`; run the test command from section 8.9 |
-| NAS mounts present | `df -h \| grep synology` shows `immich` and `media` |
+| NAS mounts present | `df -h \| grep synology` shows all six: `immich`, `media`, `audiobooks`, `podcasts`, `books`, `backups` |
 | Intel QS available | `ls /dev/dri` shows `card0` and `renderD128` |
 | Immich loads | Browse to `http://192.168.61.10:2283` |
 | Immich ML connected | Administration > Jobs shows machine learning green |
