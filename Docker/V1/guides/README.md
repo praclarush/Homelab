@@ -12,7 +12,7 @@ covered earlier (a VLAN being configured, a stack already being deployed),
 it says so explicitly and points back to the specific section.
 
 For the service inventory, port list, and `.env` file reference, see the
-[repository root README](../README.md) instead -- it is the quick-reference
+[repository root README](../../../README.md) instead -- it is the quick-reference
 doc, not a how-to guide.
 
 For complete, version-stepped copies of the host-level Linux config
