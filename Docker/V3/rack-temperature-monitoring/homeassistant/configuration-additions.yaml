@@ -1,0 +1,17 @@
+# Merge this into the existing configuration.yaml at
+# /opt/docker/stacks/dashboards-automation/homeassistant/config/configuration.yaml
+# (that file is gitignored runtime state, not tracked in this repo).
+#
+# If a top-level `rest_command:` key already exists there, add
+# `ntfy_rack_alert` under it instead of duplicating the key.
+
+rest_command:
+  ntfy_rack_alert:
+    url: "http://ntfy:80/rack-temp"
+    method: POST
+    headers:
+      Title: "Server Rack Alert"
+      Priority: "high"
+      Tags: "warning,thermometer"
+    content_type: "text/plain"
+    payload: "{{ message }}"

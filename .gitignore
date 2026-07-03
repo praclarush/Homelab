@@ -72,6 +72,9 @@ logs/
 # Open WebUI uploaded files
 **/open-webui/uploads/
 
+# ESPHome secrets (WiFi credentials, API/OTA keys)
+**/esphome/secrets.yaml
+
 # Paperless-ngx ingested/processed documents
 **/paperless/media/
 **/paperless/consume/
