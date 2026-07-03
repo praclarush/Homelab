@@ -1,0 +1,8 @@
+# Add to Docker/V2/stacks/dashboards-automation/.env.example (blank, as a
+# template) and to the real, gitignored .env on the host (real values).
+#
+# Must match the "zigbee2mqtt" user's password created in Mosquitto's
+# password file -- see "Set Up Mosquitto Authentication" in README.md.
+
+ZIGBEE2MQTT_MQTT_USER=zigbee2mqtt
+ZIGBEE2MQTT_MQTT_PASSWORD=

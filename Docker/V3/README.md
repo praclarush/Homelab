@@ -27,3 +27,4 @@ change has been verified working:
 | [rack-temperature-monitoring](rack-temperature-monitoring/README.md) | ESP32 dev board (unpurchased) | TempPro TP350 rack temperature/humidity sensor, read via an ESPHome Bluetooth proxy, alerting through Home Assistant and ntfy |
 | [pc-temperature-alerting](pc-temperature-alerting/README.md) | Confirming `node_hwmon_temp_celsius` has data | Mini PC temperature via the existing node-exporter/Prometheus, alerting through Home Assistant and ntfy |
 | [unifi-temperature-monitoring](unifi-temperature-monitoring/README.md) | Local read-only UniFi account | UniFi switch/UDM Pro temperature via `unpoller` into Prometheus, alerting through Grafana and ntfy |
+| [zigbee-smart-home](zigbee-smart-home/README.md) | Zigbee coordinator (unpurchased, SLZB-06 recommended) | Zigbee2MQTT + Mosquitto bridging a network-attached coordinator into Home Assistant via MQTT discovery |
