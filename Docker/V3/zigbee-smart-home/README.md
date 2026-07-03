@@ -75,6 +75,20 @@ step 5.
 Copy `mosquitto/mosquitto.conf` from this folder to
 `/opt/docker/stacks/dashboards-automation/mosquitto/config/mosquitto.conf`.
 
+The `eclipse-mosquitto` image runs as a non-root `mosquitto` user
+(UID/GID `1883`) by default. If `./mosquitto/data` and `./mosquitto/log`
+don't exist before the container's first start, Docker auto-creates them
+as root-owned, and Mosquitto fails to write its persistence file and log
+(`Error: Unable to open log file` / permission denied) and crash-loops.
+Create and own them explicitly before step 4:
+
+```bash
+mkdir -p /opt/docker/stacks/dashboards-automation/mosquitto/data \
+         /opt/docker/stacks/dashboards-automation/mosquitto/log
+chown -R 1883:1883 /opt/docker/stacks/dashboards-automation/mosquitto/data \
+                    /opt/docker/stacks/dashboards-automation/mosquitto/log
+```
+
 ### 2. Merge Compose and Env Changes
 
 - Add both service blocks from `compose/mosquitto-service-addition.yaml`
