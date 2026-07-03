@@ -1,0 +1,32 @@
+---
+# Top strip of the dashboard, left to right.
+# "resources" tiles mirror the per-node CPU/disk meters in the reference
+# screenshot. You only have one Docker host + one NAS, so there are two
+# tiles instead of six — add more blocks here later if you split hosts.
+
+- resources:
+    label: mini-pc
+    cpu: true
+    memory: true
+    disk: /
+
+- resources:
+    label: synology-nas
+    disk: /mnt/synology
+
+- datetime:
+    text_size: xl
+    format:
+      dateStyle: long
+      timeStyle: short
+      hourCycle: h12
+
+# Open-Meteo needs no API key. Replace latitude/longitude/timezone with
+# your actual location — these are placeholder values.
+- openmeteo:
+    label: Home
+    latitude: 39.0
+    longitude: -76.0
+    timezone: America/New_York
+    units: imperial
+    cache: 5

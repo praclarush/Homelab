@@ -1,0 +1,14 @@
+---
+# Homepage reads container state through the Docker socket to show the
+# green "RUNNING" pill on each card. Mount the socket read-only into the
+# homepage container in compose.yaml:
+#
+#   volumes:
+#     - /var/run/docker.sock:/var/run/docker.sock:ro
+#
+# my-docker is just a label — reference it from services.yaml as:
+#   container: <container_name>
+#   server: my-docker
+
+my-docker:
+  socket: /var/run/docker.sock
