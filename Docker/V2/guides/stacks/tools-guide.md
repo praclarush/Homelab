@@ -170,6 +170,12 @@ ports, not the host-mapped ports.
 
 n8n requires websockets enabled for its editor to function correctly.
 
+> **IT Tools and Stirling PDF have no login of their own** (see Section 6
+> below). Once their proxy hosts exist, put them behind Authentik forward
+> auth following
+> [Section 5.3 of the NPM guide](../networking/nginx-proxy-manager-guide.md#section-53-authentik-forward-auth-for-no-login-services) --
+> otherwise anyone on VLAN 11 reaches them with zero credentials.
+
 ---
 
 ## 6. First-Time Service Setup
@@ -311,6 +317,7 @@ configuration before relying on the schedule.
 - [ ] Mealie accessible at `http://192.168.11.10:9925`, default password changed
 - [ ] n8n accessible at `http://192.168.11.10:5678`, owner account created
 - [ ] IT Tools accessible at `http://192.168.11.10:8084`
+- [ ] IT Tools and Stirling PDF proxy hosts are behind Authentik forward auth (NPM guide Section 5.3) -- unauthenticated browsing to `it-tools.home.bremmer.zone` or `pdf.home.bremmer.zone` redirects to an Authentik login
 - [ ] Actual Budget accessible at `http://192.168.11.10:5006`
 - [ ] Paperless-ngx admin account created via `createsuperuser`; accessible at `http://192.168.11.10:8085`
 - [ ] Grocy accessible at `http://192.168.11.10:9283`, default password changed
