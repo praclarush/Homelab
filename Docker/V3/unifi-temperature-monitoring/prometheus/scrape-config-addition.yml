@@ -1,0 +1,13 @@
+# Add this job to the scrape_configs list in
+# Docker/V2/stacks/dashboards-automation/prometheus/prometheus.yml
+#
+# NOTE: compose.yaml currently mounts ./prometheus/config:/etc/prometheus,
+# but the tracked file in this repo lives at ./prometheus/prometheus.yml
+# (no config/ subfolder). Confirm which path is actually correct on the
+# live host before assuming an edit to the repo's prometheus.yml takes
+# effect -- this mismatch predates this change and isn't specific to it.
+
+  - job_name: 'unpoller'
+    scrape_interval: 60s
+    static_configs:
+      - targets: ['unpoller:9130']

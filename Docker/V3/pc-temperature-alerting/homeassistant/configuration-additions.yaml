@@ -1,0 +1,35 @@
+# Merge into the existing configuration.yaml at
+# /opt/docker/stacks/dashboards-automation/homeassistant/config/configuration.yaml
+# (that file is gitignored runtime state, not tracked in this repo).
+#
+# If `rest:` or `rest_command:` top-level keys already exist there (e.g. from
+# the rack-temperature-monitoring item), add these entries under the
+# existing keys instead of duplicating them.
+#
+# Reaches Prometheus by container name since homeassistant and prometheus
+# are both on proxy_net.
+
+rest:
+  - resource: "http://prometheus:9090/api/v1/query"
+    method: GET
+    params:
+      query: "max(node_hwmon_temp_celsius)"
+    scan_interval: 30
+    sensor:
+      - name: "Mini PC Max Temperature"
+        unique_id: mini_pc_max_temperature
+        value_template: "{{ (value_json.data.result[0].value[1] | float(0)) | round(1) }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+
+rest_command:
+  ntfy_pc_temp_alert:
+    url: "http://ntfy:80/pc-temp"
+    method: POST
+    headers:
+      Title: "Mini PC High Temperature"
+      Priority: "high"
+      Tags: "warning,fire"
+    content_type: "text/plain"
+    payload: "{{ message }}"

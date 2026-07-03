@@ -1,0 +1,22 @@
+# Add this service to Docker/V2/stacks/dashboards-automation/compose.yaml
+# (indent to match the existing `services:` block).
+
+  unpoller:
+    container_name: unpoller
+    image: ghcr.io/unpoller/unpoller:latest
+    environment:
+      - UP_UNIFI_DEFAULT_URL=${UNIFI_CONTROLLER_URL}
+      - UP_UNIFI_DEFAULT_USER=${UNIFI_POLLER_USER}
+      - UP_UNIFI_DEFAULT_PASS=${UNIFI_POLLER_PASS}
+      # UDM Pro's controller normally uses a self-signed cert unless you've
+      # replaced it -- verification is off by default in unpoller's own
+      # example config too. Flip to true if you've installed a trusted cert.
+      - UP_UNIFI_DEFAULT_VERIFY_SSL=false
+      - UP_PROMETHEUS_HTTP_LISTEN=0.0.0.0:9130
+    ports:
+      - "${VLAN11_IP}:9130:9130"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
