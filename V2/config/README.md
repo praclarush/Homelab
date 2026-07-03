@@ -38,10 +38,12 @@ from the package, not from this repository, and are not reproduced here.
 
 **`netplan-00-installer-config.yaml` genuinely is a complete file** --
 the getting-started guide has you replace the whole file's contents,
-so the copy here is the full, ready-to-adapt file. You still need to
-substitute your actual interface name (`eth0` is a placeholder --
-check with `ip link show`) and your actual VLAN subnet addresses if
-they differ from the examples used throughout the guides.
+so the copy here is the full, ready-to-adapt file. It reflects the
+actual interface name (`enp171s0`) and VLAN addressing in use on the
+mini PC, confirmed against `ip addr` on the host. If you reimage the
+host or swap hardware, the interface name may change -- check with
+`ip link show` and update this file and the getting-started guide to
+match.
 
 ## Source of Truth
 

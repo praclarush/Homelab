@@ -13,14 +13,14 @@ household network segmentation and have no Docker-relevant content.
 | VLAN ID | Name | Subnet | Gateway | Purpose / Typical Devices | Mini PC Presence |
 |---------|------|--------|---------|---------------------------|-------------------|
 | 1 | Default | `192.168.10.0/24` | `192.168.10.1` | Factory/native management VLAN. No client devices expected here. | No |
-| 11 | Services | `192.168.11.0/24` | `192.168.11.1` | Homelab management plane. Every stack except `media-gaming` binds here. | **Yes** -- `eth0.11`, static `192.168.11.10` |
+| 11 | Services | `192.168.11.0/24` | `192.168.11.1` | Homelab management plane. Every stack except `media-gaming` binds here. | **Yes** -- untagged/native on `enp171s0`, static `192.168.11.10` |
 | 20 | Guest | `192.168.20.0/24` | `192.168.20.1` | Guest Wi-Fi, isolated from every other VLAN. | No |
 | 30 | IOT | `192.168.30.0/24` | `192.168.30.1` | Smart-home devices -- bulbs, plugs, sensors. | No |
 | 31 | Media | `192.168.31.0/24` | `192.168.31.1` | Streaming/casting **client** devices -- Fire TV/Firestick, game consoles. Not the homelab `media-gaming` Docker stack -- see note below. | No |
 | 40 | Camera | `192.168.40.0/24` | `192.168.40.1` | IP cameras, NVR. | No |
 | 50 | Work | `192.168.50.0/24` | `192.168.50.1` | Work/corporate devices, isolated from the home network. | No |
 | 60 | Personal | `192.168.60.0/24` | `192.168.60.1` | Personal/trusted client devices -- phones, laptops. | No |
-| 61 | NAS | `192.168.61.0/24` | `192.168.61.1` | Synology NAS. | **Yes** -- `eth0.61`, static `192.168.61.10` -- see note below |
+| 61 | NAS | `192.168.61.0/24` | `192.168.61.1` | Synology NAS. | **Yes** -- tagged `vlan61`, static `192.168.61.10` -- see note below |
 
 Gateway is `192.168.<VLAN ID>.1` for every VLAN **except VLAN 1**,
 which deliberately uses `192.168.10.0/24` instead of `192.168.1.0/24`
@@ -29,12 +29,22 @@ which deliberately uses `192.168.10.0/24` instead of `192.168.1.0/24`
 avoids collisions when an unconfigured device lands there before being
 moved to its proper VLAN.
 
-The mini PC only has a direct interface on VLANs 11 and 61
-(`eth0.11`/`eth0.61` in
-[`config/netplan-00-installer-config.yaml`](../../config/netplan-00-installer-config.yaml)).
-It reaches every other VLAN only insofar as Ubiquiti's inter-VLAN
-routing and firewall rules allow it -- e.g. Pi-hole answering DNS
-queries from Guest or IoT clients.
+The mini PC only has a direct interface on VLANs 11 and 61, as
+configured in
+[`config/netplan-00-installer-config.yaml`](../../config/netplan-00-installer-config.yaml).
+VLAN 11 is untagged/native on the physical interface (`enp171s0`
+itself carries `192.168.11.10`); VLAN 61 is tagged via a separate
+`vlan61` interface carrying `192.168.61.10`. The mini PC reaches every
+other VLAN only insofar as Ubiquiti's inter-VLAN routing and firewall
+rules allow it -- e.g. Pi-hole answering DNS queries from Guest or IoT
+clients.
+
+> **Note:** `ip addr` on the host may also show a `vlan11` interface
+> with no IPv4 address. That's a leftover from an earlier config that
+> tagged VLAN 11 instead of putting it directly on `enp171s0` --
+> netplan/networkd don't tear down old VLAN netdevs without a reboot
+> or `ip link delete vlan11`. It's harmless and carries no traffic; the
+> current netplan config (above) does not define it.
 
 ---
 

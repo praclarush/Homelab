@@ -251,20 +251,20 @@ You will see a file named something like `00-installer-config.yaml` or
 sudo nano /etc/netplan/00-installer-config.yaml
 ```
 
-Replace the contents with the following, adjusting `eth0` to match your
-actual network interface name (check with `ip link show`) and replacing
-the IP addresses with your actual VLAN subnet addresses:
+Replace the contents with the following, adjusting `enp171s0` to match
+your actual network interface name (check with `ip link show`) and
+replacing the IP addresses with your actual VLAN subnet addresses.
+VLAN 11 is untagged/native on this switch port, so it's configured
+directly on the physical interface rather than as a tagged VLAN
+sub-interface; VLAN 61 is tagged, so it gets its own `vlans:` entry:
 
 ```yaml
 network:
   version: 2
+  renderer: networkd
   ethernets:
-    eth0:
+    enp171s0:
       dhcp4: false
-  vlans:
-    eth0.11:
-      id: 11
-      link: eth0
       addresses:
         - 192.168.11.10/24
       routes:
@@ -272,16 +272,17 @@ network:
           via: 192.168.11.1
       nameservers:
         addresses: [127.0.0.1]
-    eth0.61:
+  vlans:
+    vlan61:
       id: 61
-      link: eth0
+      link: enp171s0
       addresses:
         - 192.168.61.10/24
 ```
 
 > **VLAN 61 IP reservation:** `192.168.61.10` is the suggested static IP for the mini PC on VLAN 61. VLAN 61 is newly created and has no existing devices. Before running `netplan apply`, open the Ubiquiti controller and add a fixed IP reservation for the mini PC's MAC address at `192.168.61.10` on VLAN 61, or confirm your DHCP pool for VLAN 61 starts above `.10`. Ubiquiti creates the VLAN gateway (`192.168.61.1`) automatically when the VLAN is configured.
 
-> **Important:** The `nameservers` entry on `eth0.11` points to
+> **Important:** The `nameservers` entry on `enp171s0` points to
 > `127.0.0.1`. This is intentional -- once Pi-hole is running, the
 > host itself will use it for DNS. Leave this as-is.
 
@@ -301,22 +302,23 @@ sudo netplan apply
 Verify both interfaces are up:
 
 ```bash
-ip addr show eth0.11
-ip addr show eth0.61
+ip addr show enp171s0
+ip addr show vlan61
 ```
 
 Each should show its assigned IP address and `state UP`.
 
 **Find your network interface name:**
 
-If `eth0` does not exist on your system, find the correct name with:
+If `enp171s0` does not exist on your system, find the correct name with:
 
 ```bash
 ip link show
 ```
 
-Common names are `eth0`, `ens18`, `enp3s0`, or `enp0s3`. Replace `eth0`
-everywhere in the Netplan config with whatever name you see.
+Common names are `eth0`, `ens18`, `enp3s0`, `enp0s3`, or `enp171s0`.
+Replace `enp171s0` everywhere in the Netplan config with whatever name
+you see.
 
 ### 2.6 Copy Compose Files to the Host
 
@@ -505,7 +507,7 @@ GRAFANA_PASSWORD=your-grafana-password
 VLAN11_IP=192.168.11.10
 ```
 
-Replace `192.168.11.10` with the actual IP you assigned to `eth0.11`
+Replace `192.168.11.10` with the actual IP you assigned to `enp171s0`
 in the Netplan config.
 
 ### 5.2 dockge
@@ -547,7 +549,7 @@ DB_DATABASE_NAME=immich
 VLAN61_IP=192.168.61.10
 ```
 
-`VLAN61_IP` must match the IP configured for `eth0.61` in the Netplan
+`VLAN61_IP` must match the IP configured for `vlan61` in the Netplan
 config.
 
 > **Important:** Set `DB_PASSWORD` before you start the stack for the

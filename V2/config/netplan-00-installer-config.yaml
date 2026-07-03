@@ -6,28 +6,21 @@
 # Source: guides/getting-started/homelab-guide.md (Configure the
 # Trunk Port and VLAN Sub-Interfaces)
 #
-# Before using:
-#   - The actual filename under /etc/netplan/ may differ
-#     (e.g. 01-netcfg.yaml) -- check with `ls /etc/netplan/` first.
-#   - Replace "eth0" everywhere with your host's real interface name,
-#     found via `ip link show` (common names: eth0, ens18, enp3s0).
-#   - Replace the VLAN 11 and VLAN 61 addresses/gateway below with
-#     your actual subnet if it differs from the example used
-#     throughout these guides.
+# This is the actual file in use on the mini PC (confirmed against
+# `ip addr` on the host). If you reimage the host or swap hardware,
+# the interface name may differ -- check with `ip link show` first.
 
 network:
   version: 2
+  renderer: networkd
   ethernets:
-    eth0:
+    # VLAN 11 (Services) -- the untagged/native VLAN on this switch
+    # port, so it's configured directly on the physical interface
+    # rather than as a tagged VLAN sub-interface. Every stack except
+    # media-gaming binds its host ports here: dashboards-automation,
+    # dockge, infrastructure-networking, auth, tools, llm.
+    enp171s0:
       dhcp4: false
-  vlans:
-    # VLAN 11 (Services) -- the untagged/native VLAN. Every stack
-    # except media-gaming binds its host ports here:
-    # dashboards-automation, dockge, infrastructure-networking, auth,
-    # tools, llm.
-    eth0.11:
-      id: 11
-      link: eth0
       addresses:
         - 192.168.11.10/24
       routes:
@@ -38,15 +31,15 @@ network:
       # guides/getting-started/homelab-guide.md.
       nameservers:
         addresses: [127.0.0.1]
-
+  vlans:
     # VLAN 61 (NAS) -- tagged. The Synology NAS lives here; media-gaming
     # (Immich, Jellyfin, AMP, Audiobookshelf, Kavita) binds its host
     # ports on this same VLAN for same-subnet NFS access to NAS storage.
     # No default route or nameserver entry -- this interface is reached
     # only for media-gaming's bound services and NAS access, not used
     # for general host traffic. See guides/networking/vlan-reference.md.
-    eth0.61:
+    vlan61:
       id: 61
-      link: eth0
+      link: enp171s0
       addresses:
         - 192.168.61.10/24
