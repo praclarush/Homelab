@@ -2,7 +2,8 @@
 
 `Docker/V3/` holds changes that are designed and ready to apply but not yet
 deployed to the live homelab, because they depend on something not yet in
-place -- usually new physical hardware. It sits alongside `Docker/V1/`
+place -- new physical hardware, an unverified assumption, or a credential/
+account that needs to be created first. It sits alongside `Docker/V1/`
 (historical, do not add to) and `Docker/V2/` (the live, deployed state).
 
 Nothing under `V3/` is running. Each subfolder is one staged item and is
@@ -24,3 +25,5 @@ change has been verified working:
 | Item | Depends on | Summary |
 |------|-----------|---------|
 | [rack-temperature-monitoring](rack-temperature-monitoring/README.md) | ESP32 dev board (unpurchased) | TempPro TP350 rack temperature/humidity sensor, read via an ESPHome Bluetooth proxy, alerting through Home Assistant and ntfy |
+| [pc-temperature-alerting](pc-temperature-alerting/README.md) | Confirming `node_hwmon_temp_celsius` has data | Mini PC temperature via the existing node-exporter/Prometheus, alerting through Home Assistant and ntfy |
+| [unifi-temperature-monitoring](unifi-temperature-monitoring/README.md) | Local read-only UniFi account | UniFi switch/UDM Pro temperature via `unpoller` into Prometheus, alerting through Grafana and ntfy |

@@ -1,0 +1,17 @@
+# Add to Docker/V2/stacks/dashboards-automation/.env.example (with blank
+# values, as a template) and to the real, gitignored .env on the host
+# (with real values).
+#
+# UNIFI_CONTROLLER_URL: the UDM Pro's controller URL. For UniFi OS devices
+# (UDM, UDM Pro, UDM SE, UXG, or a CloudKey on recent firmware) this is just
+# https://<ip>, with NO :8443 suffix -- that port is for older, non-UniFi-OS
+# controllers only.
+#
+# UNIFI_POLLER_USER / UNIFI_POLLER_PASS: credentials for the local,
+# least-privilege read-only account created for this poller (see the
+# "Create a Read-Only UniFi Account" section in README.md) -- not your
+# normal admin login.
+
+UNIFI_CONTROLLER_URL=https://<udm-pro-ip>
+UNIFI_POLLER_USER=
+UNIFI_POLLER_PASS=

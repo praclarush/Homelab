@@ -1,0 +1,25 @@
+# Append to the automations list at
+# /opt/docker/stacks/dashboards-automation/homeassistant/config/automations.yaml
+# (that file is gitignored runtime state, not tracked in this repo).
+
+- id: pc_temp_high_alert
+  alias: "Mini PC - High Temperature Alert"
+  description: >
+    Sends an ntfy notification when the mini PC's hottest hwmon sensor
+    (read from node-exporter via Prometheus) stays above 80°C for 5
+    minutes.
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.mini_pc_max_temperature
+      above: 80
+      for:
+        minutes: 5
+  condition: []
+  action:
+    - service: rest_command.ntfy_pc_temp_alert
+      data:
+        message: >
+          Mini PC temperature is
+          {{ states('sensor.mini_pc_max_temperature') }}°C
+          (threshold: 80°C).
+  mode: single
