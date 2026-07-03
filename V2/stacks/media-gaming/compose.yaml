@@ -86,7 +86,7 @@ services:
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
     volumes:
-      - ./immich-postgres-backups:/backups
+      - /mnt/synology/backups/postgres-dumps/immich:/backups
     depends_on:
       immich-database:
         condition: service_healthy

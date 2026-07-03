@@ -5,8 +5,11 @@
 # the file; it also contains your root partition, swap, and any other
 # host-specific entries not shown here.
 #
-# Source: guides/getting-started/homelab-guide.md (NAS mounts),
-# guides/stacks/media-gaming-guide.md, guides/stacks/tools-guide.md
+# Source: guides/getting-started/homelab-guide.md section 2.2 (Mount
+# the NAS Shares) -- this is the single place all six shares below are
+# created and mounted, before any stack that depends on one first
+# deploys. media-gaming-guide.md and tools-guide.md only confirm these
+# mounts are present; they don't create them.
 #
 # Replace <nas-ip> with your Synology's actual IP, and the
 # /volume1/... paths with your actual NAS shared folder paths if they
@@ -28,5 +31,8 @@
 # ^ media-gaming stack: Kavita -- ebook/comic/manga library.
 
 <nas-ip>:/volume1/backups   /mnt/synology/backups   nfs   defaults   0 0
-# ^ tools stack: Backrest -- restic backup destination for
+# ^ auth, media-gaming, tools stacks: nightly Postgres pg_dump sidecars
+#   (Authentik, Immich, WikiJS, Paperless-ngx, Linkwarden) write to
+#   /mnt/synology/backups/postgres-dumps/<service>/ here. tools stack:
+#   Backrest also uses this share as its restic backup destination for
 #   /opt/docker/stacks.

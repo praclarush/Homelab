@@ -240,9 +240,14 @@ sudo systemctl disable systemd-resolved
 
 ### Mount Synology Storage
 
-NFS shares must be permanently mounted via `/etc/fstab` before starting
-`media-gaming`. Immich uploads go to `/mnt/synology/immich` and
-Jellyfin media is served from `/mnt/synology/media`.
+Six NFS shares must be permanently mounted via `/etc/fstab` before
+starting `media-gaming`, `auth`, or `tools` -- all in one place, per
+[`V2/guides/getting-started/homelab-guide.md`](V2/guides/getting-started/homelab-guide.md)
+section 2.2: Immich uploads (`/mnt/synology/immich`), Jellyfin media
+(`/mnt/synology/media`), Audiobookshelf's audiobooks and podcasts,
+Kavita's books, and the shared Postgres backup / Backrest destination
+(`/mnt/synology/backups`). See [`V2/config/fstab`](V2/config/fstab) for
+the complete reference copy.
 
 ------------------------------------------------------------------------
 

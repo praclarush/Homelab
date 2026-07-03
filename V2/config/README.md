@@ -10,7 +10,7 @@ reconstructing it by reading every guide that touches it.
 
 | File | Introduced by |
 |------|---------------|
-| `fstab` | NFS mounts for Immich, Jellyfin (`media-gaming`); Audiobookshelf, Kavita (`media-gaming`); Backrest (`tools`) |
+| `fstab` | All six NAS shares this repo needs, created and mounted in one place: Immich, Jellyfin, Audiobookshelf, Kavita (`media-gaming`); Postgres backups (`auth`, `media-gaming`, `tools`); Backrest (`tools`) |
 | `netplan-00-installer-config.yaml` | VLAN trunk config for the mini PC's two interfaces (VLAN 11, VLAN 61) |
 | `crowdsec-firewall-bouncer.yaml` | CrowdSec firewall bouncer override values (`infrastructure-networking`) |
 | `docker-daemon.json` | Docker Engine log rotation default, applied to every container across every stack |
