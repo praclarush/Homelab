@@ -1,0 +1,17 @@
+# Add this service to Docker/V2/stacks/dashboards-automation/compose.yaml
+# (indent to match the existing `services:` block).
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    ports:
+      - "${VLAN11_IP}:1883:1883"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net

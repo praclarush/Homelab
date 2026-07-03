@@ -1,0 +1,37 @@
+# Copy to the host at
+# /opt/docker/stacks/dashboards-automation/zigbee2mqtt/data/configuration.yaml
+# before first start (that data/ directory is gitignored runtime state, not
+# tracked in this repo -- same treatment as Home Assistant's config/).
+#
+# If the Zigbee2MQTT frontend instead presents a first-run setup wizard
+# rather than reading this file directly (onboarding UX has changed across
+# major versions -- verify against the current docs at deploy time), use
+# the wizard with these same values instead of hand-editing this file.
+#
+# mqtt.server/user/password are intentionally NOT set here -- they're
+# provided via ZIGBEE2MQTT_CONFIG_MQTT_* environment variables in
+# compose.yaml so credentials never land in a file. If that environment
+# variable override doesn't take for your Zigbee2MQTT version (there are
+# scattered upstream reports of this), fall back to setting mqtt.user/
+# mqtt.password directly in this file -- it's gitignored either way.
+
+mqtt:
+  base_topic: zigbee2mqtt
+
+# Replace <slzb-06-ip> with the SLZB-06's actual IP. Copy the exact
+# generated value from the SLZB-06's own web dashboard (Z2M/ZHA menu) in
+# preference to hand-typing it -- it also confirms the port, which
+# defaults to 6638 but is changeable in the device's firmware.
+serial:
+  port: "tcp://<slzb-06-ip>:6638"
+  adapter: zstack
+
+homeassistant:
+  enabled: true
+
+frontend:
+  port: 8080
+
+# Leave closed by default; enable only while actively pairing a new
+# device, then turn back off.
+permit_join: false
