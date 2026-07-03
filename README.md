@@ -24,9 +24,35 @@ The environment is organized into three hardware tiers:
 
 ------------------------------------------------------------------------
 
+## Physical Devices & Hostnames
+
+Non-IoT hardware on the network follows a themed naming convention.
+Smart home / IoT devices are not hostname-assigned individually -- they're
+managed through Home Assistant instead.
+
+| Device Type | Hostname | Network Role / Purpose | Lore Context |
+| :---- | :---- | :---- | :---- |
+| **Gateway Router** | blackwall | WAN Edge, Traffic Management | The lethal AI barrier separating the safe Net from chaotic rogue code. |
+| **Network Switch** | blackwall-node | Local LAN Hardware Distribution | Direct extensions of the primary barrier infrastructure. |
+| **Mini Switch** | Blackwall-Splinter | Local LAN Hardware Distribution (4-port) | A splinter of the primary barrier infrastructure. |
+| **Access Point** | netwatch | Wireless Stream Oversight (Wi-Fi) | The corporate security force constantly monitoring local signals. |
+| **Main Server** | mikoshi | Orchestration & Automation Hub | The ultimate data fortress holding the digital constructs of your smart home. |
+| **Network Storage** | ghost-buffer | Mass Storage & Encrypted Backups | A dark-net repository caching digital constructs and hidden data. |
+| **DNS Sinkhole** | black-ice | Ad & Tracker Countermeasure | Lethal defense programs deployed to fry malicious data streams. |
+| **Main Rig** | afterlife | Primary Interfacing Machine (Desktop) | The legendary club where the heaviest data deals and operations go down. |
+| **Mobile Comms** | cyberdeck | Remote Access & Node Controls | Your pocket-sized, custom-tuned rig used to slice into nodes on the fly. |
+
+`mikoshi` is this repository's Docker host (the mini PC referenced
+throughout as the Compute Layer). `ghost-buffer` is the Synology NAS
+(Storage Layer). See [`hardware-configuration/`](hardware-configuration/)
+for host-level hardware setup guides that fall outside Docker Compose
+(e.g. UPS monitoring).
+
+------------------------------------------------------------------------
+
 ## Repository Layout
 
-This repository holds two parallel snapshots of the homelab:
+This repository holds three parallel snapshots of the homelab:
 
 - **[`Docker/V2/`](Docker/V2/)** -- the current state, and what the rest of this file
   describes. Each stack has a single `compose.yaml`; there is no version
@@ -34,6 +60,11 @@ This repository holds two parallel snapshots of the homelab:
 - **[`Docker/V1/`](Docker/V1/)** -- the prior, versioned snapshot, preserved for history.
   Several stacks there carry multiple `compose.vN.yaml` files representing
   incremental migrations. Not maintained going forward.
+- **[`Docker/V3/`](Docker/V3/)** -- staged changes not yet deployed, typically
+  blocked on hardware or another external dependency. Each item is a
+  self-contained folder with its own `README.md`. See
+  [`Docker/V3/README.md`](Docker/V3/README.md) for the promotion process
+  into `Docker/V2/` once a staged item is verified.
 
 ## Documentation
 
@@ -54,6 +85,7 @@ eventually be moved into the WikiJS instance this homelab runs. Start at
 | [`Docker/V2/guides/stacks/llm-stack-guide.md`](Docker/V2/guides/stacks/llm-stack-guide.md) | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | [`Docker/V2/stacks/compose-review-notes.md`](Docker/V2/stacks/compose-review-notes.md) | Rationale for compose file changes, deferred Postgres migration procedure |
 | [`Docker/V2/config/README.md`](Docker/V2/config/README.md) | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer, Docker log rotation) referenced by the guides above |
+| [`hardware-configuration/CyberPower CP1500PFCRM2U on a headless Ubuntu Server.md`](<hardware-configuration/CyberPower CP1500PFCRM2U on a headless Ubuntu Server.md>) | UPS monitoring and graceful shutdown via NUT (Network UPS Tools) on `mikoshi` |
 
 ------------------------------------------------------------------------
 

@@ -10,6 +10,9 @@ Nothing under `V3/` is running. Each subfolder is one staged item and is
 self-contained: its own `README.md` with setup/deployment instructions, plus
 whatever config files it introduces.
 
+See [`HARDWARE-TO-BUY.md`](HARDWARE-TO-BUY.md) for a consolidated shopping
+list across all staged items.
+
 ## Promotion
 
 Once a `V3/` item's hardware or external dependency is in place and the
