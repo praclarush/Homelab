@@ -269,10 +269,19 @@ See [`V2/guides/stacks/dashboards-automation-guide.md`](V2/guides/stacks/dashboa
 ``` text
 GRAFANA_PASSWORD=
 VLAN11_IP=192.168.11.10
+HOMEPAGE_VAR_IMMICH_KEY=
+HOMEPAGE_VAR_JELLYFIN_KEY=
+HOMEPAGE_VAR_PIHOLE_KEY=
 ```
 
 **Notes**
 
+-   Homepage's dashboard config is checked into the repo at
+    `V2/stacks/dashboards-automation/homepage/config/`, not generated
+    blank on first start. See
+    [`V2/guides/getting-started/homelab-guide.md`](V2/guides/getting-started/homelab-guide.md)
+    section 8.4 for the remaining placeholder values to fill in
+    (location, the `HOMEPAGE_VAR_*` keys above, container names).
 -   Prometheus requires `./prometheus/config/prometheus.yml` to exist
     before starting. Copy it from `V2/stacks/dashboards-automation/prometheus/prometheus.yml`
     in the repository.

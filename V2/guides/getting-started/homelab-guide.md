@@ -824,52 +824,36 @@ the `PIHOLE_PASSWORD` from your `.env` file. Full Pi-hole configuration
 
 ### 8.4 Homepage
 
-Homepage is configured through YAML files rather than a web UI. The
-config files live in `./homepage/config/` on the host
-(`/opt/docker/stacks/dashboards-automation/homepage/config/`).
+Homepage is configured through YAML files rather than a web UI. Unlike
+the other services in this stack, its config is not created blank on
+first start -- a full dashboard config for every service in this repo
+is already checked in at
+[`V2/stacks/dashboards-automation/homepage/config/`](../../stacks/dashboards-automation/homepage/config/),
+which lands on the host at
+`/opt/docker/stacks/dashboards-automation/homepage/config/` once you've
+pulled the repo (see
+[`git-deployment-guide.md`](../operations/git-deployment-guide.md)).
+The Docker socket mount (for live RUNNING/STOPPED status pills) and the
+`HOMEPAGE_VAR_*` environment wiring for widget API keys are already in
+`compose.yaml` -- nothing to add there.
 
-On first start, Homepage creates blank config files automatically. Edit
-them to add your services.
+Before starting the stack, finish the setup steps documented in
+[`homepage/config/DEPLOY.md`](../../stacks/dashboards-automation/homepage/config/DEPLOY.md):
 
-Open the services config:
+- Set your real latitude/longitude/timezone in `widgets.yaml` (it ships
+  with placeholder DC-area coordinates)
+- Add `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, and
+  `HOMEPAGE_VAR_PIHOLE_KEY` to `dashboards-automation/.env` for the
+  live Immich/Jellyfin/Pi-hole widgets (or delete a service's `widget:`
+  block to keep it as a plain link without live stats)
+- Double check the `container:` names in `services.yaml` against your
+  actual `container_name:` values -- they assume the names used
+  elsewhere in this repo's compose files
 
-```bash
-nano /opt/docker/stacks/dashboards-automation/homepage/config/services.yaml
-```
-
-A basic starter configuration:
-
-```yaml
-- Infrastructure:
-    - Pi-hole:
-        icon: pi-hole.png
-        href: http://192.168.11.10:8080
-        description: DNS filtering
-    - Nginx Proxy Manager:
-        icon: nginx-proxy-manager.png
-        href: http://192.168.11.10:81
-        description: Reverse proxy
-    - Dockge:
-        icon: dockge.png
-        href: http://192.168.11.10:5001
-        description: Stack manager
-
-- Media:
-    - Immich:
-        icon: immich.png
-        href: http://192.168.11.10:2283
-        description: Photo library
-    - AMP:
-        icon: amp.png
-        href: http://192.168.11.10:8081
-        description: Game servers
-```
-
-Homepage reloads automatically when files are saved -- no container
-restart needed. Refresh your browser to see changes.
-
-A full list of supported icons, widgets, and configuration options is
-at `https://gethomepage.dev/configs/services/`.
+Once running, Homepage reloads automatically when config files are
+saved -- no container restart needed. Refresh your browser to see
+changes. A full list of supported icons, widgets, and configuration
+options is at `https://gethomepage.dev/configs/services/`.
 
 ### 8.5 Immich
 
