@@ -28,32 +28,32 @@ The environment is organized into three hardware tiers:
 
 This repository holds two parallel snapshots of the homelab:
 
-- **[`V2/`](V2/)** -- the current state, and what the rest of this file
+- **[`Docker/V2/`](Docker/V2/)** -- the current state, and what the rest of this file
   describes. Each stack has a single `compose.yaml`; there is no version
   history to reconcile within it.
-- **[`V1/`](V1/)** -- the prior, versioned snapshot, preserved for history.
+- **[`Docker/V1/`](Docker/V1/)** -- the prior, versioned snapshot, preserved for history.
   Several stacks there carry multiple `compose.vN.yaml` files representing
   incremental migrations. Not maintained going forward.
 
 ## Documentation
 
-The [`V2/guides/`](V2/guides/) directory is organized like a wiki -- it will
+The [`Docker/V2/guides/`](Docker/V2/guides/) directory is organized like a wiki -- it will
 eventually be moved into the WikiJS instance this homelab runs. Start at
-[`V2/guides/README.md`](V2/guides/README.md) for the full index. Quick reference:
+[`Docker/V2/guides/README.md`](Docker/V2/guides/README.md) for the full index. Quick reference:
 
 | File | Purpose |
 |------|---------|
-| [`V2/guides/getting-started/homelab-guide.md`](V2/guides/getting-started/homelab-guide.md) | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
-| [`V2/guides/networking/nginx-proxy-manager-guide.md`](V2/guides/networking/nginx-proxy-manager-guide.md) | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
-| [`V2/guides/networking/pihole-guide.md`](V2/guides/networking/pihole-guide.md) | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
-| [`V2/guides/operations/git-deployment-guide.md`](V2/guides/operations/git-deployment-guide.md) | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
-| [`V2/guides/stacks/tools-guide.md`](V2/guides/stacks/tools-guide.md) | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
-| [`V2/guides/stacks/media-gaming-guide.md`](V2/guides/stacks/media-gaming-guide.md) | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
-| [`V2/guides/stacks/dashboards-automation-guide.md`](V2/guides/stacks/dashboards-automation-guide.md) | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
-| [`V2/guides/stacks/infrastructure-networking-guide.md`](V2/guides/stacks/infrastructure-networking-guide.md) | `infrastructure-networking` stack beyond NPM, Pi-hole, Watchtower, ntfy, Tailscale: CrowdSec |
-| [`V2/guides/stacks/llm-stack-guide.md`](V2/guides/stacks/llm-stack-guide.md) | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
-| [`V2/stacks/compose-review-notes.md`](V2/stacks/compose-review-notes.md) | Rationale for compose file changes, deferred Postgres migration procedure |
-| [`V2/config/README.md`](V2/config/README.md) | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer, Docker log rotation) referenced by the guides above |
+| [`Docker/V2/guides/getting-started/homelab-guide.md`](Docker/V2/guides/getting-started/homelab-guide.md) | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
+| [`Docker/V2/guides/networking/nginx-proxy-manager-guide.md`](Docker/V2/guides/networking/nginx-proxy-manager-guide.md) | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| [`Docker/V2/guides/networking/pihole-guide.md`](Docker/V2/guides/networking/pihole-guide.md) | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| [`Docker/V2/guides/operations/git-deployment-guide.md`](Docker/V2/guides/operations/git-deployment-guide.md) | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
+| [`Docker/V2/guides/stacks/tools-guide.md`](Docker/V2/guides/stacks/tools-guide.md) | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
+| [`Docker/V2/guides/stacks/media-gaming-guide.md`](Docker/V2/guides/stacks/media-gaming-guide.md) | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
+| [`Docker/V2/guides/stacks/dashboards-automation-guide.md`](Docker/V2/guides/stacks/dashboards-automation-guide.md) | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
+| [`Docker/V2/guides/stacks/infrastructure-networking-guide.md`](Docker/V2/guides/stacks/infrastructure-networking-guide.md) | `infrastructure-networking` stack beyond NPM, Pi-hole, Watchtower, ntfy, Tailscale: CrowdSec |
+| [`Docker/V2/guides/stacks/llm-stack-guide.md`](Docker/V2/guides/stacks/llm-stack-guide.md) | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
+| [`Docker/V2/stacks/compose-review-notes.md`](Docker/V2/stacks/compose-review-notes.md) | Rationale for compose file changes, deferred Postgres migration procedure |
+| [`Docker/V2/config/README.md`](Docker/V2/config/README.md) | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer, Docker log rotation) referenced by the guides above |
 
 ------------------------------------------------------------------------
 
@@ -69,8 +69,8 @@ eventually be moved into the WikiJS instance this homelab runs. Start at
 | `tools` | WikiJS, PostgreSQL, pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
 | `llm` | Ollama, Open WebUI |
 
-Each stack in [`V2/stacks/`](V2/stacks/) has a single `compose.yaml`
-representing its full current state. [`V1/stacks/`](V1/stacks/) preserves
+Each stack in [`Docker/V2/stacks/`](Docker/V2/stacks/) has a single `compose.yaml`
+representing its full current state. [`Docker/V1/stacks/`](Docker/V1/stacks/) preserves
 the prior versioned snapshot (`compose.yaml` plus `compose.vN.yaml` per
 stack, where applicable) for history.
 
@@ -133,9 +133,9 @@ Internal-only services (no exposed port) are marked with a dash.
 ## Directory Structure
 
 All stacks are stored under `/opt/docker/stacks/` on the host. Following
-[`V2/guides/operations/git-deployment-guide.md`](V2/guides/operations/git-deployment-guide.md),
+[`Docker/V2/guides/operations/git-deployment-guide.md`](Docker/V2/guides/operations/git-deployment-guide.md),
 this path is a symlink into a clone of this
-repository at `/opt/docker/repo`, pointed at the `V2/stacks/` tree, so
+repository at `/opt/docker/repo`, pointed at the `Docker/V2/stacks/` tree, so
 config changes made on the host can be committed and pushed directly,
 and changes pushed elsewhere can be pulled and applied with
 `docker compose up -d`.
@@ -242,11 +242,11 @@ sudo systemctl disable systemd-resolved
 
 Six NFS shares must be permanently mounted via `/etc/fstab` before
 starting `media-gaming`, `auth`, or `tools` -- all in one place, per
-[`V2/guides/getting-started/homelab-guide.md`](V2/guides/getting-started/homelab-guide.md)
+[`Docker/V2/guides/getting-started/homelab-guide.md`](Docker/V2/guides/getting-started/homelab-guide.md)
 section 2.2: Immich uploads (`/mnt/synology/immich`), Jellyfin media
 (`/mnt/synology/media`), Audiobookshelf's audiobooks and podcasts,
 Kavita's books, and the shared Postgres backup / Backrest destination
-(`/mnt/synology/backups`). See [`V2/config/fstab`](V2/config/fstab) for
+(`/mnt/synology/backups`). See [`Docker/V2/config/fstab`](Docker/V2/config/fstab) for
 the complete reference copy.
 
 ------------------------------------------------------------------------
@@ -255,7 +255,7 @@ the complete reference copy.
 
 ### dashboards-automation
 
-See [`V2/guides/stacks/dashboards-automation-guide.md`](V2/guides/stacks/dashboards-automation-guide.md) for Loki and Promtail setup beyond the base Homepage/Home Assistant/Uptime Kuma/Grafana/Prometheus deployment.
+See [`Docker/V2/guides/stacks/dashboards-automation-guide.md`](Docker/V2/guides/stacks/dashboards-automation-guide.md) for Loki and Promtail setup beyond the base Homepage/Home Assistant/Uptime Kuma/Grafana/Prometheus deployment.
 
 **Ports**
 
@@ -282,13 +282,13 @@ HOMEPAGE_VAR_PIHOLE_KEY=
 **Notes**
 
 -   Homepage's dashboard config is checked into the repo at
-    `V2/stacks/dashboards-automation/homepage/config/`, not generated
+    `Docker/V2/stacks/dashboards-automation/homepage/config/`, not generated
     blank on first start. See
-    [`V2/guides/getting-started/homelab-guide.md`](V2/guides/getting-started/homelab-guide.md)
+    [`Docker/V2/guides/getting-started/homelab-guide.md`](Docker/V2/guides/getting-started/homelab-guide.md)
     section 8.4 for the remaining placeholder values to fill in
     (location, the `HOMEPAGE_VAR_*` keys above, container names).
 -   Prometheus requires `./prometheus/config/prometheus.yml` to exist
-    before starting. Copy it from `V2/stacks/dashboards-automation/prometheus/prometheus.yml`
+    before starting. Copy it from `Docker/V2/stacks/dashboards-automation/prometheus/prometheus.yml`
     in the repository.
 -   node-exporter runs with `network_mode: host` for accurate system
     metrics. Prometheus reaches it via `host.docker.internal:9100`.
@@ -296,7 +296,7 @@ HOMEPAGE_VAR_PIHOLE_KEY=
     `http://prometheus:9090`
 -   Loki requires config files copied from the repo before deploying.
     After deploy, add Loki as a Grafana data source at
-    `http://loki:3100`. See [`V2/guides/stacks/dashboards-automation-guide.md`](V2/guides/stacks/dashboards-automation-guide.md).
+    `http://loki:3100`. See [`Docker/V2/guides/stacks/dashboards-automation-guide.md`](Docker/V2/guides/stacks/dashboards-automation-guide.md).
 
 ------------------------------------------------------------------------
 
@@ -326,7 +326,7 @@ Manages stacks at `/opt/docker/stacks` on the host.
 
 ### infrastructure-networking
 
-See [`V2/guides/stacks/infrastructure-networking-guide.md`](V2/guides/stacks/infrastructure-networking-guide.md) for CrowdSec setup beyond the base NPM/Pi-hole/Watchtower/ntfy/Tailscale deployment.
+See [`Docker/V2/guides/stacks/infrastructure-networking-guide.md`](Docker/V2/guides/stacks/infrastructure-networking-guide.md) for CrowdSec setup beyond the base NPM/Pi-hole/Watchtower/ntfy/Tailscale deployment.
 
 **Ports**
 
@@ -354,9 +354,9 @@ VLAN11_IP=192.168.11.10
 -   NPM is proxied via direct IP only (`192.168.11.10:81`). The admin
     panel is intentionally not routed through NPM itself.
 -   Pi-hole wildcard DNS entry for `home.bremmer.zone` lives at
-    `./pihole/dnsmasq/02-local-dns.conf`. See [`V2/guides/networking/nginx-proxy-manager-guide.md`](V2/guides/networking/nginx-proxy-manager-guide.md).
+    `./pihole/dnsmasq/02-local-dns.conf`. See [`Docker/V2/guides/networking/nginx-proxy-manager-guide.md`](Docker/V2/guides/networking/nginx-proxy-manager-guide.md).
 -   Remote access is provided by Tailscale. No port forwarding is
-    required. See [`V2/guides/getting-started/homelab-guide.md`](V2/guides/getting-started/homelab-guide.md) for auth key generation.
+    required. See [`Docker/V2/guides/getting-started/homelab-guide.md`](Docker/V2/guides/getting-started/homelab-guide.md) for auth key generation.
 -   Watchtower uses ntfy for update notifications. Set
     `WATCHTOWER_NTFY_TOPIC` to the topic name you subscribe to in the
     ntfy app (e.g. `watchtower`).
@@ -373,13 +373,13 @@ VLAN11_IP=192.168.11.10
     old client.
 -   CrowdSec reads NPM logs from `./npm/logs` and detects attack
     patterns. Requires the firewall bouncer installed on the host to
-    act on decisions. See [`V2/guides/stacks/infrastructure-networking-guide.md`](V2/guides/stacks/infrastructure-networking-guide.md).
+    act on decisions. See [`Docker/V2/guides/stacks/infrastructure-networking-guide.md`](Docker/V2/guides/stacks/infrastructure-networking-guide.md).
 
 ------------------------------------------------------------------------
 
 ### media-gaming
 
-See [`V2/guides/stacks/media-gaming-guide.md`](V2/guides/stacks/media-gaming-guide.md) for Jellyfin, Audiobookshelf, and Kavita setup beyond the base AMP/Immich deployment.
+See [`Docker/V2/guides/stacks/media-gaming-guide.md`](Docker/V2/guides/stacks/media-gaming-guide.md) for Jellyfin, Audiobookshelf, and Kavita setup beyond the base AMP/Immich deployment.
 
 **Ports**
 
@@ -412,7 +412,7 @@ VLAN61_IP=192.168.61.10
     `/mnt/synology/audiobooks`, `/mnt/synology/podcasts`, and
     `/mnt/synology/books`. Each path must be the NAS share mounted over
     NFS on the host, not just a folder created on the NAS -- see
-    [`V2/guides/stacks/media-gaming-guide.md`](V2/guides/stacks/media-gaming-guide.md)
+    [`Docker/V2/guides/stacks/media-gaming-guide.md`](Docker/V2/guides/stacks/media-gaming-guide.md)
     section 2 before deploying.
 -   `immich-server` waits for Postgres and Redis health checks before
     starting. On a cold start expect 15-30 seconds before the UI is
@@ -430,7 +430,7 @@ VLAN61_IP=192.168.61.10
     the `auth` stack's notes above for why both matter. Pinned to
     `prodrigestivill/postgres-backup-local:14` to match the Postgres 14
     server; re-pin this alongside the deferred Postgres image migration
-    in `V2/stacks/compose-review-notes.md`. Not labeled for Watchtower
+    in `Docker/V2/stacks/compose-review-notes.md`. Not labeled for Watchtower
     auto-update, matching the rest of the Immich block.
 
 ### Immich Database Migration (deferred)
@@ -438,7 +438,7 @@ VLAN61_IP=192.168.61.10
 The current Postgres image (`tensorchord/pgvecto-rs:pg14-v0.2.0`) needs
 to be migrated to `ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0`
 at a planned maintenance window. This requires a dump and restore -- do
-not change the image tag in-place. See `V2/stacks/compose-review-notes.md`
+not change the image tag in-place. See `Docker/V2/stacks/compose-review-notes.md`
 for the procedure.
 
 ------------------------------------------------------------------------
@@ -446,7 +446,7 @@ for the procedure.
 ### tools
 
 Single `compose.yaml` covering WikiJS plus every service added on top
-of it. See [`V2/guides/stacks/tools-guide.md`](V2/guides/stacks/tools-guide.md)
+of it. See [`Docker/V2/guides/stacks/tools-guide.md`](Docker/V2/guides/stacks/tools-guide.md)
 for pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget,
 Paperless-ngx, Grocy, Linkwarden, and Backrest setup beyond the base
 WikiJS deployment.
@@ -524,7 +524,7 @@ openssl rand -hex 32
     `/mnt/synology/backups` as the backup destination. The latter must
     be the NAS share mounted over NFS on the host, not just a folder
     created on the NAS -- see
-    [`V2/guides/stacks/tools-guide.md`](V2/guides/stacks/tools-guide.md)
+    [`Docker/V2/guides/stacks/tools-guide.md`](Docker/V2/guides/stacks/tools-guide.md)
     section 2 before deploying.
 
 ------------------------------------------------------------------------
@@ -595,7 +595,7 @@ VLAN11_IP=192.168.11.10
 -   Models are stored in `./models` and persist across container
     restarts and image updates.
 -   Pull models while internet-connected before air-gapped operation.
-    See [`V2/guides/stacks/llm-stack-guide.md`](V2/guides/stacks/llm-stack-guide.md) for model recommendations and pull
+    See [`Docker/V2/guides/stacks/llm-stack-guide.md`](Docker/V2/guides/stacks/llm-stack-guide.md) for model recommendations and pull
     commands.
 -   Recommended model for this hardware: `qwen2.5-coder:14b` (~9 GB,
     strong at both code and general chat).

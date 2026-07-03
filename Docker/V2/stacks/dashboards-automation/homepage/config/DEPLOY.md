@@ -1,7 +1,7 @@
 # Homepage config -- remaining setup
 
 These files are already in place at
-`V2/stacks/dashboards-automation/homepage/config/`, matching the
+`Docker/V2/stacks/dashboards-automation/homepage/config/`, matching the
 `./homepage/config:/app/config` volume mount in `compose.yaml`, and the
 Docker socket mount and `HOMEPAGE_VAR_*` environment wiring are already
 in `compose.yaml`. What's left is filling in host-specific values:

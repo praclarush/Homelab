@@ -8,12 +8,12 @@ Infrastructure-as-code for a Docker Compose homelab. No application code, no bui
 
 The repository root holds two parallel snapshots of the same homelab:
 
-- **`V2/`** -- the current state, and what the rest of this file describes. Each stack has a single `compose.yaml`; there is no version history to reconcile within it.
-- **`V1/`** -- the prior, versioned snapshot, preserved for history. Several stacks there carry multiple `compose.vN.yaml` files representing incremental migrations (e.g. `tools/compose.yaml` through `compose.v5.yaml`). Do not add new work to `V1/`.
+- **`Docker/V2/`** -- the current state, and what the rest of this file describes. Each stack has a single `compose.yaml`; there is no version history to reconcile within it.
+- **`Docker/V1/`** -- the prior, versioned snapshot, preserved for history. Several stacks there carry multiple `compose.vN.yaml` files representing incremental migrations (e.g. `tools/compose.yaml` through `compose.v5.yaml`). Do not add new work to `Docker/V1/`.
 
 ## Common Commands
 
-All operations are standard Docker Compose, run from within a stack directory under `V2/stacks/`:
+All operations are standard Docker Compose, run from within a stack directory under `Docker/V2/stacks/`:
 
 ```bash
 docker compose up -d          # Start stack
@@ -25,7 +25,7 @@ docker compose logs -f <svc>  # Follow a single service
 
 ## Architecture
 
-Seven stacks under `V2/stacks/`. Each stack has a single `compose.yaml` -- the current, deployable state.
+Seven stacks under `Docker/V2/stacks/`. Each stack has a single `compose.yaml` -- the current, deployable state.
 
 | Stack | Services |
 |-------|----------|
@@ -39,7 +39,7 @@ Seven stacks under `V2/stacks/`. Each stack has a single `compose.yaml` -- the c
 
 ## VLAN Bindings
 
-The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables. `V2/guides/networking/vlan-reference.md` is the source of truth for the full home-network VLAN plan (9 VLANs); only these two are relevant to this repo:
+The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables. `Docker/V2/guides/networking/vlan-reference.md` is the source of truth for the full home-network VLAN plan (9 VLANs); only these two are relevant to this repo:
 
 | Variable | Value | VLAN | Services |
 |----------|-------|------|----------|
@@ -62,7 +62,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **Dockge stack path:** Configured to manage stacks at `/opt/docker/stacks` via `DOCKGE_STACKS_DIR`. This must match the actual path on the host.
 
-**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `V2/guides/operations/git-deployment-guide.md`, it resolves to `/opt/docker/repo/stacks`, a clone of this repository's remote. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/opt/docker/repo`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
+**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `Docker/V2/guides/operations/git-deployment-guide.md`, it resolves to `/opt/docker/repo/Docker/V2/stacks`, a clone of this repository's remote. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/opt/docker/repo`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
 
 **Immich storage split:** PostgreSQL data (`./immich/postgres`) stays on local NVMe. Media uploads mount from NAS at `/mnt/synology/immich`. Do not move the database to NFS.
 
@@ -70,7 +70,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **node-exporter:** Runs with `network_mode: host` and `pid: host`. Prometheus reaches it via `host.docker.internal:9100` using the `extra_hosts` entry in the Prometheus service.
 
-**Immich Postgres image:** Currently on `tensorchord/pgvecto-rs:pg14-v0.2.0`. Needs migration to `ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0` via dump/restore at a maintenance window. Do not change the image tag in-place. See `V2/stacks/compose-review-notes.md`.
+**Immich Postgres image:** Currently on `tensorchord/pgvecto-rs:pg14-v0.2.0`. Needs migration to `ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0` via dump/restore at a maintenance window. Do not change the image tag in-place. See `Docker/V2/stacks/compose-review-notes.md`.
 
 **LLM inference is CPU-only:** The mini PC uses Intel UHD integrated graphics. Ollama's GPU acceleration requires NVIDIA or AMD hardware. All inference runs on CPU. Model size ceiling is ~14B parameters (Q4 quantized, ~9 GB) given 16 GB total system RAM. Do not suggest models above 14B for this hardware.
 
@@ -92,21 +92,21 @@ All generated runtime data (databases, caches, logs, certificates) is gitignored
 
 ## Documentation
 
-`V2/guides/` is organized like a wiki (it will eventually move into the WikiJS
-stack): `V2/guides/README.md` is the index page. See it for the full,
+`Docker/V2/guides/` is organized like a wiki (it will eventually move into the WikiJS
+stack): `Docker/V2/guides/README.md` is the index page. See it for the full,
 categorized list. Quick reference:
 
 | File | Purpose |
 |------|---------|
 | `README.md` | Stack reference, service inventory, env file contents, deployment order |
-| `V2/guides/getting-started/homelab-guide.md` | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
-| `V2/guides/networking/nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
-| `V2/guides/networking/pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
-| `V2/guides/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
-| `V2/guides/stacks/tools-guide.md` | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
-| `V2/guides/stacks/media-gaming-guide.md` | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
-| `V2/guides/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
-| `V2/guides/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, Watchtower, ntfy, Tailscale: CrowdSec |
-| `V2/guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
-| `V2/stacks/compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
-| `V2/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `V2/stacks/` |
+| `Docker/V2/guides/getting-started/homelab-guide.md` | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
+| `Docker/V2/guides/networking/nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `Docker/V2/guides/networking/pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| `Docker/V2/guides/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
+| `Docker/V2/guides/stacks/tools-guide.md` | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
+| `Docker/V2/guides/stacks/media-gaming-guide.md` | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
+| `Docker/V2/guides/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
+| `Docker/V2/guides/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, Watchtower, ntfy, Tailscale: CrowdSec |
+| `Docker/V2/guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
+| `Docker/V2/stacks/compose-review-notes.md` | Rationale for compose file changes, deferred Postgres migration procedure |
+| `Docker/V2/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `Docker/V2/stacks/` |
