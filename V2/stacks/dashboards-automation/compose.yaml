@@ -16,6 +16,8 @@ services:
       - HOMEPAGE_VAR_IMMICH_KEY=${HOMEPAGE_VAR_IMMICH_KEY}
       - HOMEPAGE_VAR_JELLYFIN_KEY=${HOMEPAGE_VAR_JELLYFIN_KEY}
       - HOMEPAGE_VAR_PIHOLE_KEY=${HOMEPAGE_VAR_PIHOLE_KEY}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -30,6 +32,8 @@ services:
       - TZ=America/Chicago
     ports:
       - "${VLAN11_IP}:8123:8123"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -41,6 +45,8 @@ services:
       - ./uptime-kuma/data:/app/data
     ports:
       - "${VLAN11_IP}:3001:3001"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -57,6 +63,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
     depends_on:
       - prometheus
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -75,6 +83,8 @@ services:
       - '--storage.tsdb.retention.time=30d'
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -88,6 +98,8 @@ services:
       - /:/host:ro,rslave
     command:
       - '--path.rootfs=/host'
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
 
   loki:
@@ -99,6 +111,8 @@ services:
       - ./loki/data:/loki
     ports:
       - "${VLAN11_IP}:3100:3100"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -111,6 +125,8 @@ services:
       - ./promtail/config.yaml:/etc/promtail/config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/log:/var/log:ro
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net

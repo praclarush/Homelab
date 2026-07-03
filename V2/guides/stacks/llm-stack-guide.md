@@ -75,6 +75,9 @@ services:
       - ./models:/root/.ollama
     ports:
       - "${VLAN11_IP}:11434:11434"
+    mem_limit: 10g
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -84,21 +87,27 @@ services:
     image: ghcr.io/open-webui/open-webui:main
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - WEBUI_AUTH=false
     volumes:
       - ./open-webui:/app/backend/data
     ports:
       - "${VLAN11_IP}:3004:8080"
     depends_on:
       - ollama
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
 ```
 
-`WEBUI_AUTH=false` disables the login screen. Remove that line if you
-want per-user accounts (you will be prompted to create an admin account
-on first visit).
+Open WebUI's login screen is enabled (the default) -- you'll be
+prompted to create an admin account on first visit at
+`http://192.168.11.10:3004`. The first account created becomes the
+admin automatically; sign up immediately after first start so you
+don't leave the instance briefly reachable by anyone who gets there
+first. `ollama` has a 10GB `mem_limit` -- a hard cap, not a
+reservation, sized for models up to `qwen2.5-coder:14b` on the mini
+PC's 16GB of total RAM. Raise it if you load a larger model.
 
 ---
 

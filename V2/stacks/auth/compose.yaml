@@ -21,6 +21,27 @@ services:
     networks:
       - proxy_net
 
+  authentik-postgres-backup:
+    container_name: authentik_postgres_backup
+    image: prodrigestivill/postgres-backup-local:16
+    environment:
+      - POSTGRES_HOST=authentik_postgres
+      - POSTGRES_DB=${PG_DB}
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASS}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+    volumes:
+      - ./authentik-postgres-backups:/backups
+    depends_on:
+      authentik-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
   authentik-redis:
     container_name: authentik_redis
     image: redis:alpine

@@ -10,3 +10,5 @@ services:
       - ./data:/app/data
     environment:
       - DOCKGE_STACKS_DIR=/opt/docker/stacks
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"

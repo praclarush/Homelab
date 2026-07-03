@@ -18,6 +18,8 @@ services:
     depends_on:
       wikijs-postgres:
         condition: service_healthy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -40,6 +42,27 @@ services:
     networks:
       - proxy_net
 
+  wikijs-postgres-backup:
+    container_name: wikijs_postgres_backup
+    image: prodrigestivill/postgres-backup-local:16
+    environment:
+      - POSTGRES_HOST=wikijs_postgres
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+    volumes:
+      - ./wikijs-postgres-backups:/backups
+    depends_on:
+      wikijs-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
@@ -50,6 +73,8 @@ services:
       - ./pgadmin:/var/lib/pgadmin
     ports:
       - "${VLAN11_IP}:5050:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -62,6 +87,8 @@ services:
       - ./stirling-pdf/configs:/configs
     ports:
       - "${VLAN11_IP}:8083:8080"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -77,6 +104,8 @@ services:
       - ./mealie:/app/data
     ports:
       - "${VLAN11_IP}:9925:9000"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -95,6 +124,8 @@ services:
       - ./n8n:/home/node/.n8n
     ports:
       - "${VLAN11_IP}:5678:5678"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -104,6 +135,8 @@ services:
     image: corentinth/it-tools:latest
     ports:
       - "${VLAN11_IP}:8084:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -115,6 +148,8 @@ services:
       - ./actual-budget:/data
     ports:
       - "${VLAN11_IP}:5006:5006"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -151,6 +186,27 @@ services:
     networks:
       - proxy_net
 
+  paperless-postgres-backup:
+    container_name: paperless_postgres_backup
+    image: prodrigestivill/postgres-backup-local:16
+    environment:
+      - POSTGRES_HOST=paperless_postgres
+      - POSTGRES_DB=paperless
+      - POSTGRES_USER=${PAPERLESS_DB_USER}
+      - POSTGRES_PASSWORD=${PAPERLESS_DB_PASS}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+    volumes:
+      - ./paperless-postgres-backups:/backups
+    depends_on:
+      paperless-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
   paperless-ngx:
     container_name: paperless_ngx
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
@@ -176,6 +232,9 @@ services:
         condition: service_healthy
       paperless-redis:
         condition: service_healthy
+    mem_limit: 2g
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -191,6 +250,8 @@ services:
       - ./grocy/config:/config
     ports:
       - "${VLAN11_IP}:9283:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -213,6 +274,27 @@ services:
     networks:
       - proxy_net
 
+  linkwarden-postgres-backup:
+    container_name: linkwarden_postgres_backup
+    image: prodrigestivill/postgres-backup-local:16
+    environment:
+      - POSTGRES_HOST=linkwarden_postgres
+      - POSTGRES_DB=linkwarden
+      - POSTGRES_USER=${LINKWARDEN_DB_USER}
+      - POSTGRES_PASSWORD=${LINKWARDEN_DB_PASS}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+    volumes:
+      - ./linkwarden-postgres-backups:/backups
+    depends_on:
+      linkwarden-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
   linkwarden:
     container_name: linkwarden
     image: ghcr.io/linkwarden/linkwarden:latest
@@ -227,6 +309,8 @@ services:
     depends_on:
       linkwarden-postgres:
         condition: service_healthy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -244,6 +328,8 @@ services:
       - /mnt/synology/backups:/backups
     ports:
       - "${VLAN11_IP}:9898:9898"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
