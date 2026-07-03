@@ -1,0 +1,42 @@
+---
+title: Homelab
+favicon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/home-assistant.svg
+theme: dark
+color: slate
+headerStyle: clean
+hideVersion: true
+
+# Loads custom.css from this same config directory
+customCSS: custom.css
+
+layout:
+  Media:
+    style: row
+    columns: 4
+  Infrastructure:
+    style: row
+    columns: 4
+  Core:
+    style: row
+    columns: 4
+  AI:
+    style: row
+    columns: 4
+  Observability:
+    style: row
+    columns: 4
+  Network:
+    style: row
+    columns: 4
+  Security:
+    style: row
+    columns: 4
+  Tools:
+    style: row
+    columns: 4
+
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+  showSearchSuggestions: false
+  hideVisitURL: true

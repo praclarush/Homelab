@@ -1,0 +1,104 @@
+/* ===================================================================
+   Homelab dashboard theme — dark navy, rounded cards, glowing search,
+   colored status pills. Built for gethomepage.dev.
+
+   Homepage's DOM/class names shift slightly between releases, so if a
+   selector below doesn't visibly do anything on your version, open
+   devtools (F12), inspect the element, and swap in the class you find.
+   The CSS variables at the top are Homepage's official theming hooks
+   and are the most stable part of this file.
+   =================================================================== */
+
+:root {
+  --color-primary: #3b82f6;
+  --bg-color: 15 20 30;          /* page background, rgb triplet */
+  --card-bg: 22 28 42;           /* service card background */
+  --text-color: 226 232 240;
+}
+
+body {
+  background: rgb(var(--bg-color)) !important;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ---- Info widgets row (resources / clock / weather) ---- */
+#information-widgets,
+.information-widget-clock,
+.information-widget-weather {
+  background: rgb(var(--card-bg));
+  border-radius: 12px;
+}
+
+/* ---- Service group headers (Media / Infra / Core / AI ...) ---- */
+.services-group > h3,
+h3.text-theme-800 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: rgb(var(--text-color));
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ---- Service cards ---- */
+.service-card,
+a.service-card {
+  background: rgb(var(--card-bg)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.service-card:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+/* ---- Status pill (RUNNING / STOPPED / ping ms) ---- */
+.service-card .statusText,
+.service-card .pill {
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Homepage assigns .green/.red/.yellow (or similar) status classes —
+   inspect your rendered pill to confirm which one applies, then keep
+   whichever of these matches. */
+.service-card .status-green,
+.service-card .green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.service-card .status-red,
+.service-card .red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* ---- Quick search bar (the glowing "Inference" bar in the mock) ----
+   Homepage's built-in quick launch search renders an <input> with
+   id="search". We give it the glow treatment and let it double as
+   your live filter — type a group name and it narrows the grid. */
+#search,
+input[type="text"]#search {
+  width: 100%;
+  background: rgb(var(--card-bg)) !important;
+  border: 1px solid rgba(59, 130, 246, 0.6) !important;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 1.1rem;
+  color: rgb(var(--text-color));
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15),
+              0 0 24px rgba(59, 130, 246, 0.25);
+}
+
+#search:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25),
+              0 0 32px rgba(59, 130, 246, 0.4);
+}
