@@ -349,7 +349,7 @@ The NAS is not a Docker container -- NPM reaches it by IP address over the netwo
 **No firewall rule needed for this.** Per
 [`vlan-reference.md`](vlan-reference.md), the NAS lives
 on VLAN 61, and the mini PC already has a direct interface there
-(`eth0.61`) -- the same one `media-gaming`'s services bind to. NPM reaches
+(`vlan61`) -- the same one `media-gaming`'s services bind to. NPM reaches
 the NAS over that same-subnet interface with no inter-VLAN routing or
 firewall rule required. If your NAS is reachable at a different IP than
 `192.168.61.x`, confirm it's actually on VLAN 61 before troubleshooting
