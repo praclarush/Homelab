@@ -598,8 +598,13 @@ nano /opt/docker/stacks/infrastructure-networking/.env
 PIHOLE_PASSWORD=your-pihole-admin-password
 TAILSCALE_AUTHKEY=tskey-auth-xxxxxxxxxxxx
 WATCHTOWER_NTFY_TOPIC=watchtower
+WATCHTOWER_NTFY_TOKEN=
 VLAN11_IP=192.168.11.10
 ```
+
+Leave `WATCHTOWER_NTFY_TOKEN` blank for now -- it can't be generated until
+ntfy is running. Section 8.9 covers generating it and coming back to fill
+this in.
 
 Replace `tskey-auth-xxxxxxxxxxxx` with the key from step 4.2 and
 `watchtower` with the topic name from step 4.4.
@@ -1037,16 +1042,79 @@ ntfy is a push notification server. You subscribe to a topic on your
 phone and services post to that topic when they have something to
 report.
 
-1. Open `http://192.168.11.10:8082`
-2. No account creation is needed for basic use
-3. Install the **ntfy** app on your phone (available on iOS and Android)
-4. In the app, add your server:
-   - Tap **+** or **Add subscription**
-   - Set the server URL to `http://<meshnet-ip>:8082` (use the Meshnet
-     IP from step 3.2 so it works when you are away from home)
-   - Set the topic name to whatever you entered in `WATCHTOWER_NTFY_TOPIC`
-     (e.g. `watchtower`)
-   - Subscribe
+`compose.yaml` runs ntfy with `NTFY_AUTH_DEFAULT_ACCESS=deny-all` --
+nobody can read or publish to any topic without an explicit grant. This
+is deliberate: ntfy has no login by default, so an unauthenticated
+`docker run`-standard deployment lets anyone on VLAN 11 (or anyone who
+finds `ntfy.home.bremmer.zone`) publish or read any topic, including
+Watchtower's update notifications. The steps below create an admin
+account for yourself and a scoped, write-only token for Watchtower.
+
+**Create the admin account** (used for the web UI login and your phone
+subscription):
+
+```bash
+docker exec -it ntfy ntfy user add --role=admin admin
+```
+
+You'll be prompted for a password -- choose a strong one and store it
+alongside your other credentials. Admins bypass per-topic ACLs, so this
+one account can read and publish to everything.
+
+**Create a scoped account for Watchtower:**
+
+```bash
+docker exec -it ntfy ntfy user add --role=none watchtower
+docker exec -it ntfy ntfy access watchtower ${WATCHTOWER_NTFY_TOPIC} write-only
+docker exec -it ntfy ntfy token add watchtower
+```
+
+`--role=none` means the `watchtower` user has no access to anything
+until explicitly granted -- the `ntfy access` command grants it
+write-only access to just the one topic it needs. `ntfy token add`
+prints a token starting with `tk_`; copy it.
+
+**Wire the token into Watchtower:**
+
+```bash
+nano /opt/docker/stacks/infrastructure-networking/.env
+```
+
+Set `WATCHTOWER_NTFY_TOKEN=` to the `tk_` value you copied, then
+restart Watchtower to pick it up:
+
+```bash
+cd /opt/docker/stacks/infrastructure-networking
+docker compose up -d watchtower
+```
+
+> **If notifications still don't arrive:** confirm Watchtower and ntfy
+> can reach each other by container name -- both must be on `proxy_net`.
+> If you're troubleshooting an existing deployment, check that
+> Watchtower's service block in `compose.yaml` has a `networks:` entry
+> for `proxy_net`; earlier versions of this file omitted it, which
+> silently broke `ntfy://ntfy/...` resolution.
+>
+> Some older Watchtower/shoutrrr builds don't support the `?token=`
+> query parameter on the `ntfy://` notification URL. If Watchtower logs
+> show a 401 or the request never reaches ntfy, switch to password
+> auth instead: set a password on the `watchtower` user
+> (`docker exec -it ntfy ntfy user change-pass watchtower`) and use
+> `WATCHTOWER_NOTIFICATION_URL=ntfy://watchtower:<password>@ntfy/${WATCHTOWER_NTFY_TOPIC}`
+> in `compose.yaml` instead of the token-based URL.
+
+**Subscribe on your phone:**
+
+1. Install the **ntfy** app (iOS and Android)
+2. Tap **+** or **Add subscription**
+3. Set the server URL to `http://<meshnet-ip>:8082` (use the Meshnet IP
+   from step 3.2 so it works when you are away from home)
+4. Set the topic name to whatever you entered in `WATCHTOWER_NTFY_TOPIC`
+   (e.g. `watchtower`)
+5. When prompted for login, enter the `admin` username and password
+   created above -- with `deny-all` as the default, anonymous
+   subscriptions no longer work
+6. Subscribe
 
 To confirm Watchtower notifications are wired up correctly, trigger a
 test report:
@@ -1056,8 +1124,22 @@ docker exec watchtower /watchtower --run-once --notification-report
 ```
 
 You should receive a push notification on your phone within a few
-seconds. If nothing arrives, double-check the `WATCHTOWER_NTFY_TOPIC`
-in the `.env` file and confirm the ntfy container is running.
+seconds. If nothing arrives, double-check `WATCHTOWER_NTFY_TOKEN` and
+`WATCHTOWER_NTFY_TOPIC` in the `.env` file, confirm the ntfy container
+is running, and check `docker compose logs watchtower` for the actual
+HTTP status of the notification attempt.
+
+**Confirm anonymous access is actually blocked:**
+
+```bash
+curl -d "test" http://192.168.11.10:8082/${WATCHTOWER_NTFY_TOPIC}
+```
+
+This should fail (403) rather than deliver a notification. If it
+succeeds, `NTFY_AUTH_DEFAULT_ACCESS=deny-all` isn't taking effect --
+check that `./ntfy/lib` is writable and that the container picked up
+the environment variable (`docker compose up -d --force-recreate ntfy`
+after any `compose.yaml` edits).
 
 ### 8.10 Jellyfin
 

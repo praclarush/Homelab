@@ -387,6 +387,129 @@ is sufficient.
 
 ---
 
+## Section 5.3: Authentik Forward Auth for No-Login Services
+
+Four proxied services have no login of their own: **Homepage**, **Prometheus**
+(both above), and **IT Tools** and **Stirling PDF** (in the `tools` stack --
+see [tools-guide.md](../stacks/tools-guide.md)). Anyone who can reach
+`*.home.bremmer.zone` -- any device on VLAN 11, or anyone who guesses a
+subdomain -- gets straight in with zero credentials.
+
+The `auth` stack already runs Authentik specifically to close gaps like this,
+but it has never actually been wired into NPM. This section does that, using
+Authentik's built-in **embedded outpost** -- no new container, no compose
+changes. Do **not** apply this to services that already have their own login
+(Grafana, WikiJS, Immich, n8n, pgAdmin, etc.) -- that's redundant, not a gap.
+`ntfy` is also unauthenticated by default but is excluded here: it receives
+HTTP posts from Watchtower, and a browser-redirect auth flow would break
+that. ntfy uses its own auth-file/token mechanism instead -- see
+[Section 8.9 of the getting-started guide](../getting-started/homelab-guide.md#89-ntfy).
+
+This uses Authentik's **domain-level** forward auth: one provider protects
+the whole `*.home.bremmer.zone` domain via a shared cookie, so adding a fifth
+no-login service later only needs the NPM steps in 5.3.2, not a new Authentik
+provider.
+
+### 5.3.1 Create the Provider, Application, and Outpost Binding
+
+In Authentik (`https://auth.home.bremmer.zone`, admin interface):
+
+1. **Applications → Providers → Create**
+2. Select **Proxy Provider**, click **Next**
+3. Name: `NPM Forward Auth`
+4. Authorization flow: leave the default (`default-provider-authorization-implicit-consent`)
+5. Under **Proxy Type**, select **Forward auth (domain level)**
+6. **External host**: `https://home.bremmer.zone`
+7. **Cookie domain**: `home.bremmer.zone`
+8. Click **Save**
+
+Create the application:
+
+1. **Applications → Applications → Create**
+2. Name: `Homelab Forward Auth`
+3. Slug: auto-fills as `homelab-forward-auth`
+4. **Provider**: select `NPM Forward Auth` from the dropdown
+5. Click **Create**
+
+Bind it to the embedded outpost so it's actually served:
+
+1. **Applications → Outposts**
+2. Click the pencil icon on **authentik Embedded Outpost**
+3. Under **Applications**, move `Homelab Forward Auth` into the selected list
+4. Click **Update**
+
+No separate outpost container is needed -- the embedded outpost runs inside
+the existing `authentik-server` container on port `9000`, already on
+`proxy_net` and already reachable by NPM under the container name
+`authentik_server`.
+
+### 5.3.2 Configure Each Protected Proxy Host in NPM
+
+Repeat this for **Homepage**, **Prometheus**, **IT Tools**, and **Stirling
+PDF**. Edit the existing proxy host for each (do not create a new one).
+
+**Custom Locations tab:**
+
+1. Click **Add location**
+2. **Location**: `/outpost.goauthentik.io`
+3. **Scheme**: `http`
+4. **Forward Hostname / IP**: `authentik_server`
+5. **Forward Port**: `9000`
+6. In that location's **Advanced** box, paste:
+
+```nginx
+proxy_set_header Host $host;
+proxy_set_header X-Original-URL $scheme://$http_host$request_uri;
+add_header Set-Cookie $auth_cookie;
+auth_request_set $auth_cookie $upstream_http_set_cookie;
+proxy_pass_request_body off;
+proxy_set_header Content-Length "";
+```
+
+**Advanced tab (host-level, not the location's):**
+
+```nginx
+auth_request /outpost.goauthentik.io/auth/nginx;
+error_page 401 = @goauthentik_proxy_signin;
+auth_request_set $auth_cookie $upstream_http_set_cookie;
+add_header Set-Cookie $auth_cookie;
+auth_request_set $authentik_username $upstream_http_x_authentik_username;
+auth_request_set $authentik_groups $upstream_http_x_authentik_groups;
+auth_request_set $authentik_email $upstream_http_x_authentik_email;
+auth_request_set $authentik_name $upstream_http_x_authentik_name;
+auth_request_set $authentik_uid $upstream_http_x_authentik_uid;
+proxy_set_header X-authentik-username $authentik_username;
+proxy_set_header X-authentik-groups $authentik_groups;
+proxy_set_header X-authentik-email $authentik_email;
+proxy_set_header X-authentik-name $authentik_name;
+proxy_set_header X-authentik-uid $authentik_uid;
+
+location @goauthentik_proxy_signin {
+    internal;
+    add_header Set-Cookie $auth_cookie;
+    return 302 https://auth.home.bremmer.zone/outpost.goauthentik.io/start?rd=$scheme://$http_host$request_uri;
+}
+```
+
+Save the proxy host after both tabs are filled in.
+
+### 5.3.3 Verification
+
+For each of the four services, in a private/incognito browser window:
+
+1. Browse to the service's URL (e.g. `https://prometheus.home.bremmer.zone`)
+2. Expect a redirect to `https://auth.home.bremmer.zone` with an Authentik
+   login prompt
+3. Log in
+4. Expect a redirect back to the original service, now loading normally
+
+If instead you get a 502, the Custom Location's forward host/port is wrong or
+`authentik_server` isn't reachable on `proxy_net`. If you get stuck in a
+redirect loop, double check the **Cookie domain** on the provider is exactly
+`home.bremmer.zone` (not `www.home.bremmer.zone` or a specific subdomain).
+
+---
+
 ## Section 6: Verification
 
 Work through this table after all proxy hosts are created. Every service should load
@@ -394,11 +517,11 @@ over HTTPS with a valid certificate and no browser security warning.
 
 | Service | URL | Expected Result |
 |---------|-----|-----------------|
-| Homepage | `https://homepage.home.bremmer.zone` | Dashboard loads |
+| Homepage | `https://homepage.home.bremmer.zone` | Authentik login, then dashboard loads (Section 5.3) |
 | Home Assistant | `https://homeassistant.home.bremmer.zone` | Login page, no 400 error |
 | Uptime Kuma | `https://uptime.home.bremmer.zone` | Monitor dashboard |
 | Grafana | `https://grafana.home.bremmer.zone` | Login page |
-| Prometheus | `https://prometheus.home.bremmer.zone` | Query interface |
+| Prometheus | `https://prometheus.home.bremmer.zone` | Authentik login, then query interface (Section 5.3) |
 | Dockge | `https://dockge.home.bremmer.zone` | Stack list |
 | Pi-hole | `https://pihole.home.bremmer.zone` | Redirects to `/admin`, loads |
 | ntfy | `https://ntfy.home.bremmer.zone` | Notification interface |

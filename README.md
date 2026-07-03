@@ -187,11 +187,13 @@ and changes pushed elsewhere can be pulled and applied with
 │
 ├── infrastructure-networking/
 │   ├── compose.yaml             # NPM, Pi-hole, Watchtower, ntfy, Tailscale, CrowdSec
-│   ├── .env                     # Pi-hole password, Tailscale auth key, ntfy topic
+│   ├── .env                     # Pi-hole password, Tailscale auth key, ntfy topic/token
 │   ├── pihole/config/
 │   ├── pihole/dnsmasq/
 │   ├── npm/
-│   ├── ntfy/
+│   ├── ntfy/cache/
+│   ├── ntfy/config/
+│   ├── ntfy/lib/                # ntfy auth database (users, tokens, ACLs)
 │   ├── tailscale/state/
 │   └── crowdsec/
 │
@@ -329,6 +331,9 @@ HOMEPAGE_VAR_PIHOLE_KEY=
 -   Loki requires config files copied from the repo before deploying.
     After deploy, add Loki as a Grafana data source at
     `http://loki:3100`. See [`Docker/V2/guides/stacks/dashboards-automation-guide.md`](Docker/V2/guides/stacks/dashboards-automation-guide.md).
+-   Homepage and Prometheus have no login of their own and sit behind
+    Authentik forward auth -- see the `auth` stack notes below and
+    [Section 5.3 of the NPM guide](Docker/V2/guides/networking/nginx-proxy-manager-guide.md#section-53-authentik-forward-auth-for-no-login-services).
 
 ------------------------------------------------------------------------
 
@@ -378,6 +383,7 @@ See [`Docker/V2/guides/stacks/infrastructure-networking-guide.md`](Docker/V2/gui
 PIHOLE_PASSWORD=
 TAILSCALE_AUTHKEY=
 WATCHTOWER_NTFY_TOPIC=
+WATCHTOWER_NTFY_TOKEN=
 VLAN11_IP=192.168.11.10
 ```
 
@@ -389,9 +395,15 @@ VLAN11_IP=192.168.11.10
     `./pihole/dnsmasq/02-local-dns.conf`. See [`Docker/V2/guides/networking/nginx-proxy-manager-guide.md`](Docker/V2/guides/networking/nginx-proxy-manager-guide.md).
 -   Remote access is provided by Tailscale. No port forwarding is
     required. See [`Docker/V2/guides/getting-started/homelab-guide.md`](Docker/V2/guides/getting-started/homelab-guide.md) for auth key generation.
--   Watchtower uses ntfy for update notifications. Set
-    `WATCHTOWER_NTFY_TOPIC` to the topic name you subscribe to in the
-    ntfy app (e.g. `watchtower`).
+-   ntfy runs with `NTFY_AUTH_DEFAULT_ACCESS=deny-all` -- no anonymous
+    publish or subscribe. Watchtower authenticates with a write-only
+    token scoped to its own topic (`WATCHTOWER_NTFY_TOKEN`); your own
+    phone subscription authenticates with an admin account. Both are
+    created via `ntfy user add` / `ntfy token add` -- see
+    [Section 8.9 of the getting-started guide](Docker/V2/guides/getting-started/homelab-guide.md#89-ntfy).
+    The auth database persists at `./ntfy/lib`.
+-   Watchtower is on `proxy_net` so it can reach `ntfy` by container
+    name for notifications.
 -   Watchtower only updates containers with the label
     `com.centurylinklabs.watchtower.enable=true`. Every service across
     all stacks carries this label except: Authentik (`auth`) and its
@@ -552,6 +564,9 @@ openssl rand -hex 32
     The NPM proxy host must exist before webhooks will work.
 -   Grocy default login is `admin`/`admin` -- change the password
     immediately after first login.
+-   IT Tools and Stirling PDF have no login of their own and sit behind
+    Authentik forward auth -- see the `auth` stack notes above and
+    [Section 5.3 of the NPM guide](Docker/V2/guides/networking/nginx-proxy-manager-guide.md#section-53-authentik-forward-auth-for-no-login-services).
 -   Backrest mounts `/opt/docker/stacks` read-only and
     `/mnt/synology/backups` as the backup destination. The latter must
     be the NAS share mounted over NFS on the host, not just a folder
@@ -590,8 +605,16 @@ openssl rand -hex 32
 
 -   Initial admin account is created via the browser on first start at
     `http://192.168.11.10:9000/if/flow/initial-setup/`
--   Authentik integrates with Nginx Proxy Manager via forward auth to
-    gate access to proxied services.
+-   Authentik's embedded outpost is wired into NPM via domain-level
+    forward auth, but only for the proxied services that have no login
+    of their own: Homepage, Prometheus, IT Tools, and Stirling PDF. See
+    [Section 5.3 of the NPM guide](Docker/V2/guides/networking/nginx-proxy-manager-guide.md#section-53-authentik-forward-auth-for-no-login-services).
+    Services with their own login (Grafana, WikiJS, Immich, n8n, etc.)
+    are intentionally left alone. `ntfy` is also unauthenticated but is
+    excluded -- it receives machine-to-machine posts from Watchtower and
+    CrowdSec that a browser auth redirect would break; it uses ntfy's own
+    auth-file/token mechanism instead -- see the `infrastructure-networking`
+    notes below.
 -   `authentik-postgres-backup` runs a nightly `pg_dump` (7 daily / 4
     weekly / 6 monthly rotation) to `./authentik-postgres-backups`,
     reusing the `PG_*` credentials above. This is a logical backup
