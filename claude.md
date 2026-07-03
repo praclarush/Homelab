@@ -80,7 +80,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 | Stack | Required Variables |
 |-------|-------------------|
-| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP` |
+| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
 | `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `VLAN11_IP` |
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` |
