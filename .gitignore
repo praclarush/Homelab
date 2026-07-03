@@ -87,6 +87,9 @@ backups/
 *.tar
 *.tar.gz
 
+# Scheduled pg_dump output (authentik, immich, wikijs, paperless, linkwarden)
+**/*-postgres-backups/
+
 # ==============================
 # OS / Editor Files
 # ==============================

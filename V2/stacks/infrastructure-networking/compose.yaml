@@ -13,6 +13,8 @@ services:
     volumes:
       - ./npm/data:/data
       - ./npm/letsencrypt:/etc/letsencrypt
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -33,6 +35,8 @@ services:
     volumes:
       - ./pihole/config:/etc/pihole
       - ./pihole/dnsmasq:/etc/dnsmasq.d
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -47,6 +51,8 @@ services:
       - WATCHTOWER_POLL_INTERVAL=86400
       - WATCHTOWER_LABEL_ENABLE=true
       - WATCHTOWER_NOTIFICATION_URL=ntfy://ntfy/${WATCHTOWER_NTFY_TOPIC}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
 
   ntfy:
@@ -58,6 +64,8 @@ services:
       - ./ntfy/config:/etc/ntfy
     ports:
       - "${VLAN11_IP}:8082:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -75,6 +83,8 @@ services:
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
 
   crowdsec:
@@ -88,6 +98,8 @@ services:
       - ./crowdsec/data:/var/lib/crowdsec/data
       - ./npm/logs:/var/log/npm:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net

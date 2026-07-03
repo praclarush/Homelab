@@ -53,7 +53,7 @@ eventually be moved into the WikiJS instance this homelab runs. Start at
 | [`V2/guides/stacks/infrastructure-networking-guide.md`](V2/guides/stacks/infrastructure-networking-guide.md) | `infrastructure-networking` stack beyond NPM, Pi-hole, Watchtower, ntfy, Tailscale: CrowdSec |
 | [`V2/guides/stacks/llm-stack-guide.md`](V2/guides/stacks/llm-stack-guide.md) | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation |
 | [`V2/stacks/compose-review-notes.md`](V2/stacks/compose-review-notes.md) | Rationale for compose file changes, deferred Postgres migration procedure |
-| [`V2/config/README.md`](V2/config/README.md) | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) referenced by the guides above |
+| [`V2/config/README.md`](V2/config/README.md) | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer, Docker log rotation) referenced by the guides above |
 
 ------------------------------------------------------------------------
 
@@ -356,7 +356,16 @@ VLAN11_IP=192.168.11.10
     `WATCHTOWER_NTFY_TOPIC` to the topic name you subscribe to in the
     ntfy app (e.g. `watchtower`).
 -   Watchtower only updates containers with the label
-    `com.centurylinklabs.watchtower.enable=true`.
+    `com.centurylinklabs.watchtower.enable=true`. Every service across
+    all stacks carries this label except: Authentik (`auth`) and its
+    Postgres/Redis, Immich (`media-gaming`) and its Postgres/Redis, and
+    the standalone Postgres containers for WikiJS, Paperless-ngx, and
+    Linkwarden (`tools`). Those are excluded because an unattended
+    update either risks locking you out of SSO-gated services
+    (Authentik) or has a history of breaking database migrations
+    (Immich), and restarting a database mid-update risks an app/schema
+    version mismatch with the application container still running the
+    old client.
 -   CrowdSec reads NPM logs from `./npm/logs` and detects attack
     patterns. Requires the firewall bouncer installed on the host to
     act on decisions. See [`V2/guides/stacks/infrastructure-networking-guide.md`](V2/guides/stacks/infrastructure-networking-guide.md).
@@ -406,6 +415,18 @@ VLAN61_IP=192.168.61.10
 -   The `immich-machine-learning` sidecar downloads models on first
     start (requires outbound internet). Models are cached at
     `./immich/model-cache` and do not re-download on subsequent starts.
+-   `immich-machine-learning` has a 3GB `mem_limit`. The mini PC has
+    16GB total RAM shared across every stack -- see the `llm` stack's
+    notes below for why hard memory caps matter here.
+-   `immich-postgres-backup` runs a nightly `pg_dump` (7 daily / 4
+    weekly / 6 monthly rotation) to `./immich-postgres-backups`, using
+    the `DB_*` credentials above. This is a logical backup alongside
+    Backrest's filesystem-level snapshot of `./immich/postgres` -- see
+    the `auth` stack's notes above for why both matter. Pinned to
+    `prodrigestivill/postgres-backup-local:14` to match the Postgres 14
+    server; re-pin this alongside the deferred Postgres image migration
+    in `V2/stacks/compose-review-notes.md`. Not labeled for Watchtower
+    auto-update, matching the rest of the Immich block.
 
 ### Immich Database Migration (deferred)
 
@@ -476,8 +497,20 @@ openssl rand -hex 32
 -   WikiJS PostgreSQL is isolated from all other PostgreSQL containers
     in the stack. Paperless-ngx and Linkwarden each have their own
     dedicated PostgreSQL (and, for Paperless, Redis) containers.
+-   Each of the three Postgres databases in this stack (WikiJS,
+    Paperless-ngx, Linkwarden) has a matching `*-postgres-backup`
+    sidecar running a nightly `pg_dump` (7 daily / 4 weekly / 6 monthly
+    rotation) to `./<service>-postgres-backups`, reusing that
+    database's existing credentials. This is a logical backup alongside
+    Backrest's filesystem-level snapshot of each `./*/postgres`
+    directory -- see the `auth` stack's notes above for why both
+    matter. None of the three are labeled for Watchtower auto-update.
 -   Paperless-ngx: drop files into `./paperless/consume` to ingest
     documents automatically.
+-   Paperless-ngx has a 2GB `mem_limit` -- its OCR pass on large
+    documents is one of the heavier consumers on the mini PC's 16GB of
+    total RAM. See the `llm` stack's notes below for the full memory
+    budget rationale.
 -   n8n webhook URL is configured for `https://n8n.home.bremmer.zone`.
     The NPM proxy host must exist before webhooks will work.
 -   Grocy default login is `admin`/`admin` -- change the password
@@ -522,6 +555,15 @@ openssl rand -hex 32
     `http://192.168.11.10:9000/if/flow/initial-setup/`
 -   Authentik integrates with Nginx Proxy Manager via forward auth to
     gate access to proxied services.
+-   `authentik-postgres-backup` runs a nightly `pg_dump` (7 daily / 4
+    weekly / 6 monthly rotation) to `./authentik-postgres-backups`,
+    reusing the `PG_*` credentials above. This is a logical backup
+    alongside Backrest's filesystem-level snapshot of
+    `./postgres` -- a raw copy of live Postgres data files isn't
+    guaranteed restorable if it's taken mid-write, so this gives you a
+    consistent fallback. Not labeled for Watchtower auto-update, same
+    reasoning as Authentik itself: a broken backup image update could
+    go unnoticed for weeks.
 
 ------------------------------------------------------------------------
 
@@ -552,6 +594,27 @@ VLAN11_IP=192.168.11.10
     commands.
 -   Recommended model for this hardware: `qwen2.5-coder:14b` (~9 GB,
     strong at both code and general chat).
+-   `ollama` has a 10GB `mem_limit` -- a hard cap, not a reservation.
+    The mini PC has 16GB total RAM shared across every stack in this
+    repo (~30 containers). Ollama, `immich-machine-learning` (3GB), and
+    `paperless-ngx` (2GB) are the only services capped, since they're
+    the only ones capable of consuming enough memory to starve
+    everything else through the Linux OOM killer, which otherwise picks
+    a victim somewhat arbitrarily -- it could just as easily kill a
+    database mid-write as the process actually responsible for the
+    spike. If you load a model larger than `qwen2.5-coder:14b`, raise
+    Ollama's `mem_limit` in `compose.yaml` to match, with headroom for
+    everything else still running.
+-   Open WebUI's login screen is enabled -- `WEBUI_AUTH=false` was
+    removed from `compose.yaml`. The first account created after
+    `docker compose up -d` becomes the admin automatically. If this
+    stack was already running with auth disabled, recreate the
+    container (`docker compose up -d --force-recreate open-webui`) and
+    sign up immediately -- there's a brief window where anyone who
+    reaches `http://192.168.11.10:3004` first gets the admin account
+    instead of you. Whether prior chat history carries over to the new
+    admin account depends on the Open WebUI version running; check
+    after signing up and treat it as not guaranteed.
 
 ------------------------------------------------------------------------
 

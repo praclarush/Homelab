@@ -344,6 +344,41 @@ ls /opt/docker/stacks
 You should see six directories: `dashboards-automation`, `dockge`,
 `infrastructure-networking`, `media-gaming`, `auth`, `tools`.
 
+### 2.7 Configure Docker Log Rotation
+
+By default, Docker's `json-file` log driver has no size cap -- every
+container's stdout/stderr grows without bound until the disk fills up.
+Set a repo-wide default before deploying any stack:
+
+```bash
+sudo cp /path/to/repo/config/docker-daemon.json /etc/docker/daemon.json
+sudo systemctl restart docker
+```
+
+> **Warning:** Restarting the Docker daemon restarts every currently
+> running container. If you're doing this after stacks are already
+> deployed rather than during initial setup, expect a brief outage
+> across all of them.
+
+If `/etc/docker/daemon.json` already exists (e.g. you've customized
+`data-root` or added a registry mirror), merge in the `log-driver` and
+`log-opts` keys from
+[`config/docker-daemon.json`](../../config/docker-daemon.json) instead
+of overwriting the file -- see
+[`config/README.md`](../../config/README.md) for details.
+
+Confirm it applied:
+
+```bash
+docker info --format '{{.LoggingDriver}}'
+```
+
+This caps each container's logs at 10MB × 3 files (30MB max, older
+entries rotated out). It only affects local log storage on the host --
+Promtail still ships full, unrotated logs to Loki (see
+[`dashboards-automation-guide.md`](../stacks/dashboards-automation-guide.md)),
+so nothing is lost from the observability stack.
+
 ---
 
 ## 3. Remote Access: NordVPN Meshnet
@@ -1126,6 +1161,7 @@ should pass before considering the deployment complete.
 | Item | How to Verify |
 |------|--------------|
 | SSH access to host works | You completed this guide |
+| Docker log rotation configured | `docker info --format '{{.LoggingDriver}}'` and check `docker inspect <any container> --format '{{json .HostConfig.LogConfig}}'` shows `max-size: 10m` |
 | proxy_net network exists | `docker network ls \| grep proxy_net` returns one result |
 | All containers running | `docker ps` -- no containers showing `Exiting` or `Restarting` (CrowdSec is expected to sit idle until NPM has log entries) |
 | Homepage loads | Browse to `http://192.168.11.10:3000` |
@@ -1153,4 +1189,5 @@ should pass before considering the deployment complete.
 | NordVPN Meshnet active | `nordvpn meshnet status` on host shows enabled |
 | Remote access over Meshnet works | Browse to `http://<meshnet-ip>:3000` from a device not on your home network |
 | WikiJS loads | `http://192.168.11.10:3003` |
+| Postgres backup sidecars running | `docker ps \| grep postgres_backup` shows all 5 (`authentik`, `immich`, `wikijs`, `paperless`, `linkwarden`) as `Up`. They run on `SCHEDULE=@daily`, so the first `.sql.gz` dump won't appear in `./<service>-postgres-backups` until the next scheduled run -- to confirm one works immediately instead of waiting, run `docker exec <container_name> /backup.sh` and check the directory for a new file |
 | WikiJS Postgres healthy | `docker inspect wikijs_postgres --format '{{.State.Health.Status}}'` returns `healthy` |

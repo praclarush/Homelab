@@ -15,6 +15,8 @@ services:
     environment:
       - UID=1000
       - GID=1000
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     networks:
       - proxy_net
 
@@ -48,6 +50,7 @@ services:
     image: ghcr.io/immich-app/immich-machine-learning:release
     volumes:
       - ./immich/model-cache:/cache
+    mem_limit: 3g
     restart: unless-stopped
     networks:
       - proxy_net
@@ -66,6 +69,27 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  immich-postgres-backup:
+    container_name: immich_postgres_backup
+    image: prodrigestivill/postgres-backup-local:14
+    environment:
+      - POSTGRES_HOST=immich_postgres
+      - POSTGRES_DB=${DB_DATABASE_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+    volumes:
+      - ./immich-postgres-backups:/backups
+    depends_on:
+      immich-database:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - proxy_net
@@ -97,6 +121,8 @@ services:
       - "${VLAN61_IP}:8096:8096"
     environment:
       - TZ=America/Chicago
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -113,6 +139,8 @@ services:
       - /mnt/synology/podcasts:/podcasts
     ports:
       - "${VLAN61_IP}:13378:13378"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net
@@ -125,6 +153,8 @@ services:
       - /mnt/synology/books:/books
     ports:
       - "${VLAN61_IP}:5000:5000"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
     networks:
       - proxy_net

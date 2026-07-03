@@ -13,6 +13,7 @@ reconstructing it by reading every guide that touches it.
 | `fstab` | NFS mounts for Immich, Jellyfin (`media-gaming`); Audiobookshelf, Kavita (`media-gaming`); Backrest (`tools`) |
 | `netplan-00-installer-config.yaml` | VLAN trunk config for the mini PC's two interfaces (VLAN 11, VLAN 61) |
 | `crowdsec-firewall-bouncer.yaml` | CrowdSec firewall bouncer override values (`infrastructure-networking`) |
+| `docker-daemon.json` | Docker Engine log rotation default, applied to every container across every stack |
 
 `config/operations/` holds the one host file from
 [`guides/operations/git-deployment-guide.md`](../guides/operations/git-deployment-guide.md)
@@ -35,6 +36,17 @@ complete file.** The full file is generated on the host by the
 and this reference -- only document the two values it tells you to
 change (`api_url`, `api_key`). The rest of that file's contents come
 from the package, not from this repository, and are not reproduced here.
+
+**`docker-daemon.json` genuinely is a complete file, but check for an
+existing `/etc/docker/daemon.json` before dropping it in.** A fresh
+Ubuntu Server install typically has none, in which case you can copy
+this file as-is. If one already exists (e.g. because you've configured
+a custom `data-root` or registry mirror), merge the `log-driver` and
+`log-opts` keys into it instead of overwriting the file -- Docker
+Engine only reads one `daemon.json`, and replacing it wholesale would
+silently drop your other settings. Without this file (or an
+equivalent), every container uses the default `json-file` driver with
+no size cap, and container logs grow unbounded on disk indefinitely.
 
 **`netplan-00-installer-config.yaml` genuinely is a complete file** --
 the getting-started guide has you replace the whole file's contents,
