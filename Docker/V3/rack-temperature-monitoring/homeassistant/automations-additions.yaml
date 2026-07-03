@@ -1,0 +1,31 @@
+# Append this entry to the automations list at
+# /opt/docker/stacks/dashboards-automation/homeassistant/config/automations.yaml
+# (that file is gitignored runtime state, not tracked in this repo).
+#
+# entity_id below is a placeholder: Home Assistant assigns the TP350's
+# entity_id from its BLE MAC address when it is discovered, so the real
+# value can't be known until the sensor is paired. Find it under
+# Settings > Devices & Services > Devices > <the TP350 device> > Sensors,
+# and replace both occurrences below before this automation is enabled.
+
+- id: rack_temp_high_alert
+  alias: "Server Rack - High Temperature Alert"
+  description: >
+    Sends an ntfy notification when the server rack temperature (TempPro
+    TP350, read via the rack-ble-proxy ESPHome Bluetooth proxy) stays above
+    85°F for 5 minutes.
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.REPLACE_WITH_TP350_TEMPERATURE_ENTITY
+      above: 85
+      for:
+        minutes: 5
+  condition: []
+  action:
+    - service: rest_command.ntfy_rack_alert
+      data:
+        message: >
+          Server rack temperature is
+          {{ states('sensor.REPLACE_WITH_TP350_TEMPERATURE_ENTITY') }}°F
+          (threshold: 85°F).
+  mode: single

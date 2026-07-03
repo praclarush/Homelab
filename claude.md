@@ -6,10 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Infrastructure-as-code for a Docker Compose homelab. No application code, no build pipeline, no tests. The authoritative deployment target is `/opt/docker/` on the Linux host.
 
-The repository root holds two parallel snapshots of the same homelab:
+The repository root holds three parallel snapshots of the same homelab:
 
-- **`Docker/V2/`** -- the current state, and what the rest of this file describes. Each stack has a single `compose.yaml`; there is no version history to reconcile within it.
+- **`Docker/V2/`** -- the current, deployed state, and what the rest of this file describes. Each stack has a single `compose.yaml`; there is no version history to reconcile within it.
 - **`Docker/V1/`** -- the prior, versioned snapshot, preserved for history. Several stacks there carry multiple `compose.vN.yaml` files representing incremental migrations (e.g. `tools/compose.yaml` through `compose.v5.yaml`). Do not add new work to `Docker/V1/`.
+- **`Docker/V3/`** -- staged changes not yet deployed, typically blocked on hardware or another external dependency. Each item is a self-contained folder with its own `README.md`. See `Docker/V3/README.md` for the promotion process into `Docker/V2/` once a staged item is verified.
 
 ## Common Commands
 

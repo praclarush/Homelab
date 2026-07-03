@@ -1,0 +1,44 @@
+esphome:
+  name: rack-ble-proxy
+  friendly_name: Rack BLE Proxy
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Fallback hotspot if the configured network is unreachable, so a
+  # mis-typed password doesn't turn this into a return trip to the rack.
+  ap:
+    ssid: "Rack-Ble-Proxy Fallback Hotspot"
+    password: !secret wifi_fallback_password
+
+captive_portal:
+
+# Passive scanning only -- the TP350 broadcasts unsolicited advertisements
+# and never needs to be connected to. Passive mode is lower power and
+# sufficient for this use case.
+esp32_ble_tracker:
+  scan_parameters:
+    active: false
+
+# `active: false` means this proxy only forwards broadcast advertisements
+# (what the TP350 needs) and does not support HA opening GATT connections
+# through it. Flip to `true` only if a future BLE device on this proxy
+# requires pairing/connection (e.g. a BLE lock).
+bluetooth_proxy:
+  active: false
