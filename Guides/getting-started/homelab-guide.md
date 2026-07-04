@@ -759,9 +759,9 @@ it like a virtual switch that the other containers plug in to -- if
 `dockge` is the only stack that does not join `proxy_net` and can be
 deployed at any point.
 
-1. `dashboards-automation`
+1. `infrastructure-networking`
 2. `dockge`
-3. `infrastructure-networking`
+3. `dashboards-automation`
 4. `media-gaming`
 5. `auth`
 6. `tools`
@@ -771,10 +771,10 @@ and `Scripts/shutdown-all.sh` bring everything up or down again in this
 same order in one command -- useful for a planned reboot, not for this
 first-time walkthrough.
 
-### 7.1 dashboards-automation
+### 7.1 infrastructure-networking
 
 ```bash
-cd /opt/docker/stacks/dashboards-automation
+cd /opt/docker/stacks/infrastructure-networking
 docker compose up -d
 ```
 
@@ -782,18 +782,28 @@ The `-d` flag means "detached" -- the containers run in the background,
 similar to starting a Windows service. Without it, the output streams
 to your terminal and stops when you close the SSH session.
 
-Confirm the `proxy_net` network was created:
+Pi-hole takes 20-30 seconds to initialise on first start. Confirm the
+`proxy_net` network was created and every container is running:
 
 ```bash
 docker network ls | grep proxy_net
+docker compose ps
 ```
 
-You should see one line with `proxy_net` and `bridge` in it. If the
-output is empty, check the logs:
+You should see one line with `proxy_net` and `bridge` in the first
+command's output, and `running` in the `STATUS` column for every
+container in the second. If one container shows `exiting` or
+`restarting`, check its logs:
 
 ```bash
-docker compose logs
+docker compose logs <service_name>
 ```
+
+CrowdSec mounts NPM logs from `./npm/logs`, so it stays idle until NPM
+has generated at least one access log entry -- this is expected and not
+a failure. Its full setup, including enrolling with the CrowdSec Hub
+and installing the host firewall bouncer, is in
+[infrastructure-networking-guide.md](../stacks/infrastructure-networking-guide.md).
 
 ### 7.2 dockge
 
@@ -806,32 +816,24 @@ Dockge has no `networks:` configuration and is not on `proxy_net` --
 NPM proxies it via the host IP (`192.168.11.10:5001`) rather than by
 container name.
 
-### 7.3 infrastructure-networking
+### 7.3 dashboards-automation
 
 ```bash
-cd /opt/docker/stacks/infrastructure-networking
+cd /opt/docker/stacks/dashboards-automation
 docker compose up -d
 ```
 
-Pi-hole takes 20-30 seconds to initialise on first start. Confirm all
-containers are running:
+Confirm every container is running:
 
 ```bash
 docker compose ps
 ```
 
-The `STATUS` column should show `running` for every container. If one
-shows `exiting` or `restarting`, check its logs:
+If one shows `exiting` or `restarting`, check its logs:
 
 ```bash
-docker compose logs <service_name>
+docker compose logs
 ```
-
-CrowdSec mounts NPM logs from `./npm/logs`, so it stays idle until NPM
-has generated at least one access log entry -- this is expected and not
-a failure. Its full setup, including enrolling with the CrowdSec Hub
-and installing the host firewall bouncer, is in
-[infrastructure-networking-guide.md](../stacks/infrastructure-networking-guide.md).
 
 ### 7.4 media-gaming
 

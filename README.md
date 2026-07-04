@@ -66,8 +66,7 @@ The repository root holds four top-level folders:
   under [`Migrations/V3/`](Migrations/V3/) (a versioned batch -- see
   [`Migrations/V3/README.md`](Migrations/V3/README.md) for its promotion
   process); newer items are added as standalone folders directly under
-  `Migrations/` (e.g. [`Migrations/proxy-net-ownership-swap/`](Migrations/proxy-net-ownership-swap/)).
-  Each item is self-contained with its own `README.md`.
+  `Migrations/`. Each item is self-contained with its own `README.md`.
 - **[`Scripts/`](Scripts/)** -- host-side operational scripts not tied to a
   single stack: `startup-all.sh`/`shutdown-all.sh` bring every stack up or
   down in dependency order, and `add-npm-proxy-hosts.ps1` bulk-creates NPM
@@ -240,8 +239,8 @@ and changes pushed elsewhere can be pulled and applied with
 
 ## Deployment Order
 
-`dashboards-automation` first (creates the `proxy_net` network every
-other stack but `dockge` joins), then `dockge`, `infrastructure-networking`,
+`infrastructure-networking` first (creates the `proxy_net` network every
+other stack but `dockge` joins), then `dockge`, `dashboards-automation`,
 `media-gaming`, `auth`, `tools`, `llm` -- in any order after that. Full
 prerequisites (disabling `systemd-resolved`, mounting the six NAS shares,
 Intel Quick Sync, VLAN trunking) and step-by-step deployment for each
