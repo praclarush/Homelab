@@ -9,7 +9,7 @@ interface. The stack runs fully offline once models are pulled.
 > All inference runs on CPU. Expect 3-6 tokens/second for a 14B model.
 > This is normal and usable for code generation and chat.
 
-> **Prerequisite:** `dashboards-automation` must be running before
+> **Prerequisite:** `infrastructure-networking` must be running before
 > deploying this stack. It creates the `proxy_net` Docker bridge network
 > that all stacks except `dockge` depend on.
 

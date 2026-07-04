@@ -752,10 +752,10 @@ mid-write, so the logical dump is the consistent fallback of the two.
 
 ### Order Matters
 
-`dashboards-automation` must be deployed first. It creates a Docker
+`infrastructure-networking` must be deployed first. It creates a Docker
 network called `proxy_net` that every other stack connects to. Think of
 it like a virtual switch that the other containers plug in to -- if
-`dashboards-automation` is not running, the other stacks cannot start.
+`infrastructure-networking` is not running, the other stacks cannot start.
 `dockge` is the only stack that does not join `proxy_net` and can be
 deployed at any point.
 

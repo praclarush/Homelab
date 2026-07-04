@@ -1,6 +1,7 @@
 networks:
   proxy_net:
-    external: true
+    name: proxy_net
+    external: false
 
 services:
   nginx-proxy-manager:
