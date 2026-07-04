@@ -58,7 +58,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 ## Shared Network Dependency
 
-`proxy_net` is a Docker bridge network created by `dashboards-automation` (`external: false`). All other stacks except `dockge` join it as `external: true`. **`dashboards-automation` must be running before any other stack starts.**
+`proxy_net` is a Docker bridge network created by `infrastructure-networking` (`external: false`). All other stacks except `dockge` join it as `external: true`. **`infrastructure-networking` must be running before any other stack starts.**
 
 `dockge` is standalone with no `networks:` configuration -- it is not on `proxy_net` and cannot be reached by container name from NPM. NPM proxies Dockge via the host IP (`192.168.11.10:5001`).
 

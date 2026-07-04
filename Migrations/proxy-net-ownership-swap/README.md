@@ -1,9 +1,18 @@
 # Proxy Net Ownership Swap (dashboards-automation -> infrastructure-networking)
 
-**Status: planned, not yet applied.** Deferred until a maintenance window --
-this requires taking every proxied stack down and back up, so expect
-downtime for NPM, Pi-hole, Homepage, Immich, Jellyfin, Authentik, and
-everything else on `proxy_net` for the duration.
+**Status: repo changes prepared, host cutover not yet applied.** The compose
+edits, `CLAUDE.md`, and both `Scripts/*-all.sh` files already reflect the new
+ownership (steps 3 and 7 below are done). Steps 1, 2, 4, 5, and 6 --
+the actual `docker compose down`/`up` cutover on the host -- are still
+deferred until a maintenance window, since they require taking every
+proxied stack down and back up: expect downtime for NPM, Pi-hole, Homepage,
+Immich, Jellyfin, Authentik, and everything else on `proxy_net` for the
+duration.
+
+Do not run `docker compose up -d` on the host from this repo state until
+that maintenance window: the compose files now declare
+`infrastructure-networking` as the owner of `proxy_net`, which does not
+match reality until the live cutover (steps 1-2, 4-6) is performed.
 
 ## Why
 
