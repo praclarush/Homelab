@@ -165,7 +165,7 @@ Internal-only services (no exposed port) are marked with a dash.
 All stacks are stored under `/opt/docker/stacks/` on the host. Following
 [`Guides/operations/git-deployment-guide.md`](Guides/operations/git-deployment-guide.md),
 this path is a symlink into a clone of this
-repository at `/opt/docker/repo`, pointed at the `Docker/stacks/` tree, so
+repository at `/srv/git/homelab`, pointed at the `Docker/stacks/` tree, so
 config changes made on the host can be committed and pushed directly,
 and changes pushed elsewhere can be pulled and applied with
 `docker compose up -d`.

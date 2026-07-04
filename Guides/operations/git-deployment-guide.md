@@ -160,11 +160,19 @@ You should see a message confirming authentication as the repository
 ## 4. Migrating the Live Deployment to a Git Working Tree
 
 Clone to a separate path first -- do not point `git clone` at
-`/opt/docker/stacks` directly.
+`/opt/docker/stacks` directly. Repos live under `/srv/git/`, a
+dedicated location kept separate from `/opt/docker` (which holds only
+the live stacks symlink and its target).
 
 ```bash
-git clone github-homelab:praclarush/Homelab.git /opt/docker/repo
+sudo mkdir -p /srv/git
+sudo chown "$USER:$USER" /srv/git
+git clone github-homelab:praclarush/Homelab.git /srv/git/homelab
 ```
+
+`/srv/git` is created once, owned by your user so subsequent `git`
+commands don't need `sudo` -- only the symlink swap into `/opt/docker`
+below needs root.
 
 Back up the live stacks directory before changing anything:
 
@@ -178,14 +186,29 @@ data (Postgres volumes, caches, models, Tailscale state) -- none of
 which exist in the fresh clone, since none of it is tracked:
 
 ```bash
-rsync -a --exclude='.git' /opt/docker/stacks.bak/ /opt/docker/repo/Docker/stacks/
+sudo rsync -a --exclude='.git' /opt/docker/stacks.bak/ /srv/git/homelab/Docker/stacks/
+sudo chown -R "$USER:$USER" /srv/git/homelab
 ```
+
+`sudo cp -r` above preserves the original ownership of every file it
+copies, including root-owned and container-UID-owned paths (Postgres
+data directories, Tailscale state, CrowdSec's config and data,
+NPM's Let's Encrypt certs, and more). A plain `rsync` run as your user
+cannot read those paths in the backup and will fail with `Permission
+denied` partway through. Running the `rsync` itself with `sudo` avoids
+that, and the follow-up `chown -R` reclaims the working tree for your
+user so the `git` commands in the rest of this section don't need
+`sudo`. This is safe even for services like Postgres that expect a
+specific UID on their data directory -- their container entrypoints
+run as root initially and re-`chown` their own data directory to the
+UID they need before dropping privileges, so host ownership
+self-corrects the next time you run `docker compose up`.
 
 Check what, if anything, has drifted between the live server and
 GitHub:
 
 ```bash
-cd /opt/docker/repo
+cd /srv/git/homelab
 git status
 ```
 
@@ -199,7 +222,7 @@ Once satisfied, point the live path at the repo:
 
 ```bash
 sudo mv /opt/docker/stacks /opt/docker/stacks.old
-sudo ln -s /opt/docker/repo/Docker/stacks /opt/docker/stacks
+sudo ln -s /srv/git/homelab/Docker/stacks /opt/docker/stacks
 ```
 
 `/opt/docker/stacks` is now a symlink into the git working tree.
@@ -226,7 +249,7 @@ sudo rm -rf /opt/docker/stacks.bak /opt/docker/stacks.old
 **Editing on the server, then publishing:**
 
 ```bash
-cd /opt/docker/repo
+cd /srv/git/homelab
 git add -p
 git commit -m "describe the config change"
 git push
@@ -239,7 +262,7 @@ before it becomes a leaked secret instead of after.
 **Pulling a change made elsewhere (e.g. from a Windows checkout):**
 
 ```bash
-cd /opt/docker/repo
+cd /srv/git/homelab
 git pull
 ```
 
@@ -284,9 +307,9 @@ same commit that adds the service -- not after the fact.
 |------|--------------|
 | `.gitignore` matches current paths | `git check-ignore -v` on each sensitive path in Section 2 returns a rule |
 | Deploy key authenticates | `ssh -T github-homelab` confirms as the repo |
-| Repo cloned, not into the live path directly | `/opt/docker/repo/.git` exists |
+| Repo cloned, not into the live path directly | `/srv/git/homelab/.git` exists |
 | Live state reconciled before cutover | `git status` reviewed; no unexpected drift |
-| `/opt/docker/stacks` is a symlink | `ls -ld /opt/docker/stacks` shows `-> /opt/docker/repo/Docker/stacks` |
+| `/opt/docker/stacks` is a symlink | `ls -ld /opt/docker/stacks` shows `-> /srv/git/homelab/Docker/stacks` |
 | Dockge still sees all stacks | `http://192.168.11.10:5001` lists every stack, all green |
 | All containers still running post-cutover | `docker compose ps` in every stack directory shows `running` |
 | Push from server works | Edit a tracked file, `git add -p && git commit && git push`, confirm it appears on GitHub |

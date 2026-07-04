@@ -66,7 +66,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **Dockge stack path:** Configured to manage stacks at `/opt/docker/stacks` via `DOCKGE_STACKS_DIR`. This must match the actual path on the host.
 
-**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `Guides/operations/git-deployment-guide.md`, it resolves to `/opt/docker/repo/Docker/stacks`, a clone of this repository's remote. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/opt/docker/repo`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
+**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `Guides/operations/git-deployment-guide.md`, it resolves to `/srv/git/homelab/Docker/stacks`, a clone of this repository's remote kept in a dedicated repos folder separate from `/opt/docker`. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/srv/git/homelab`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
 
 **Immich storage split:** PostgreSQL data (`./immich/postgres`) stays on local NVMe. Media uploads mount from NAS at `/mnt/synology/immich`. Do not move the database to NFS.
 
