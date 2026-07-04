@@ -40,6 +40,14 @@ logs/
 **/*.sqlite3
 **/*.db
 
+# SQLite WAL/SHM sidecar files (not matched by the patterns above)
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite-shm
+**/*.sqlite-wal
+**/*.sqlite3-shm
+**/*.sqlite3-wal
+
 # ==============================
 # Application Persistent Data
 # (paths match the current stacks/<stack>/ layout)
@@ -54,6 +62,11 @@ logs/
 # Home Assistant runtime/secret files (.storage holds auth tokens, device credentials)
 **/homeassistant/config/.storage/
 **/homeassistant/config/home-assistant.log*
+**/homeassistant/config/secrets.yaml
+**/homeassistant/config/.cloud/
+**/homeassistant/config/deps/
+**/homeassistant/config/tts/
+**/homeassistant/config/.ha_run.lock
 
 # Pi-hole runtime data and admin password hash (pihole.toml lives here)
 **/pihole/config/
@@ -78,6 +91,35 @@ logs/
 # Paperless-ngx ingested/processed documents
 **/paperless/media/
 **/paperless/consume/
+
+# CrowdSec: cscli-managed hub content (vendored parsers/scenarios, symlinked
+# into the container at /etc/crowdsec/hub -- reinstalled by cscli, not hand-authored),
+# downloaded blocklists/GeoIP databases, and notification profiles (contain
+# webhook URLs/API tokens)
+**/crowdsec/data/
+**/crowdsec/config/hub/
+**/crowdsec/config/local_api_credentials.yaml
+**/crowdsec/config/online_api_credentials.yaml
+**/crowdsec/config/notifications/
+**/crowdsec/config/scenarios/
+**/crowdsec/config/collections/
+**/crowdsec/config/postoverflows/
+**/crowdsec/config/parsers/
+**/crowdsec/config/contexts/
+**/crowdsec/config/patterns/
+
+# Self-managed app data with no separate static-config layer -- everything
+# under these paths is written by the app itself (SQLite DBs, metadata caches,
+# session stores, user-generated content), not hand-authored config
+**/audiobookshelf/
+**/jellyfin/
+**/kavita/
+**/actual-budget/
+**/grocy/
+**/mealie/
+**/n8n/
+**/pgadmin/
+**/stirling-pdf/
 
 # ==============================
 # Backups
