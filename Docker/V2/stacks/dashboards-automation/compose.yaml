@@ -16,6 +16,7 @@ services:
       - HOMEPAGE_VAR_IMMICH_KEY=${HOMEPAGE_VAR_IMMICH_KEY}
       - HOMEPAGE_VAR_JELLYFIN_KEY=${HOMEPAGE_VAR_JELLYFIN_KEY}
       - HOMEPAGE_VAR_PIHOLE_KEY=${HOMEPAGE_VAR_PIHOLE_KEY}
+      - HOMEPAGE_ALLOWED_HOSTS=homepage.home.bremmer.zone,${VLAN11_IP}:3000
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
