@@ -383,7 +383,7 @@ See [`Docker/V2/guides/stacks/infrastructure-networking-guide.md`](Docker/V2/gui
 PIHOLE_PASSWORD=
 TAILSCALE_AUTHKEY=
 WATCHTOWER_NTFY_TOPIC=
-WATCHTOWER_NTFY_TOKEN=
+WATCHTOWER_NTFY_PASS=
 VLAN11_IP=192.168.11.10
 ```
 
@@ -396,10 +396,13 @@ VLAN11_IP=192.168.11.10
 -   Remote access is provided by Tailscale. No port forwarding is
     required. See [`Docker/V2/guides/getting-started/homelab-guide.md`](Docker/V2/guides/getting-started/homelab-guide.md) for auth key generation.
 -   ntfy runs with `NTFY_AUTH_DEFAULT_ACCESS=deny-all` -- no anonymous
-    publish or subscribe. Watchtower authenticates with a write-only
-    token scoped to its own topic (`WATCHTOWER_NTFY_TOKEN`); your own
-    phone subscription authenticates with an admin account. Both are
-    created via `ntfy user add` / `ntfy token add` -- see
+    publish or subscribe. Watchtower authenticates with a scoped user
+    that has write-only access to its own topic, via password
+    (`WATCHTOWER_NTFY_PASS`) rather than a `tk_` token -- the Shoutrrr
+    version bundled in `containrrr/watchtower:latest` does not support
+    the `?token=` query parameter on `ntfy://` URLs. Your own phone
+    subscription authenticates with an admin account. Both are
+    created via `ntfy user add` -- see
     [Section 8.9 of the getting-started guide](Docker/V2/guides/getting-started/homelab-guide.md#89-ntfy).
     The auth database persists at `./ntfy/lib`.
 -   Watchtower is on `proxy_net` so it can reach `ntfy` by container

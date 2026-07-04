@@ -598,13 +598,13 @@ nano /opt/docker/stacks/infrastructure-networking/.env
 PIHOLE_PASSWORD=your-pihole-admin-password
 TAILSCALE_AUTHKEY=tskey-auth-xxxxxxxxxxxx
 WATCHTOWER_NTFY_TOPIC=watchtower
-WATCHTOWER_NTFY_TOKEN=
+WATCHTOWER_NTFY_PASS=
 VLAN11_IP=192.168.11.10
 ```
 
-Leave `WATCHTOWER_NTFY_TOKEN` blank for now -- it can't be generated until
-ntfy is running. Section 8.9 covers generating it and coming back to fill
-this in.
+Leave `WATCHTOWER_NTFY_PASS` blank for now -- it can't be set until
+ntfy is running. Section 8.9 covers creating the account and coming
+back to fill this in.
 
 Replace `tskey-auth-xxxxxxxxxxxx` with the key from step 4.2 and
 `watchtower` with the topic name from step 4.4.
@@ -1064,24 +1064,30 @@ one account can read and publish to everything.
 **Create a scoped account for Watchtower:**
 
 ```bash
-docker exec -it ntfy ntfy user add --role=none watchtower
-docker exec -it ntfy ntfy access watchtower ${WATCHTOWER_NTFY_TOPIC} write-only
-docker exec -it ntfy ntfy token add watchtower
+docker exec -e NTFY_PASSWORD=<choose-a-password> ntfy ntfy user add watchtower
+docker exec ntfy ntfy access watchtower ${WATCHTOWER_NTFY_TOPIC} write-only
 ```
 
-`--role=none` means the `watchtower` user has no access to anything
-until explicitly granted -- the `ntfy access` command grants it
-write-only access to just the one topic it needs. `ntfy token add`
-prints a token starting with `tk_`; copy it.
+The default role (`user`) has no access to anything until explicitly
+granted -- the `ntfy access` command grants it write-only access to
+just the one topic it needs.
 
-**Wire the token into Watchtower:**
+Use password auth, not a `tk_` access token: the Shoutrrr version
+bundled in `containrrr/watchtower:latest` doesn't recognize the
+`?token=` query parameter on `ntfy://` URLs and will fail to start
+with `error initializing router services: token is not a valid config
+key`.
+
+**Wire the password into Watchtower:**
 
 ```bash
 nano /opt/docker/stacks/infrastructure-networking/.env
 ```
 
-Set `WATCHTOWER_NTFY_TOKEN=` to the `tk_` value you copied, then
-restart Watchtower to pick it up:
+Set `WATCHTOWER_NTFY_PASS=` to the password you chose above.
+`compose.yaml` builds the notification URL as
+`ntfy://watchtower:${WATCHTOWER_NTFY_PASS}@ntfy/${WATCHTOWER_NTFY_TOPIC}`.
+Restart Watchtower to pick it up:
 
 ```bash
 cd /opt/docker/stacks/infrastructure-networking
@@ -1094,14 +1100,6 @@ docker compose up -d watchtower
 > Watchtower's service block in `compose.yaml` has a `networks:` entry
 > for `proxy_net`; earlier versions of this file omitted it, which
 > silently broke `ntfy://ntfy/...` resolution.
->
-> Some older Watchtower/shoutrrr builds don't support the `?token=`
-> query parameter on the `ntfy://` notification URL. If Watchtower logs
-> show a 401 or the request never reaches ntfy, switch to password
-> auth instead: set a password on the `watchtower` user
-> (`docker exec -it ntfy ntfy user change-pass watchtower`) and use
-> `WATCHTOWER_NOTIFICATION_URL=ntfy://watchtower:<password>@ntfy/${WATCHTOWER_NTFY_TOPIC}`
-> in `compose.yaml` instead of the token-based URL.
 
 **Subscribe on your phone:**
 
@@ -1124,7 +1122,7 @@ docker exec watchtower /watchtower --run-once --notification-report
 ```
 
 You should receive a push notification on your phone within a few
-seconds. If nothing arrives, double-check `WATCHTOWER_NTFY_TOKEN` and
+seconds. If nothing arrives, double-check `WATCHTOWER_NTFY_PASS` and
 `WATCHTOWER_NTFY_TOPIC` in the `.env` file, confirm the ntfy container
 is running, and check `docker compose logs watchtower` for the actual
 HTTP status of the notification attempt.
