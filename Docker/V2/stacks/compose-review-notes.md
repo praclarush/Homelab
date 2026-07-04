@@ -67,13 +67,10 @@ Redis by default stores data only in memory. Adding the `/data` volume bind-moun
 
 ---
 
-## Deferred — `immich-database` image migration (do not apply in-place)
+## `immich-database` image migration -- forced by Immich v3.0.1 (2026-07-04)
 
-The current image `tensorchord/pgvecto-rs:pg14-v0.2.0` is an older community build. Immich now ships its own Postgres image: `ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0`.
+`immich-server` runs on the floating `:release` tag, and Watchtower auto-updated it to v3.0.1, which dropped pgvecto.rs (`vectors` extension) support entirely. `immich-server` crash-looped with `No vector extension found` until this was applied -- the migration was no longer optional/deferred by the time it was addressed.
 
-This change requires a full database dump and restore -- it is not a rolling upgrade. Do not change the image tag without completing the migration procedure first. Perform at a scheduled maintenance window:
+Image changed from `tensorchord/pgvecto-rs:pg14-v0.2.0` to `ghcr.io/immich-app/postgres:14-vectorchord0.4.2-pgvectors0.2.0` (matches the exact `vectors 0.2.0` version that was installed, on the newest VectorChord release that still bundles that pgvectors compat version).
 
-1. `docker exec immich_postgres pg_dumpall -U <DB_USERNAME> > immich_backup.sql`
-2. Stop the stack, update the image tag, restart.
-3. `docker exec -i immich_postgres psql -U <DB_USERNAME> < immich_backup.sql`
-4. Verify Immich starts cleanly before discarding the backup.
+Per Immich's official docs (https://docs.immich.app/administration/postgres-standalone/), this is a straight image-tag swap, not a dump/restore -- Immich's own startup migration reindexes from the old extension into VectorChord automatically, logged as reindexing progress. A precautionary `pg_dumpall` backup was still taken first.

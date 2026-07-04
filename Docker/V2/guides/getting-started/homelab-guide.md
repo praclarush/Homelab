@@ -1073,7 +1073,7 @@ granted -- the `ntfy access` command grants it write-only access to
 just the one topic it needs.
 
 Use password auth, not a `tk_` access token: the Shoutrrr version
-bundled in `containrrr/watchtower:latest` doesn't recognize the
+bundled in `nickfedor/watchtower:latest` doesn't recognize the
 `?token=` query parameter on `ntfy://` URLs and will fail to start
 with `error initializing router services: token is not a valid config
 key`.
