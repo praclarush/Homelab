@@ -2,16 +2,16 @@
 set -euo pipefail
 
 # Starts every stack's containers, in dependency order.
-# dashboards-automation owns proxy_net (external: false) and must come up
+# infrastructure-networking owns proxy_net (external: false) and must come up
 # first; every other stack (except dockge, which isn't on proxy_net) joins
 # it as external: true.
 
 STACKS_DIR="${STACKS_DIR:-/opt/docker/stacks}"
 
 STACK_ORDER=(
+  infrastructure-networking
   dashboards-automation
   dockge
-  infrastructure-networking
   auth
   media-gaming
   tools

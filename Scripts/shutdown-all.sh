@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Stops every stack's containers, in reverse dependency order.
-# dashboards-automation owns proxy_net (external: false), so it is stopped
+# infrastructure-networking owns proxy_net (external: false), so it is stopped
 # last, after every stack that joins that network as external: true.
 
 STACKS_DIR="${STACKS_DIR:-/opt/docker/stacks}"
@@ -12,9 +12,9 @@ STACK_ORDER=(
   tools
   media-gaming
   auth
-  infrastructure-networking
   dockge
   dashboards-automation
+  infrastructure-networking
 )
 
 failed=()

@@ -1,7 +1,6 @@
 networks:
   proxy_net:
-    name: proxy_net
-    external: false
+    external: true
 
 services:
   homepage:
