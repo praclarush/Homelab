@@ -399,7 +399,7 @@ VLAN11_IP=192.168.11.10
     publish or subscribe. Watchtower authenticates with a scoped user
     that has write-only access to its own topic, via password
     (`WATCHTOWER_NTFY_PASS`) rather than a `tk_` token -- the Shoutrrr
-    version bundled in `containrrr/watchtower:latest` does not support
+    version bundled in `nickfedor/watchtower:latest` does not support
     the `?token=` query parameter on `ntfy://` URLs. Your own phone
     subscription authenticates with an admin account. Both are
     created via `ntfy user add` -- see

@@ -21,12 +21,10 @@
       timeStyle: short
       hourCycle: h12
 
-# Open-Meteo needs no API key. Replace latitude/longitude/timezone with
-# your actual location — these are placeholder values.
 - openmeteo:
     label: Home
-    latitude: 39.0
-    longitude: -76.0
-    timezone: America/New_York
+    latitude: 35.5879903
+    longitude: -97.5512220
+    timezone: America/Chicago
     units: imperial
     cache: 5
