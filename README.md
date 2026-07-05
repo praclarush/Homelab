@@ -65,7 +65,11 @@ The repository root holds four top-level folders:
   typically blocked on hardware or another external dependency. Most live
   under [`Migrations/V3/`](Migrations/V3/) (a versioned batch -- see
   [`Migrations/V3/README.md`](Migrations/V3/README.md) for its promotion
-  process); newer items are added as standalone folders directly under
+  process); [`Migrations/V2.1/`](Migrations/V2.1/) is a second versioned
+  batch, a minor update to the currently-deployed state rather than a
+  future major version (see
+  [`Migrations/V2.1/README.md`](Migrations/V2.1/README.md)); newer,
+  unbatched items are added as standalone folders directly under
   `Migrations/`. Each item is self-contained with its own `README.md`.
 - **[`Scripts/`](Scripts/)** -- host-side operational scripts not tied to a
   single stack: `startup-all.sh`/`shutdown-all.sh` bring every stack up or
