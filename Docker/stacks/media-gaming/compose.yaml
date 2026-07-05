@@ -6,6 +6,8 @@ services:
   amp:
     container_name: amp
     image: cubecoders/amp:latest
+    tty: true
+    stdin_open: true
     ports:
       - "${VLAN61_IP}:8081:8081"
       - "${VLAN61_IP}:25565:25565"
