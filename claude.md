@@ -114,3 +114,15 @@ categorized list. Quick reference:
 | `Guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
 | `Docker/stacks/compose-review-notes.md` | Rationale for compose file changes, including the completed Immich Postgres image migration |
 | `Docker/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `Docker/stacks/` |
+
+## Branching
+
+Root branches are `master` and `release` only. Every other branch must be prefixed `{kind}/{branchName}`:
+
+| Kind | Use |
+|------|-----|
+| `bug/` | Non-urgent bug fixes -- the affected stack is degraded but not restart-looping |
+| `hotfix/` | Urgent fixes for an issue actively affecting a running stack right now |
+| `task/` | Everything else -- features, docs, refactors, migrations |
+
+`release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump.
