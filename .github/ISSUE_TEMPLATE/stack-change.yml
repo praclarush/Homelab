@@ -1,0 +1,43 @@
+name: Stack Change
+description: New service, config change, or migration work against a stack.
+labels:
+  - enhancement
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Docker/stacks (deployed state)
+        - Docker/config (host-level config)
+        - Migrations (staged, not yet deployed)
+        - Scripts
+    validations:
+      required: true
+  - type: input
+    id: stack
+    attributes:
+      label: Stack(s) / migration item
+      description: Which stack(s) under Docker/stacks, or which item under Migrations/, does this affect?
+      placeholder: e.g. tools, Migrations/V3/some-item
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs to change and why?
+    validations:
+      required: true
+  - type: checkboxes
+    id: blocked
+    attributes:
+      label: Blocked on external dependency?
+      options:
+        - label: Waiting on hardware
+        - label: Waiting on another migration/change
+        - label: Not blocked
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
