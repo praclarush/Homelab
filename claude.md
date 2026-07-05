@@ -126,4 +126,4 @@ Root branches are `master` and `release` only. Every other branch must be prefix
 | `hotfix/` | Urgent fixes for an issue actively affecting a running stack right now |
 | `task/` | Everything else -- features, docs, refactors, migrations |
 
-`release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump.
+`release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump, and is always branched from and merged back into `release` first, then forward-merged (or cherry-picked) into `master`.
