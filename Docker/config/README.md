@@ -14,6 +14,7 @@ reconstructing it by reading every guide that touches it.
 | `netplan-00-installer-config.yaml` | VLAN trunk config for the mini PC's two interfaces (VLAN 11, VLAN 61) |
 | `crowdsec-firewall-bouncer.yaml` | CrowdSec firewall bouncer override values (`infrastructure-networking`) |
 | `docker-daemon.json` | Docker Engine log rotation default, applied to every container across every stack |
+| `ssh-hardening.conf` | Recommended `sshd_config.d` drop-in from `guides/operations/ssh-management-guide.md` (Section 7) |
 
 `config/operations/` holds the one host file from
 [`guides/operations/git-deployment-guide.md`](../guides/operations/git-deployment-guide.md)
@@ -47,6 +48,14 @@ Engine only reads one `daemon.json`, and replacing it wholesale would
 silently drop your other settings. Without this file (or an
 equivalent), every container uses the default `json-file` driver with
 no size cap, and container logs grow unbounded on disk indefinitely.
+
+**`ssh-hardening.conf` is a drop-in, not a complete `sshd_config`.** It
+only sets the three directives the guide recommends changing
+(`PasswordAuthentication`, `PermitRootLogin`, `PubkeyAuthentication`).
+It must be installed as `/etc/ssh/sshd_config.d/10-ssh-hardening.conf`
+(the `10-` prefix matters -- it must sort before the existing
+`50-cloud-init.conf` to take precedence) and only after confirming
+key-based login already works.
 
 **`netplan-00-installer-config.yaml` genuinely is a complete file** --
 the getting-started guide has you replace the whole file's contents,
