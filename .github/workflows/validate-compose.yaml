@@ -24,7 +24,7 @@ jobs:
           - media-gaming
           - tools
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Validate ${{ matrix.stack }}
         working-directory: Docker/stacks/${{ matrix.stack }}
