@@ -1323,6 +1323,60 @@ In Uptime Kuma, add a new HTTP monitor:
 - **Name:** WikiJS
 - **URL:** `http://localhost:3003`
 
+### 8.14 CrowdSec
+
+CrowdSec is deployed as part of `infrastructure-networking`, but it
+stays idle until Nginx Proxy Manager has generated at least one access
+log entry -- browse to any proxied service first if you want to see it
+pick up log lines right away. It has no web UI and needs no first-login
+step of its own.
+
+Full setup -- verifying the agent loaded its detection collection,
+enrolling with the CrowdSec Hub for community blocklists, and installing
+the host firewall bouncer that actually blocks traffic -- is in
+[infrastructure-networking-guide.md](../stacks/infrastructure-networking-guide.md).
+
+### 8.15 Extra `tools` Services
+
+`tools` ships with ten more services beyond WikiJS: pgAdmin, Stirling
+PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy,
+Linkwarden, and Backrest. Each needs its own `.env` entries (the
+`tools` row in Section 5.6 above only lists what WikiJS itself needs)
+and an NPM proxy host before first login.
+
+Full setup for all ten -- default credentials, admin account creation,
+NAS-backed Backrest repository configuration, and putting the two
+no-login tools (IT Tools, Stirling PDF) behind Authentik forward auth
+-- is in
+[tools-guide.md](../stacks/tools-guide.md#7-first-time-service-setup).
+
+### 8.16 Audiobookshelf and Kavita
+
+Both join `media-gaming` alongside AMP, Immich, and Jellyfin, binding to
+`VLAN61_IP` for same-subnet NFS access to the NAS. Confirm the
+`audiobooks`, `podcasts`, and `books` NAS shares are mounted (Section
+2.2) before scanning either library, or the scan comes back empty.
+
+Full setup -- creating the admin account, adding libraries, and
+pointing each at the right NAS mount -- is in
+[media-gaming-guide.md](../stacks/media-gaming-guide.md#6-first-time-service-setup).
+
+### 8.17 LLM Stack: Ollama and Open WebUI (Optional)
+
+The `llm` stack is not part of the six-stack deployment order in
+Section 7 -- it's optional and entirely separate, with its own guide
+covering creating the stack directory, writing `compose.yaml` and
+`.env`, deploying, and pulling a model.
+
+Once running, Open WebUI's first-launch account creation follows the
+same pattern as the other services above: the first account registered
+at `http://192.168.11.10:3004` becomes the admin, so sign up
+immediately after first start.
+
+Full setup -- compose file, model selection for the 16GB RAM ceiling,
+air-gapped operation, and NPM configuration -- is in
+[llm-stack-guide.md](../stacks/llm-stack-guide.md).
+
 ---
 
 ## 9. Verification Checklist
