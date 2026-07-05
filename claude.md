@@ -4,16 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-Infrastructure-as-code for a Docker Compose homelab. No application code, no build pipeline, no tests. The authoritative deployment target is `/opt/docker/` on the Linux host.
+Infrastructure-as-code for a Docker Compose homelab. No application code, no tests -- but `.github/workflows/` does run CI: `validate-compose.yaml` runs `docker compose config -q` against every stack on any PR/push touching `Docker/stacks/**`, and `lint-scripts.yaml` runs ShellCheck and PSScriptAnalyzer against `Scripts/**`. The authoritative deployment target is `/opt/docker/` on the Linux host.
 
-The repository root holds four top-level folders. `Docker/` holds the
-current, deployed state, and what most of the rest of this file describes:
-
-- **`Docker/stacks/`** -- one folder per stack, each with a single `compose.yaml`; there is no version history to reconcile within it.
-- **`Docker/config/`** -- reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer, Docker daemon).
-- **`Guides/`** -- the wiki-style documentation described below (top-level, not under `Docker/`).
-- **`Migrations/`** -- staged changes not yet deployed, typically blocked on hardware or another external dependency (top-level, not under `Docker/`). Most live under `Migrations/V3/` (a versioned batch -- see `Migrations/V3/README.md` for its promotion process); newer items are standalone folders directly under `Migrations/`. Each item is self-contained with its own `README.md`.
-- **`Scripts/`** -- host-side operational scripts not tied to a single stack: `startup-all.sh`/`shutdown-all.sh` (bring every stack up/down in dependency order) and `add-npm-proxy-hosts.ps1` (bulk-creates NPM proxy hosts via its API).
+See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Guides/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
 
 ## Common Commands
 
@@ -26,6 +19,14 @@ docker compose pull           # Update images
 docker compose logs -f        # Follow logs
 docker compose logs -f <svc>  # Follow a single service
 ```
+
+Before considering a `compose.yaml` edit done, run `docker compose config -q` from that stack's directory -- this is what CI checks. Before considering a `Scripts/` edit done, run `shellcheck` on any changed `.sh` file (or PSScriptAnalyzer for `.ps1`) -- same as `lint-scripts.yaml`.
+
+## Migrations Conventions
+
+- **Versioning**: `Migrations/V3/` is a batch of items blocked on hardware or another external dependency, staged toward a future major version. `Migrations/V2.1/` is a batch of minor, low-risk updates to the *currently-deployed* production state (historically called "V2" -- versioned `V1`/`V2` folders existed before being collapsed into today's `Docker/` layout; see git history around commit `d92985e`). Bump the minor version for further low-risk production updates; only start a new major-version batch for changes blocked on hardware or another external dependency, matching the `V3` pattern.
+- **Full drop-in replacements**: when a migration item replaces an entire stack's `compose.yaml` rather than adding one service for hand-merging, name its subfolder after the target stack (e.g. `infrastructure-networking/`), not a generic `compose/` folder, and say explicitly in that item's `README.md` that the file is a complete copy of the current `compose.yaml` with the new service appended. Diff it against the live file before promoting -- it can go stale if the live file changes after the migration was written.
+- Every item is still self-contained with its own `README.md`: What This Is / What's In This Folder / Setup / Verify / Promotion, matching the existing `V3/` items.
 
 ## Architecture
 
