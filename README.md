@@ -281,6 +281,30 @@ docker compose pull
 docker compose up -d
 ```
 
+### Applying a compose.yaml Change
+
+`docker restart <service>` reuses the existing container's config as-is --
+it does **not** re-read `compose.yaml`. If you edited the file (new
+environment variable, `tty`/`stdin_open`, port, volume, etc.), the
+container must be recreated, not just restarted:
+
+``` bash
+docker compose up -d <service>
+```
+
+If it doesn't pick up the change, force it:
+
+``` bash
+docker compose up -d --force-recreate <service>
+```
+
+Confirm the running container actually has the new config (don't just
+trust that it looks "up"):
+
+``` bash
+docker inspect <service> --format '{{json .Config}}'
+```
+
 ### Viewing Logs
 
 ``` bash
