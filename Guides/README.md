@@ -84,4 +84,4 @@ Not how-to guides -- background and reference material linked from the guides ab
 | Document | Covers |
 |----------|--------|
 | [`Docker/stacks/compose-review-notes.md`](../Docker/stacks/compose-review-notes.md) | Rationale for compose file changes, including the completed Immich Postgres image migration |
-| [`Hardware-configuration/`](Hardware-configuration/) | Host-level hardware setup outside Docker Compose (e.g. UPS monitoring via NUT) |
+| [`Hardware-configuration/`](Hardware-configuration/) | Host-level hardware setup outside Docker Compose (e.g. UPS monitoring via NUT, Synology NAS NIC bonding) |
