@@ -1,0 +1,38 @@
+name: Validate Compose Files
+
+on:
+  pull_request:
+    paths:
+      - 'Docker/stacks/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'Docker/stacks/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        stack:
+          - auth
+          - dashboards-automation
+          - dockge
+          - infrastructure-networking
+          - llm
+          - media-gaming
+          - tools
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate ${{ matrix.stack }}
+        working-directory: Docker/stacks/${{ matrix.stack }}
+        run: |
+          if [ ! -f .env.example ]; then
+            echo "No .env.example found for ${{ matrix.stack }}, skipping env substitution"
+            docker compose config -q
+          else
+            cp .env.example .env
+            docker compose config -q
+          fi

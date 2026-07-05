@@ -1,0 +1,45 @@
+name: Bug Report
+description: Something deployed is broken or behaving unexpectedly.
+labels:
+  - bug
+body:
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Stack
+      description: Which stack is affected?
+      options:
+        - dashboards-automation
+        - dockge
+        - infrastructure-networking
+        - media-gaming
+        - auth
+        - tools
+        - llm
+        - Not stack-specific (host-level / networking / other)
+    validations:
+      required: true
+  - type: input
+    id: service
+    attributes:
+      label: Service
+      description: Specific service/container within the stack, if applicable.
+      placeholder: e.g. immich-server, nginx-proxy-manager
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include relevant `docker compose logs` output if available.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Recent changes, related PRs/migrations, or anything else relevant.
