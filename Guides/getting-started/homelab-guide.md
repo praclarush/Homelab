@@ -126,6 +126,48 @@ sudo ss -tulnp | grep :53
 The output should be empty. If anything is still listed, find and stop
 that process before continuing.
 
+**Stopping `systemd-resolved` leaves `/etc/resolv.conf` a dangling
+symlink.** By default it points to `/run/systemd/resolve/resolv.conf`,
+a file that only exists while `systemd-resolved` is running. The host
+itself will keep resolving names (glibc falls back to `127.0.0.1:53`
+when the file is unreadable, which happens to land on Pi-hole once
+that stack is up), masking the problem. But Docker's embedded
+per-container DNS resolver (`127.0.0.11`) reads `/etc/resolv.conf` at
+container start to learn its upstream servers -- with the symlink
+dangling, it finds none, and **every container on the host silently
+loses the ability to resolve external hostnames** (SMTP relays, image
+pulls by tag needing registry lookups, anything calling out to the
+internet). This is easy to miss because containers still start and
+run; only outbound DNS lookups fail.
+
+Replace the symlink with a static file before deploying any stack:
+
+```bash
+sudo rm /etc/resolv.conf
+sudo tee /etc/resolv.conf > /dev/null <<'EOF'
+nameserver 192.168.11.10
+nameserver 1.1.1.1
+EOF
+```
+
+`192.168.11.10` is this host's own `VLAN11_IP` -- once
+`infrastructure-networking` is deployed, Pi-hole binds `0.0.0.0:53`
+there, so the host's own queries get ad-blocking and logging like any
+other LAN client. `1.1.1.1` is a fallback if Pi-hole is ever down. If
+you run this before `infrastructure-networking` is deployed, the first
+nameserver will simply go unused until Pi-hole comes up -- the second
+line still resolves in the meantime.
+
+If Docker was already running when you edited this file, restart it so
+every container regenerates its embedded resolver config:
+
+```bash
+sudo systemctl restart docker
+```
+
+This restarts every running container, so do it before deploying
+stacks, not after, if you can help it.
+
 ### 2.2 Mount the NAS Shares
 
 This section mounts every NAS share any stack in this repo depends on,
