@@ -245,12 +245,14 @@ sudo chown $USER:$USER /opt/docker/stacks
 `$USER` is a built-in variable -- Linux fills in your username
 automatically. You do not need to replace it.
 
-### 2.5 Configure the Trunk Port and VLAN Sub-Interfaces
+### 2.5 Configure the Two NICs for VLAN 11 and VLAN 61
 
-The mini PC needs a trunk uplink from the Ubiquiti switch so it can
-have a presence on multiple VLANs simultaneously. This must be
-configured in two places: on the Ubiquiti switch port, and on the Linux
-host. See
+The mini PC needs a presence on two VLANs, one per physical NIC -- no
+trunk port, no 802.1Q tagging on the host. If your hardware only has
+one NIC, you'll need a tagged VLAN sub-interface instead; see the
+"Single-NIC alternative" note at the end of this section. This must be
+configured in two places: on the two Ubiquiti switch ports, and on the
+Linux host. See
 [`guides/networking/vlan-reference.md`](../networking/vlan-reference.md)
 for the complete VLAN plan -- this section only configures the two
 VLANs the mini PC needs a direct interface on.
@@ -259,16 +261,27 @@ VLANs the mini PC needs a direct interface on.
 
 1. Log in to your Ubiquiti controller
 2. Navigate to **Devices > [your switch] > Ports**
-3. Find the port connected to the mini PC
-4. Change the port profile from an access port (single VLAN) to a trunk:
-   - Set **Native Network** to VLAN 11 (Services) -- this is the
-     untagged VLAN the host uses as its primary network
-   - Under **Tagged Networks**, add VLAN 61 (NAS) -- the
-     `media-gaming` stack binds here for same-subnet NFS access to
-     the NAS, which also lives on this VLAN
-   - Apply the change
+3. Find the two ports connected to the mini PC's two NICs
+4. Set the first port to **Access, VLAN 11 (Services)** -- this is the
+   host's primary network
+5. Set the second port to **Access, VLAN 61 (NAS)** -- the
+   `media-gaming` stack binds here for same-subnet NFS access to the
+   NAS, which also lives on this VLAN
+6. Apply both changes
 
 **On the Linux host (Netplan):**
+
+Identify both physical NIC names and MAC addresses -- the kernel
+enumerates every NIC it detects regardless of cable/link state:
+
+```bash
+for i in /sys/class/net/*; do [ -e "$i/device" ] && basename "$i"; done
+ip link show <nic-name>   # repeat for each name, to note its MAC
+```
+
+This filters out virtual interfaces (Docker bridges, veth pairs) and
+lists only real NICs. Confirm which cable goes to which switch port
+before continuing.
 
 Ubuntu uses Netplan to manage network configuration. Find the existing
 config file:
@@ -284,12 +297,14 @@ You will see a file named something like `00-installer-config.yaml` or
 sudo nano /etc/netplan/00-installer-config.yaml
 ```
 
-Replace the contents with the following, adjusting `enp171s0` to match
-your actual network interface name (check with `ip link show`) and
-replacing the IP addresses with your actual VLAN subnet addresses.
-VLAN 11 is untagged/native on this switch port, so it's configured
-directly on the physical interface rather than as a tagged VLAN
-sub-interface; VLAN 61 is tagged, so it gets its own `vlans:` entry:
+Replace the contents with the following, substituting your two NIC
+names, MAC addresses, and VLAN subnet addresses for the ones below
+(`enp171s0`/`enp170s0` are this repo's actual interface names -- yours
+will likely differ). Both interfaces are matched by MAC address, with
+`set-name` pinned back to their own kernel-assigned names -- if the two
+NICs are the same make/model, this protects against a future
+firmware/kernel update silently swapping which port carries which
+VLAN:
 
 ```yaml
 network:
@@ -297,6 +312,9 @@ network:
   renderer: networkd
   ethernets:
     enp171s0:
+      match:
+        macaddress: "<VLAN-11-NIC-MAC>"
+      set-name: enp171s0
       dhcp4: false
       addresses:
         - 192.168.11.10/24
@@ -305,10 +323,11 @@ network:
           via: 192.168.11.1
       nameservers:
         addresses: [127.0.0.1]
-  vlans:
-    vlan61:
-      id: 61
-      link: enp171s0
+    enp170s0:
+      match:
+        macaddress: "<VLAN-61-NIC-MAC>"
+      set-name: enp170s0
+      dhcp4: false
       addresses:
         - 192.168.61.10/24
 ```
@@ -336,22 +355,29 @@ Verify both interfaces are up:
 
 ```bash
 ip addr show enp171s0
-ip addr show vlan61
+ip addr show enp170s0
 ```
 
 Each should show its assigned IP address and `state UP`.
 
-**Find your network interface name:**
+**Single-NIC alternative:** if your hardware only has one NIC, you
+still need both VLANs reachable from the host, so you'll need a trunk
+port on the switch (native VLAN 11, tagged VLAN 61) and a tagged
+`vlans:` sub-interface in Netplan instead of a second `ethernets:`
+entry:
 
-If `enp171s0` does not exist on your system, find the correct name with:
-
-```bash
-ip link show
+```yaml
+  vlans:
+    vlan61:
+      id: 61
+      link: enp171s0
+      addresses:
+        - 192.168.61.10/24
 ```
 
-Common names are `eth0`, `ens18`, `enp3s0`, `enp0s3`, or `enp171s0`.
-Replace `enp171s0` everywhere in the Netplan config with whatever name
-you see.
+This carries both VLANs over one physical link, so it doesn't get the
+dedicated bandwidth or MAC-pinning benefits above, but it's the only
+option without a second NIC.
 
 ### 2.6 Copy Compose Files to the Host
 
@@ -622,8 +648,8 @@ DB_DATABASE_NAME=immich
 VLAN61_IP=192.168.61.10
 ```
 
-`VLAN61_IP` must match the IP configured for `vlan61` in the Netplan
-config.
+`VLAN61_IP` must match the IP configured for the VLAN 61 NIC (e.g.
+`enp170s0` above) in the Netplan config.
 
 > **Important:** Set `DB_PASSWORD` before you start the stack for the
 > first time and do not change it afterwards. This password initialises

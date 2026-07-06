@@ -24,6 +24,15 @@ The environment is organized into three hardware tiers:
 
 ------------------------------------------------------------------------
 
+## Current Version
+
+**v2.0.1** -- the version of the state deployed in [`Docker/stacks/`](Docker/stacks/).
+Bump this when a versioned [`Migrations/`](Migrations/) batch (e.g.
+[`Migrations/V2.1/`](Migrations/V2.1/)) is promoted into `Docker/stacks/`, per
+the versioning convention in [Repository Layout](#repository-layout).
+
+------------------------------------------------------------------------
+
 ## Physical Devices & Hostnames
 
 Non-IoT hardware on the network follows a themed naming convention.

@@ -11,7 +11,7 @@ reconstructing it by reading every guide that touches it.
 | File | Introduced by |
 |------|---------------|
 | `fstab` | All six NAS shares this repo needs, created and mounted in one place: Immich, Jellyfin, Audiobookshelf, Kavita (`media-gaming`); Postgres backups (`auth`, `media-gaming`, `tools`); Backrest (`tools`) |
-| `netplan-00-installer-config.yaml` | VLAN trunk config for the mini PC's two interfaces (VLAN 11, VLAN 61) |
+| `netplan-00-installer-config.yaml` | VLAN config for the mini PC's two dedicated physical NICs (no trunking) |
 | `crowdsec-firewall-bouncer.yaml` | CrowdSec firewall bouncer override values (`infrastructure-networking`) |
 | `docker-daemon.json` | Docker Engine log rotation default, applied to every container across every stack |
 | `ssh-hardening.conf` | Recommended `sshd_config.d` drop-in from `guides/operations/ssh-management-guide.md` (Section 7) |
@@ -60,10 +60,12 @@ key-based login already works.
 **`netplan-00-installer-config.yaml` genuinely is a complete file** --
 the getting-started guide has you replace the whole file's contents,
 so the copy here is the full, ready-to-adapt file. It reflects the
-actual interface name (`enp171s0`) and VLAN addressing in use on the
-mini PC, confirmed against `ip addr` on the host. If you reimage the
-host or swap hardware, the interface name may change -- check with
-`ip link show` and update this file and the getting-started guide to
+actual interface names (`enp171s0`, `enp170s0`) and VLAN addressing in
+use on the mini PC, confirmed against `ip addr` on the host. Both
+interfaces are matched by MAC address in the file, with `set-name`
+pinned back to these same names. If you reimage the host or swap
+hardware, confirm the interface names and MAC addresses with
+`ip link show` and update this file (and the getting-started guide) to
 match.
 
 ## Source of Truth
