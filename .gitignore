@@ -68,6 +68,9 @@ logs/
 **/homeassistant/config/tts/
 **/homeassistant/config/.ha_run.lock
 
+# HACS and HACS-managed integrations (downloaded vendor code, not hand-authored config)
+**/homeassistant/config/custom_components/
+
 # Pi-hole runtime data and admin password hash (pihole.toml lives here)
 **/pihole/config/
 

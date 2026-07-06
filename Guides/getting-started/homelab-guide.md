@@ -126,6 +126,48 @@ sudo ss -tulnp | grep :53
 The output should be empty. If anything is still listed, find and stop
 that process before continuing.
 
+**Stopping `systemd-resolved` leaves `/etc/resolv.conf` a dangling
+symlink.** By default it points to `/run/systemd/resolve/resolv.conf`,
+a file that only exists while `systemd-resolved` is running. The host
+itself will keep resolving names (glibc falls back to `127.0.0.1:53`
+when the file is unreadable, which happens to land on Pi-hole once
+that stack is up), masking the problem. But Docker's embedded
+per-container DNS resolver (`127.0.0.11`) reads `/etc/resolv.conf` at
+container start to learn its upstream servers -- with the symlink
+dangling, it finds none, and **every container on the host silently
+loses the ability to resolve external hostnames** (SMTP relays, image
+pulls by tag needing registry lookups, anything calling out to the
+internet). This is easy to miss because containers still start and
+run; only outbound DNS lookups fail.
+
+Replace the symlink with a static file before deploying any stack:
+
+```bash
+sudo rm /etc/resolv.conf
+sudo tee /etc/resolv.conf > /dev/null <<'EOF'
+nameserver 192.168.11.10
+nameserver 1.1.1.1
+EOF
+```
+
+`192.168.11.10` is this host's own `VLAN11_IP` -- once
+`infrastructure-networking` is deployed, Pi-hole binds `0.0.0.0:53`
+there, so the host's own queries get ad-blocking and logging like any
+other LAN client. `1.1.1.1` is a fallback if Pi-hole is ever down. If
+you run this before `infrastructure-networking` is deployed, the first
+nameserver will simply go unused until Pi-hole comes up -- the second
+line still resolves in the meantime.
+
+If Docker was already running when you edited this file, restart it so
+every container regenerates its embedded resolver config:
+
+```bash
+sudo systemctl restart docker
+```
+
+This restarts every running container, so do it before deploying
+stacks, not after, if you can help it.
+
 ### 2.2 Mount the NAS Shares
 
 This section mounts every NAS share any stack in this repo depends on,
@@ -245,12 +287,14 @@ sudo chown $USER:$USER /opt/docker/stacks
 `$USER` is a built-in variable -- Linux fills in your username
 automatically. You do not need to replace it.
 
-### 2.5 Configure the Trunk Port and VLAN Sub-Interfaces
+### 2.5 Configure the Two NICs for VLAN 11 and VLAN 61
 
-The mini PC needs a trunk uplink from the Ubiquiti switch so it can
-have a presence on multiple VLANs simultaneously. This must be
-configured in two places: on the Ubiquiti switch port, and on the Linux
-host. See
+The mini PC needs a presence on two VLANs, one per physical NIC -- no
+trunk port, no 802.1Q tagging on the host. If your hardware only has
+one NIC, you'll need a tagged VLAN sub-interface instead; see the
+"Single-NIC alternative" note at the end of this section. This must be
+configured in two places: on the two Ubiquiti switch ports, and on the
+Linux host. See
 [`guides/networking/vlan-reference.md`](../networking/vlan-reference.md)
 for the complete VLAN plan -- this section only configures the two
 VLANs the mini PC needs a direct interface on.
@@ -259,16 +303,27 @@ VLANs the mini PC needs a direct interface on.
 
 1. Log in to your Ubiquiti controller
 2. Navigate to **Devices > [your switch] > Ports**
-3. Find the port connected to the mini PC
-4. Change the port profile from an access port (single VLAN) to a trunk:
-   - Set **Native Network** to VLAN 11 (Services) -- this is the
-     untagged VLAN the host uses as its primary network
-   - Under **Tagged Networks**, add VLAN 61 (NAS) -- the
-     `media-gaming` stack binds here for same-subnet NFS access to
-     the NAS, which also lives on this VLAN
-   - Apply the change
+3. Find the two ports connected to the mini PC's two NICs
+4. Set the first port to **Access, VLAN 11 (Services)** -- this is the
+   host's primary network
+5. Set the second port to **Access, VLAN 61 (NAS)** -- the
+   `media-gaming` stack binds here for same-subnet NFS access to the
+   NAS, which also lives on this VLAN
+6. Apply both changes
 
 **On the Linux host (Netplan):**
+
+Identify both physical NIC names and MAC addresses -- the kernel
+enumerates every NIC it detects regardless of cable/link state:
+
+```bash
+for i in /sys/class/net/*; do [ -e "$i/device" ] && basename "$i"; done
+ip link show <nic-name>   # repeat for each name, to note its MAC
+```
+
+This filters out virtual interfaces (Docker bridges, veth pairs) and
+lists only real NICs. Confirm which cable goes to which switch port
+before continuing.
 
 Ubuntu uses Netplan to manage network configuration. Find the existing
 config file:
@@ -284,12 +339,14 @@ You will see a file named something like `00-installer-config.yaml` or
 sudo nano /etc/netplan/00-installer-config.yaml
 ```
 
-Replace the contents with the following, adjusting `enp171s0` to match
-your actual network interface name (check with `ip link show`) and
-replacing the IP addresses with your actual VLAN subnet addresses.
-VLAN 11 is untagged/native on this switch port, so it's configured
-directly on the physical interface rather than as a tagged VLAN
-sub-interface; VLAN 61 is tagged, so it gets its own `vlans:` entry:
+Replace the contents with the following, substituting your two NIC
+names, MAC addresses, and VLAN subnet addresses for the ones below
+(`enp171s0`/`enp170s0` are this repo's actual interface names -- yours
+will likely differ). Both interfaces are matched by MAC address, with
+`set-name` pinned back to their own kernel-assigned names -- if the two
+NICs are the same make/model, this protects against a future
+firmware/kernel update silently swapping which port carries which
+VLAN:
 
 ```yaml
 network:
@@ -297,6 +354,9 @@ network:
   renderer: networkd
   ethernets:
     enp171s0:
+      match:
+        macaddress: "<VLAN-11-NIC-MAC>"
+      set-name: enp171s0
       dhcp4: false
       addresses:
         - 192.168.11.10/24
@@ -305,10 +365,11 @@ network:
           via: 192.168.11.1
       nameservers:
         addresses: [127.0.0.1]
-  vlans:
-    vlan61:
-      id: 61
-      link: enp171s0
+    enp170s0:
+      match:
+        macaddress: "<VLAN-61-NIC-MAC>"
+      set-name: enp170s0
+      dhcp4: false
       addresses:
         - 192.168.61.10/24
 ```
@@ -336,22 +397,29 @@ Verify both interfaces are up:
 
 ```bash
 ip addr show enp171s0
-ip addr show vlan61
+ip addr show enp170s0
 ```
 
 Each should show its assigned IP address and `state UP`.
 
-**Find your network interface name:**
+**Single-NIC alternative:** if your hardware only has one NIC, you
+still need both VLANs reachable from the host, so you'll need a trunk
+port on the switch (native VLAN 11, tagged VLAN 61) and a tagged
+`vlans:` sub-interface in Netplan instead of a second `ethernets:`
+entry:
 
-If `enp171s0` does not exist on your system, find the correct name with:
-
-```bash
-ip link show
+```yaml
+  vlans:
+    vlan61:
+      id: 61
+      link: enp171s0
+      addresses:
+        - 192.168.61.10/24
 ```
 
-Common names are `eth0`, `ens18`, `enp3s0`, `enp0s3`, or `enp171s0`.
-Replace `enp171s0` everywhere in the Netplan config with whatever name
-you see.
+This carries both VLANs over one physical link, so it doesn't get the
+dedicated bandwidth or MAC-pinning benefits above, but it's the only
+option without a second NIC.
 
 ### 2.6 Copy Compose Files to the Host
 
@@ -622,8 +690,8 @@ DB_DATABASE_NAME=immich
 VLAN61_IP=192.168.61.10
 ```
 
-`VLAN61_IP` must match the IP configured for `vlan61` in the Netplan
-config.
+`VLAN61_IP` must match the IP configured for the VLAN 61 NIC (e.g.
+`enp170s0` above) in the Netplan config.
 
 > **Important:** Set `DB_PASSWORD` before you start the stack for the
 > first time and do not change it afterwards. This password initialises
@@ -759,9 +827,9 @@ it like a virtual switch that the other containers plug in to -- if
 `dockge` is the only stack that does not join `proxy_net` and can be
 deployed at any point.
 
-1. `dashboards-automation`
+1. `infrastructure-networking`
 2. `dockge`
-3. `infrastructure-networking`
+3. `dashboards-automation`
 4. `media-gaming`
 5. `auth`
 6. `tools`
@@ -771,10 +839,10 @@ and `Scripts/shutdown-all.sh` bring everything up or down again in this
 same order in one command -- useful for a planned reboot, not for this
 first-time walkthrough.
 
-### 7.1 dashboards-automation
+### 7.1 infrastructure-networking
 
 ```bash
-cd /opt/docker/stacks/dashboards-automation
+cd /opt/docker/stacks/infrastructure-networking
 docker compose up -d
 ```
 
@@ -782,18 +850,28 @@ The `-d` flag means "detached" -- the containers run in the background,
 similar to starting a Windows service. Without it, the output streams
 to your terminal and stops when you close the SSH session.
 
-Confirm the `proxy_net` network was created:
+Pi-hole takes 20-30 seconds to initialise on first start. Confirm the
+`proxy_net` network was created and every container is running:
 
 ```bash
 docker network ls | grep proxy_net
+docker compose ps
 ```
 
-You should see one line with `proxy_net` and `bridge` in it. If the
-output is empty, check the logs:
+You should see one line with `proxy_net` and `bridge` in the first
+command's output, and `running` in the `STATUS` column for every
+container in the second. If one container shows `exiting` or
+`restarting`, check its logs:
 
 ```bash
-docker compose logs
+docker compose logs <service_name>
 ```
+
+CrowdSec mounts NPM logs from `./npm/logs`, so it stays idle until NPM
+has generated at least one access log entry -- this is expected and not
+a failure. Its full setup, including enrolling with the CrowdSec Hub
+and installing the host firewall bouncer, is in
+[infrastructure-networking-guide.md](../stacks/infrastructure-networking-guide.md).
 
 ### 7.2 dockge
 
@@ -806,32 +884,24 @@ Dockge has no `networks:` configuration and is not on `proxy_net` --
 NPM proxies it via the host IP (`192.168.11.10:5001`) rather than by
 container name.
 
-### 7.3 infrastructure-networking
+### 7.3 dashboards-automation
 
 ```bash
-cd /opt/docker/stacks/infrastructure-networking
+cd /opt/docker/stacks/dashboards-automation
 docker compose up -d
 ```
 
-Pi-hole takes 20-30 seconds to initialise on first start. Confirm all
-containers are running:
+Confirm every container is running:
 
 ```bash
 docker compose ps
 ```
 
-The `STATUS` column should show `running` for every container. If one
-shows `exiting` or `restarting`, check its logs:
+If one shows `exiting` or `restarting`, check its logs:
 
 ```bash
-docker compose logs <service_name>
+docker compose logs
 ```
-
-CrowdSec mounts NPM logs from `./npm/logs`, so it stays idle until NPM
-has generated at least one access log entry -- this is expected and not
-a failure. Its full setup, including enrolling with the CrowdSec Hub
-and installing the host firewall bouncer, is in
-[infrastructure-networking-guide.md](../stacks/infrastructure-networking-guide.md).
 
 ### 7.4 media-gaming
 
@@ -1320,6 +1390,60 @@ Users can now log in to WikiJS via the Authentik login page.
 In Uptime Kuma, add a new HTTP monitor:
 - **Name:** WikiJS
 - **URL:** `http://localhost:3003`
+
+### 8.14 CrowdSec
+
+CrowdSec is deployed as part of `infrastructure-networking`, but it
+stays idle until Nginx Proxy Manager has generated at least one access
+log entry -- browse to any proxied service first if you want to see it
+pick up log lines right away. It has no web UI and needs no first-login
+step of its own.
+
+Full setup -- verifying the agent loaded its detection collection,
+enrolling with the CrowdSec Hub for community blocklists, and installing
+the host firewall bouncer that actually blocks traffic -- is in
+[infrastructure-networking-guide.md](../stacks/infrastructure-networking-guide.md).
+
+### 8.15 Extra `tools` Services
+
+`tools` ships with ten more services beyond WikiJS: pgAdmin, Stirling
+PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy,
+Linkwarden, and Backrest. Each needs its own `.env` entries (the
+`tools` row in Section 5.6 above only lists what WikiJS itself needs)
+and an NPM proxy host before first login.
+
+Full setup for all ten -- default credentials, admin account creation,
+NAS-backed Backrest repository configuration, and putting the two
+no-login tools (IT Tools, Stirling PDF) behind Authentik forward auth
+-- is in
+[tools-guide.md](../stacks/tools-guide.md#7-first-time-service-setup).
+
+### 8.16 Audiobookshelf and Kavita
+
+Both join `media-gaming` alongside AMP, Immich, and Jellyfin, binding to
+`VLAN61_IP` for same-subnet NFS access to the NAS. Confirm the
+`audiobooks`, `podcasts`, and `books` NAS shares are mounted (Section
+2.2) before scanning either library, or the scan comes back empty.
+
+Full setup -- creating the admin account, adding libraries, and
+pointing each at the right NAS mount -- is in
+[media-gaming-guide.md](../stacks/media-gaming-guide.md#6-first-time-service-setup).
+
+### 8.17 LLM Stack: Ollama and Open WebUI (Optional)
+
+The `llm` stack is not part of the six-stack deployment order in
+Section 7 -- it's optional and entirely separate, with its own guide
+covering creating the stack directory, writing `compose.yaml` and
+`.env`, deploying, and pulling a model.
+
+Once running, Open WebUI's first-launch account creation follows the
+same pattern as the other services above: the first account registered
+at `http://192.168.11.10:3004` becomes the admin, so sign up
+immediately after first start.
+
+Full setup -- compose file, model selection for the 16GB RAM ceiling,
+air-gapped operation, and NPM configuration -- is in
+[llm-stack-guide.md](../stacks/llm-stack-guide.md).
 
 ---
 

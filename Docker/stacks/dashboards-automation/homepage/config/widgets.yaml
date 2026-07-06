@@ -4,6 +4,12 @@
 # screenshot. You only have one Docker host + one NAS, so there are two
 # tiles instead of six — add more blocks here later if you split hosts.
 
+# Static banner showing the deployed homelab version (README.md's
+# "Current Version" section). Bump both when a Migrations/ batch is promoted.
+- greeting:
+    text_size: xl
+    text: "Homelab v2.1.0"
+
 - resources:
     label: mini-pc
     cpu: true

@@ -4,22 +4,33 @@
 # the entire contents of this file (not append to it).
 #
 # Source: guides/getting-started/homelab-guide.md (Configure the
-# Trunk Port and VLAN Sub-Interfaces)
+# Trunk Port and VLAN Sub-Interfaces) describes the original single-NIC
+# trunk setup this file superseded. See git history around
+# `Migrations/V2.1/dual-nic-vlan-split/` for the migration that moved
+# VLAN 61 off a tagged sub-interface onto its own dedicated physical
+# NIC.
 #
 # This is the actual file in use on the mini PC (confirmed against
-# `ip addr` on the host). If you reimage the host or swap hardware,
-# the interface name may differ -- check with `ip link show` first.
+# `ip addr` on the host). Both interfaces are matched by MAC address,
+# with `set-name` pinned back to their current kernel names
+# (`enp171s0`/`enp170s0`) -- the two onboard NICs are the same
+# make/model, so this protects against a firmware/kernel update
+# silently swapping which physical port carries which VLAN. If you
+# reimage the host or swap hardware, confirm the interface names and
+# MAC addresses with `ip link show` first and update them here.
 
 network:
   version: 2
   renderer: networkd
   ethernets:
-    # VLAN 11 (Services) -- the untagged/native VLAN on this switch
-    # port, so it's configured directly on the physical interface
-    # rather than as a tagged VLAN sub-interface. Every stack except
-    # media-gaming binds its host ports here: dashboards-automation,
-    # dockge, infrastructure-networking, auth, tools, llm.
+    # VLAN 11 (Services) -- untagged/native on this NIC's switch port.
+    # Every stack except media-gaming binds its host ports here:
+    # dashboards-automation, dockge, infrastructure-networking, auth,
+    # tools, llm.
     enp171s0:
+      match:
+        macaddress: "78:55:36:09:c0:41"
+      set-name: enp171s0
       dhcp4: false
       addresses:
         - 192.168.11.10/24
@@ -31,15 +42,19 @@ network:
       # guides/getting-started/homelab-guide.md.
       nameservers:
         addresses: [127.0.0.1]
-  vlans:
-    # VLAN 61 (NAS) -- tagged. The Synology NAS lives here; media-gaming
+
+    # VLAN 61 (NAS) -- dedicated physical NIC, untagged/access on its
+    # own switch port. The Synology NAS lives here; media-gaming
     # (Immich, Jellyfin, AMP, Audiobookshelf, Kavita) binds its host
-    # ports on this same VLAN for same-subnet NFS access to NAS storage.
-    # No default route or nameserver entry -- this interface is reached
-    # only for media-gaming's bound services and NAS access, not used
-    # for general host traffic. See guides/networking/vlan-reference.md.
-    vlan61:
-      id: 61
-      link: enp171s0
+    # ports on this same VLAN for same-subnet NFS access to NAS
+    # storage. No default route or nameserver entry -- this interface
+    # is reached only for media-gaming's bound services and NAS
+    # access, not used for general host traffic. See
+    # guides/networking/vlan-reference.md.
+    enp170s0:
+      match:
+        macaddress: "78:55:36:09:c0:42"
+      set-name: enp170s0
+      dhcp4: false
       addresses:
         - 192.168.61.10/24
