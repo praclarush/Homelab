@@ -1,10 +1,11 @@
 # Infrastructure-Networking Stack Guide
 
-This guide covers CrowdSec intrusion detection and the cross-stack
-Watchtower auto-update policy, both in the `infrastructure-networking`
-stack. Nginx Proxy Manager and Pi-hole have their own deep-dive guides
-under [Networking](../README.md#networking); ntfy and Tailscale
-deployment are covered in
+This guide covers CrowdSec intrusion detection, the SMTP relay, and the
+cross-stack Watchtower auto-update policy, all in the
+`infrastructure-networking` stack. Nginx Proxy Manager and Pi-hole have
+their own deep-dive guides under
+[Networking](../README.md#networking); ntfy and Tailscale deployment
+are covered in
 [getting-started/homelab-guide.md](../getting-started/homelab-guide.md).
 
 > **Prerequisite:** NPM, Pi-hole, Watchtower, ntfy, and Tailscale must
@@ -22,7 +23,8 @@ deployment are covered in
 5. [Enroll with the CrowdSec Hub](#5-enroll-with-the-crowdsec-hub)
 6. [Install the Firewall Bouncer](#6-install-the-firewall-bouncer)
 7. [Ongoing Operations](#7-ongoing-operations)
-8. [Verification Checklist](#8-verification-checklist)
+8. [SMTP Relay](#8-smtp-relay)
+9. [Verification Checklist](#9-verification-checklist)
 
 ---
 
@@ -68,6 +70,7 @@ labels:
 | Service | Port | Purpose |
 |---------|------|---------|
 | CrowdSec | — | Intrusion detection -- reads NPM logs and detects attacks |
+| Postfix Relay | 25 | Unauthenticated local SMTP relay for LAN devices, forwarding to Gmail -- see [Section 8](#8-smtp-relay) |
 
 CrowdSec has two components:
 
@@ -235,7 +238,70 @@ docker compose restart crowdsec
 
 ---
 
-## 8. Verification Checklist
+## 8. SMTP Relay
+
+`boky/postfix` (`postfix-relay` service, container `postfix_relay`)
+accepts unauthenticated mail on port 25 from trusted LAN subnets and
+relays it out through Gmail over authenticated SMTP, for devices like
+the Synology NAS that can't hold a Gmail app password or do STARTTLS
+themselves:
+
+```
+NAS / other LAN device --> postfix-relay (VLAN11_IP:25, no auth) -->
+  smtp.gmail.com:587 (authenticated) --> your inbox
+```
+
+**Setup:**
+
+1. Generate a Gmail app password (requires 2FA on the account):
+   myaccount.google.com/apppasswords -> create one for "Mail".
+2. Set `SMTP_RELAY_USERNAME` (your Gmail address) and
+   `SMTP_RELAY_PASSWORD` (the 16-character app password) in this
+   stack's `.env`.
+3. `ALLOWED_SENDER_DOMAINS=home.bremmer.zone` in `compose.yaml`
+   restricts relaying to envelope senders in that domain -- point any
+   new LAN device's SMTP client at `192.168.11.10:25`, no encryption,
+   no auth, with a `from` address under `home.bremmer.zone`.
+4. `MYNETWORKS` in `compose.yaml` is set explicitly to
+   `127.0.0.0/8,192.168.11.0/24,192.168.61.0/24` (VLANs 11 and 61),
+   overriding the image's own auto-detected default. If another
+   container on `proxy_net` needs to relay by container name rather
+   than `VLAN11_IP`, add `proxy_net`'s actual subnet too -- confirm it
+   with `docker network inspect proxy_net` first, since it isn't
+   pinned to a fixed CIDR in `compose.yaml`.
+
+**Verify:**
+
+`boky/postfix` is relay-only -- it has no MUA (`mail`/`mailx`), only
+Postfix's own `sendmail` binary. Use `-f` to set an envelope sender in
+`home.bremmer.zone`, or the default `root@<container>` sender gets
+rejected by `ALLOWED_SENDER_DOMAINS` before it reaches Gmail:
+
+```bash
+docker exec -it postfix_relay sh -c "printf 'Subject: relay test\n\ntest body\n' | sendmail -f test@home.bremmer.zone you@gmail.com"
+```
+
+Check `docker logs postfix_relay` if it doesn't arrive. Besides a bad
+app password, a common failure is `status=deferred ... Name service
+error for name=smtp.gmail.com`: this means the *host's* DNS is broken,
+not Postfix's config -- see the `resolv.conf` note in
+[`Docker/config/README.md`](../../Docker/config/README.md). Disabling
+`systemd-resolved` (Section 2.1 of the getting-started guide) leaves
+`/etc/resolv.conf` a dangling symlink, which silently breaks external
+DNS resolution for every container on the host, not just this one.
+
+Once verified, point the NAS's (or other device's) SMTP notification
+settings at `192.168.11.10:25`, no encryption, no auth, and trigger a
+real test notification from its UI.
+
+If Gmail starts throttling or bouncing mail from this relay, swap
+`RELAYHOST`/`RELAYHOST_USERNAME`/`RELAYHOST_PASSWORD` for a dedicated
+transactional provider (Brevo, Mailgun, SES) instead -- same Postfix
+config, different relayhost.
+
+---
+
+## 9. Verification Checklist
 
 - [ ] `docker compose ps` shows all containers as `Up`
 - [ ] `cscli collections list` shows `crowdsecurity/nginx` as enabled
@@ -243,4 +309,6 @@ docker compose restart crowdsec
 - [ ] CrowdSec hub enrollment completed (optional)
 - [ ] Firewall bouncer installed and running on host
 - [ ] `cscli decisions list` returns without error
+- [ ] `sendmail` test from `postfix_relay` arrives in the target inbox
+- [ ] A real LAN device (e.g. the NAS) can send mail through the relay
 - [ ] Existing services (NPM, Pi-hole, Watchtower, ntfy, Tailscale) still accessible
