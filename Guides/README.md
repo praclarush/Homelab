@@ -62,6 +62,7 @@ Ongoing, cross-stack maintenance -- not tied to a specific stack.
 | Guide | Covers |
 |-------|--------|
 | [git-deployment-guide.md](operations/git-deployment-guide.md) | Turning the live `/opt/docker/stacks` deployment into a git working tree, keeping `.gitignore` correct, day-to-day push/pull workflow, and what to check when adding a new stack or service |
+| [ssh-management-guide.md](operations/ssh-management-guide.md) | Every SSH key in play (workstation-to-host, GitHub deploy key), naming conventions, adding/rotating/revoking keys, and hardening `sshd` |
 
 ## Stacks
 
@@ -84,4 +85,4 @@ Not how-to guides -- background and reference material linked from the guides ab
 | Document | Covers |
 |----------|--------|
 | [`Docker/stacks/compose-review-notes.md`](../Docker/stacks/compose-review-notes.md) | Rationale for compose file changes, including the completed Immich Postgres image migration |
-| [`Hardware-configuration/`](Hardware-configuration/) | Host-level hardware setup outside Docker Compose (e.g. UPS monitoring via NUT) |
+| [`Hardware-configuration/`](Hardware-configuration/) | Host-level hardware setup outside Docker Compose (e.g. UPS monitoring via NUT, Synology NAS NIC bonding) |

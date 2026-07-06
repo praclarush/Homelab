@@ -4,16 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-Infrastructure-as-code for a Docker Compose homelab. No application code, no build pipeline, no tests. The authoritative deployment target is `/opt/docker/` on the Linux host.
+Infrastructure-as-code for a Docker Compose homelab. No application code, no tests -- but `.github/workflows/` does run CI: `validate-compose.yaml` runs `docker compose config -q` against every stack on any PR/push touching `Docker/stacks/**`, and `lint-scripts.yaml` runs ShellCheck and PSScriptAnalyzer against `Scripts/**`. The authoritative deployment target is `/opt/docker/` on the Linux host.
 
-The repository root holds four top-level folders. `Docker/` holds the
-current, deployed state, and what most of the rest of this file describes:
-
-- **`Docker/stacks/`** -- one folder per stack, each with a single `compose.yaml`; there is no version history to reconcile within it.
-- **`Docker/config/`** -- reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer, Docker daemon).
-- **`Guides/`** -- the wiki-style documentation described below (top-level, not under `Docker/`).
-- **`Migrations/`** -- staged changes not yet deployed, typically blocked on hardware or another external dependency (top-level, not under `Docker/`). Most live under `Migrations/V3/` (a versioned batch -- see `Migrations/V3/README.md` for its promotion process); newer items are standalone folders directly under `Migrations/`. Each item is self-contained with its own `README.md`.
-- **`Scripts/`** -- host-side operational scripts not tied to a single stack: `startup-all.sh`/`shutdown-all.sh` (bring every stack up/down in dependency order) and `add-npm-proxy-hosts.ps1` (bulk-creates NPM proxy hosts via its API).
+See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Guides/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
 
 ## Common Commands
 
@@ -27,6 +20,14 @@ docker compose logs -f        # Follow logs
 docker compose logs -f <svc>  # Follow a single service
 ```
 
+Before considering a `compose.yaml` edit done, run `docker compose config -q` from that stack's directory -- this is what CI checks. Before considering a `Scripts/` edit done, run `shellcheck` on any changed `.sh` file (or PSScriptAnalyzer for `.ps1`) -- same as `lint-scripts.yaml`.
+
+## Migrations Conventions
+
+- **Versioning**: `Migrations/V3/` is a batch of items blocked on hardware or another external dependency, staged toward a future major version. A versioned `Migrations/V2.x/` folder (e.g. the now-fully-promoted `V2.1/`, historically called "V2" -- versioned `V1`/`V2` folders existed before being collapsed into today's `Docker/` layout; see git history around commit `d92985e`) holds a batch of minor, low-risk updates to the *currently-deployed* production state, created fresh whenever there's a new one to stage and removed once every item in it is promoted. Bump the minor version for further low-risk production updates; only start a new major-version batch for changes blocked on hardware or another external dependency, matching the `V3` pattern.
+- **Full drop-in replacements**: when a migration item replaces an entire stack's `compose.yaml` rather than adding one service for hand-merging, name its subfolder after the target stack (e.g. `infrastructure-networking/`), not a generic `compose/` folder, and say explicitly in that item's `README.md` that the file is a complete copy of the current `compose.yaml` with the new service appended. Diff it against the live file before promoting -- it can go stale if the live file changes after the migration was written.
+- Every item is still self-contained with its own `README.md`: What This Is / What's In This Folder / Setup / Verify / Promotion, matching the existing `V3/` items.
+
 ## Architecture
 
 Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- the current, deployable state.
@@ -35,7 +36,7 @@ Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- t
 |-------|----------|
 | `dashboards-automation` | Homepage (3000), Home Assistant (8123), Uptime Kuma (3001), Grafana (3002), Prometheus (9090), node-exporter (host), Loki (3100), Promtail |
 | `dockge` | Dockge stack manager (5001) |
-| `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host), CrowdSec |
+| `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host), CrowdSec, Postfix Relay (25) |
 | `media-gaming` | AMP (8081), Immich (2283), Immich Machine Learning, Postgres, Postgres Backup, Redis, Jellyfin (8096), Audiobookshelf (13378), Kavita (5000) |
 | `auth` | Authentik (9000/9443), Postgres, Postgres Backup, Redis |
 | `tools` | WikiJS (3003), Postgres, Postgres Backup, pgAdmin (5050), Stirling PDF (8083), Mealie (9925), n8n (5678), IT Tools (8084), Actual Budget (5006), Paperless-ngx (8085), Paperless Postgres, Paperless Postgres Backup, Paperless Redis, Grocy (9283), Linkwarden (3005), Linkwarden Postgres, Linkwarden Postgres Backup, Backrest (9898) |
@@ -86,7 +87,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 |-------|-------------------|
 | `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
-| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP` |
+| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
 | `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
@@ -114,3 +115,15 @@ categorized list. Quick reference:
 | `Guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
 | `Docker/stacks/compose-review-notes.md` | Rationale for compose file changes, including the completed Immich Postgres image migration |
 | `Docker/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `Docker/stacks/` |
+
+## Branching
+
+Root branches are `master` and `release` only. Every other branch must be prefixed `{kind}/{branchName}`:
+
+| Kind | Use |
+|------|-----|
+| `bug/` | Non-urgent bug fixes -- the affected stack is degraded but not restart-looping |
+| `hotfix/` | Urgent fixes for an issue actively affecting a running stack right now |
+| `task/` | Everything else -- features, docs, refactors, migrations |
+
+`release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump, and is always branched from and merged back into `release` first, then forward-merged (or cherry-picked) into `master`.

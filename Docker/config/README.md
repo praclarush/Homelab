@@ -11,9 +11,11 @@ reconstructing it by reading every guide that touches it.
 | File | Introduced by |
 |------|---------------|
 | `fstab` | All six NAS shares this repo needs, created and mounted in one place: Immich, Jellyfin, Audiobookshelf, Kavita (`media-gaming`); Postgres backups (`auth`, `media-gaming`, `tools`); Backrest (`tools`) |
-| `netplan-00-installer-config.yaml` | VLAN trunk config for the mini PC's two interfaces (VLAN 11, VLAN 61) |
+| `netplan-00-installer-config.yaml` | VLAN config for the mini PC's two dedicated physical NICs (no trunking) |
 | `crowdsec-firewall-bouncer.yaml` | CrowdSec firewall bouncer override values (`infrastructure-networking`) |
 | `docker-daemon.json` | Docker Engine log rotation default, applied to every container across every stack |
+| `ssh-hardening.conf` | Recommended `sshd_config.d` drop-in from `guides/operations/ssh-management-guide.md` (Section 7) |
+| `resolv.conf` | Static replacement for the dangling `/etc/resolv.conf` symlink left behind after disabling `systemd-resolved`, from `guides/getting-started/homelab-guide.md` (Section 2.1) |
 
 `config/operations/` holds the one host file from
 [`guides/operations/git-deployment-guide.md`](../guides/operations/git-deployment-guide.md)
@@ -48,13 +50,39 @@ silently drop your other settings. Without this file (or an
 equivalent), every container uses the default `json-file` driver with
 no size cap, and container logs grow unbounded on disk indefinitely.
 
+**`ssh-hardening.conf` is a drop-in, not a complete `sshd_config`.** It
+only sets the three directives the guide recommends changing
+(`PasswordAuthentication`, `PermitRootLogin`, `PubkeyAuthentication`).
+It must be installed as `/etc/ssh/sshd_config.d/10-ssh-hardening.conf`
+(the `10-` prefix matters -- it must sort before the existing
+`50-cloud-init.conf` to take precedence) and only after confirming
+key-based login already works.
+
+**`resolv.conf` genuinely is a complete file, and it matters that you
+install it as a real file, not just edit the existing symlink target.**
+Disabling `systemd-resolved` (Section 2.1) leaves `/etc/resolv.conf`
+pointed at `/run/systemd/resolve/resolv.conf`, which stops existing the
+moment that service is stopped. The host limps along because glibc
+falls back to `127.0.0.1:53` when the file can't be read -- which
+happens to hit Pi-hole once it's deployed -- but Docker's embedded
+per-container resolver (`127.0.0.11`) reads `/etc/resolv.conf` at
+container start to find its upstream servers, and a dangling symlink
+gives it none. The result: every container on the host silently loses
+external DNS resolution (this is what broke the `postfix-relay` SMTP
+test, and it breaks anything else doing an outbound lookup). Delete
+the symlink and replace it with this file's contents before deploying
+`infrastructure-networking`. If Docker is already running, restart it
+afterward so existing containers regenerate their resolver config.
+
 **`netplan-00-installer-config.yaml` genuinely is a complete file** --
 the getting-started guide has you replace the whole file's contents,
 so the copy here is the full, ready-to-adapt file. It reflects the
-actual interface name (`enp171s0`) and VLAN addressing in use on the
-mini PC, confirmed against `ip addr` on the host. If you reimage the
-host or swap hardware, the interface name may change -- check with
-`ip link show` and update this file and the getting-started guide to
+actual interface names (`enp171s0`, `enp170s0`) and VLAN addressing in
+use on the mini PC, confirmed against `ip addr` on the host. Both
+interfaces are matched by MAC address in the file, with `set-name`
+pinned back to these same names. If you reimage the host or swap
+hardware, confirm the interface names and MAC addresses with
+`ip link show` and update this file (and the getting-started guide) to
 match.
 
 ## Source of Truth

@@ -24,6 +24,15 @@ The environment is organized into three hardware tiers:
 
 ------------------------------------------------------------------------
 
+## Current Version
+
+**v2.1.0** -- the version of the state deployed in [`Docker/stacks/`](Docker/stacks/).
+Bump this when a versioned [`Migrations/`](Migrations/) batch (e.g.
+[`Migrations/V3/`](Migrations/V3/)) is promoted into `Docker/stacks/`, per
+the versioning convention in [Repository Layout](#repository-layout).
+
+------------------------------------------------------------------------
+
 ## Physical Devices & Hostnames
 
 Non-IoT hardware on the network follows a themed naming convention.
@@ -65,9 +74,11 @@ The repository root holds four top-level folders:
   typically blocked on hardware or another external dependency. Most live
   under [`Migrations/V3/`](Migrations/V3/) (a versioned batch -- see
   [`Migrations/V3/README.md`](Migrations/V3/README.md) for its promotion
-  process); newer items are added as standalone folders directly under
-  `Migrations/` (e.g. [`Migrations/proxy-net-ownership-swap/`](Migrations/proxy-net-ownership-swap/)).
-  Each item is self-contained with its own `README.md`.
+  process); a versioned `V2.x/` batch -- a minor update to the
+  currently-deployed state rather than a future major version -- gets
+  created the same way once there's another low-risk update to stage;
+  newer, unbatched items are added as standalone folders directly under
+  `Migrations/`. Each item is self-contained with its own `README.md`.
 - **[`Scripts/`](Scripts/)** -- host-side operational scripts not tied to a
   single stack: `startup-all.sh`/`shutdown-all.sh` bring every stack up or
   down in dependency order, and `add-npm-proxy-hosts.ps1` bulk-creates NPM
@@ -240,8 +251,8 @@ and changes pushed elsewhere can be pulled and applied with
 
 ## Deployment Order
 
-`dashboards-automation` first (creates the `proxy_net` network every
-other stack but `dockge` joins), then `dockge`, `infrastructure-networking`,
+`infrastructure-networking` first (creates the `proxy_net` network every
+other stack but `dockge` joins), then `dockge`, `dashboards-automation`,
 `media-gaming`, `auth`, `tools`, `llm` -- in any order after that. Full
 prerequisites (disabling `systemd-resolved`, mounting the six NAS shares,
 Intel Quick Sync, VLAN trunking) and step-by-step deployment for each
@@ -276,6 +287,30 @@ on top of the base deployment.
 ``` bash
 docker compose pull
 docker compose up -d
+```
+
+### Applying a compose.yaml Change
+
+`docker restart <service>` reuses the existing container's config as-is --
+it does **not** re-read `compose.yaml`. If you edited the file (new
+environment variable, `tty`/`stdin_open`, port, volume, etc.), the
+container must be recreated, not just restarted:
+
+``` bash
+docker compose up -d <service>
+```
+
+If it doesn't pick up the change, force it:
+
+``` bash
+docker compose up -d --force-recreate <service>
+```
+
+Confirm the running container actually has the new config (don't just
+trust that it looks "up"):
+
+``` bash
+docker inspect <service> --format '{{json .Config}}'
 ```
 
 ### Viewing Logs
