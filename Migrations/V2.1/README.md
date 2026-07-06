@@ -26,5 +26,4 @@ Once a `V2.1/` item is verified working:
 
 | Item | Depends on | Summary |
 |------|-----------|---------|
-| [smtp-relay](smtp-relay/README.md) | Gmail app password | Postfix relay container so LAN devices (e.g. the Synology NAS) without their own internet-facing SMTP client can send outbound notification email |
 | [homepage-version-banner](homepage-version-banner/README.md) | None | Static `greeting` widget on the Homepage dashboard showing the deployed homelab version, mirroring the root `README.md`'s "Current Version" section |
