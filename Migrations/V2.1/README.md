@@ -27,4 +27,4 @@ Once a `V2.1/` item is verified working:
 | Item | Depends on | Summary |
 |------|-----------|---------|
 | [smtp-relay](smtp-relay/README.md) | Gmail app password | Postfix relay container so LAN devices (e.g. the Synology NAS) without their own internet-facing SMTP client can send outbound notification email |
-| [dual-nic-vlan-split](dual-nic-vlan-split/README.md) | Second Ethernet cable run + two Ubiquiti switch port reconfigs (no new hardware) | Move VLAN 61 off a tagged sub-interface onto the Beelink EQi13's second onboard NIC, so VLAN 11 and VLAN 61 each get a dedicated physical port instead of sharing one trunk |
+| [homepage-version-banner](homepage-version-banner/README.md) | None | Static `greeting` widget on the Homepage dashboard showing the deployed homelab version, mirroring the root `README.md`'s "Current Version" section |
