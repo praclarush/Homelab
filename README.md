@@ -26,9 +26,9 @@ The environment is organized into three hardware tiers:
 
 ## Current Version
 
-**v2.0.1** -- the version of the state deployed in [`Docker/stacks/`](Docker/stacks/).
+**v2.1.0** -- the version of the state deployed in [`Docker/stacks/`](Docker/stacks/).
 Bump this when a versioned [`Migrations/`](Migrations/) batch (e.g.
-[`Migrations/V2.1/`](Migrations/V2.1/)) is promoted into `Docker/stacks/`, per
+[`Migrations/V3/`](Migrations/V3/)) is promoted into `Docker/stacks/`, per
 the versioning convention in [Repository Layout](#repository-layout).
 
 ------------------------------------------------------------------------
@@ -74,11 +74,10 @@ The repository root holds four top-level folders:
   typically blocked on hardware or another external dependency. Most live
   under [`Migrations/V3/`](Migrations/V3/) (a versioned batch -- see
   [`Migrations/V3/README.md`](Migrations/V3/README.md) for its promotion
-  process); [`Migrations/V2.1/`](Migrations/V2.1/) is a second versioned
-  batch, a minor update to the currently-deployed state rather than a
-  future major version (see
-  [`Migrations/V2.1/README.md`](Migrations/V2.1/README.md)); newer,
-  unbatched items are added as standalone folders directly under
+  process); a versioned `V2.x/` batch -- a minor update to the
+  currently-deployed state rather than a future major version -- gets
+  created the same way once there's another low-risk update to stage;
+  newer, unbatched items are added as standalone folders directly under
   `Migrations/`. Each item is self-contained with its own `README.md`.
 - **[`Scripts/`](Scripts/)** -- host-side operational scripts not tied to a
   single stack: `startup-all.sh`/`shutdown-all.sh` bring every stack up or
