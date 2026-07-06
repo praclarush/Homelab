@@ -4,9 +4,7 @@ Consolidated shopping list across all `Migrations/V3/` items. See each item's
 own `README.md` for setup instructions once hardware is in hand.
 `pc-temperature-alerting` and `unifi-temperature-monitoring` need no
 hardware purchases (existing infrastructure + a UniFi account) and are
-not listed below. `dual-nic-vlan-split` also needs no purchase -- the
-Beelink EQi13's second NIC is already built in; it only needs a spare
-Ethernet cable, typically already on hand.
+not listed below.
 
 ## rack-temperature-monitoring
 

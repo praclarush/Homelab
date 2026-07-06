@@ -3,7 +3,8 @@
 **Status: staged, not deployed.** Blocked on: running a second Ethernet
 cable from the mini PC's second NIC to the switch, and reconfiguring two
 Ubiquiti switch ports. No hardware purchase needed -- the Beelink EQi13
-already has two onboard NICs; only one is currently cabled and in use.
+already has two onboard NICs, so this ships as a `V2.1` minor update
+rather than a `V3` item, the same reasoning as `smtp-relay`.
 
 ## What This Is
 
@@ -137,8 +138,9 @@ interface names don't shuffle):
    it currently says "VLAN trunk config for the mini PC's two
    interfaces"; that should become "VLAN config for the mini PC's two
    dedicated physical NICs (no trunking)".
-4. Remove `Migrations/V3/dual-nic-vlan-split/` and its row in
-   [`Migrations/V3/README.md`](../README.md).
+4. Remove `Migrations/V2.1/dual-nic-vlan-split/` and its row in
+   [`Migrations/V2.1/README.md`](../README.md). If `V2.1/` has no other
+   items left, remove the whole `V2.1/` folder too.
 
 No Docker Compose or `.env` changes are needed anywhere -- every
 stack's `VLAN61_IP`/`VLAN11_IP` binding is just a static IP the host
