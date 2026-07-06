@@ -1,0 +1,36 @@
+---
+# Top strip of the dashboard, left to right.
+# "resources" tiles mirror the per-node CPU/disk meters in the reference
+# screenshot. You only have one Docker host + one NAS, so there are two
+# tiles instead of six — add more blocks here later if you split hosts.
+
+# Static banner showing the deployed homelab version (README.md's
+# "Current Version" section). Bump both when a Migrations/ batch is promoted.
+- greeting:
+    text_size: xl
+    text: "Homelab v2.0.1"
+
+- resources:
+    label: mini-pc
+    cpu: true
+    memory: true
+    disk: /
+
+- resources:
+    label: synology-nas
+    disk: /mnt/synology
+
+- datetime:
+    text_size: xl
+    format:
+      dateStyle: long
+      timeStyle: short
+      hourCycle: h12
+
+- openmeteo:
+    label: Home
+    latitude: 35.5879903
+    longitude: -97.5512220
+    timezone: America/Chicago
+    units: imperial
+    cache: 5
