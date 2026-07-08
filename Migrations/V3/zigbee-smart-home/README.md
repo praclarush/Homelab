@@ -151,8 +151,8 @@ Once verified:
   host as gitignored runtime state (matching how Home Assistant's config
   is handled) -- only the compose service definitions and this template
   are tracked.
-- Add a short section to
-  `Guides/stacks/dashboards-automation-guide.md` covering
-  Mosquitto, Zigbee2MQTT, and the HA MQTT integration setup.
+- Add a short section to `stacks/dashboards-automation-guide.md` in the
+  `Homelab-wiki` repo covering Mosquitto, Zigbee2MQTT, and the HA MQTT
+  integration setup.
 - Remove `Migrations/V3/zigbee-smart-home/` and its row in
   `Migrations/V3/README.md`.
