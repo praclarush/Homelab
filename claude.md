@@ -77,7 +77,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **node-exporter:** Runs with `network_mode: host` and `pid: host`. Prometheus reaches it via `host.docker.internal:9100` using the `extra_hosts` entry in the Prometheus service.
 
-**Immich Postgres image:** On `ghcr.io/immich-app/postgres:14-vectorchord0.4.2-pgvectors0.2.0`, migrated from `tensorchord/pgvecto-rs:pg14-v0.2.0` after Immich v3.0.1 dropped pgvecto.rs support. See `Docker/stacks/compose-review-notes.md` for the migration record.
+**Immich Postgres image:** On `ghcr.io/immich-app/postgres:14-vectorchord0.4.2-pgvectors0.2.0`, migrated from `tensorchord/pgvecto-rs:pg14-v0.2.0` after Immich v3.0.1 dropped pgvecto.rs support.
 
 **LLM inference is CPU-only:** The mini PC uses Intel UHD integrated graphics. Ollama's GPU acceleration requires NVIDIA or AMD hardware. All inference runs on CPU. Model size ceiling is ~14B parameters (Q4 quantized, ~9 GB) given 16 GB total system RAM. Do not suggest models above 14B for this hardware.
 
@@ -118,7 +118,6 @@ for the full, categorized list. Quick reference:
 | `Homelab-wiki/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
 | `Homelab-wiki/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, ntfy, Tailscale: CrowdSec, and the cross-stack Watchtower auto-update policy |
 | `Homelab-wiki/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
-| `Docker/stacks/compose-review-notes.md` | Rationale for compose file changes, including the completed Immich Postgres image migration |
 | `Docker/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `Docker/stacks/` |
 
 ## Branching
