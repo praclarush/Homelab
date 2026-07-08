@@ -4,6 +4,12 @@ A modular Docker Compose-based home lab running on a dedicated Linux
 mini PC, backed by Synology NAS storage and managed through a Ubiquiti
 network environment.
 
+**For full documentation** -- setup guides, per-stack how-tos, networking,
+and operations -- see the [`Homelab-wiki`](https://github.com/praclarush/Homelab-wiki)
+repo, starting at its [README.md](https://github.com/praclarush/Homelab-wiki/blob/master/README.md).
+This repo stays a quick-reference companion: service inventory, ports,
+`.env` contents, and directory layout.
+
 ## Overview
 
 The environment is organized into three hardware tiers:
@@ -54,22 +60,21 @@ managed through Home Assistant instead.
 `mikoshi` is this repository's Docker host (the mini PC referenced
 throughout as the Compute Layer). `ghost-buffer` is the Synology NAS
 (Storage Layer). See
-[`Guides/Hardware-configuration/`](Guides/Hardware-configuration/)
-for host-level hardware setup guides that fall outside Docker Compose
-(e.g. UPS monitoring).
+[`hardware-configuration/`](https://github.com/praclarush/Homelab-wiki/tree/master/hardware-configuration/)
+in the `Homelab-wiki` repo for host-level hardware setup guides that fall
+outside Docker Compose (e.g. UPS monitoring).
 
 ------------------------------------------------------------------------
 
 ## Repository Layout
 
-The repository root holds four top-level folders:
+The repository root holds three top-level folders:
 
 - **[`Docker/`](Docker/)** -- the current, deployed state.
   [`Docker/stacks/`](Docker/stacks/) has one folder per stack, each with a
   single `compose.yaml`; there is no version history to reconcile within it.
   [`Docker/config/`](Docker/config/) holds reference copies of host-level
   Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer, Docker daemon).
-- **[`Guides/`](Guides/)** -- the wiki-style documentation described below.
 - **[`Migrations/`](Migrations/)** -- staged changes not yet deployed,
   typically blocked on hardware or another external dependency. Most live
   under [`Migrations/V3/`](Migrations/V3/) (a versioned batch -- see
@@ -83,20 +88,20 @@ The repository root holds four top-level folders:
   single stack: `startup-all.sh`/`shutdown-all.sh` bring every stack up or
   down in dependency order, and `add-npm-proxy-hosts.ps1` bulk-creates NPM
   proxy hosts via its API instead of the manual steps in
-  [nginx-proxy-manager-guide.md](Guides/networking/nginx-proxy-manager-guide.md).
+  [nginx-proxy-manager-guide.md](https://github.com/praclarush/Homelab-wiki/blob/master/networking/nginx-proxy-manager-guide.md).
 
 ## Documentation
 
-The [`Guides/`](Guides/) directory is organized like a wiki -- it will
-eventually be moved into the WikiJS instance this homelab runs, and is the
-single index for every how-to guide in this repo (deployment, networking,
-per-stack setup, operations). It also links out to the one reference that
-lives outside `Guides/` proper: [`Docker/stacks/compose-review-notes.md`](Docker/stacks/compose-review-notes.md)
+How-to guides (deployment, networking, per-stack setup, operations) live in
+the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki)
+repo, git-synced into the WikiJS instance this homelab runs
+(`https://wiki.home.bremmer.zone`). It links out to the one reference that
+lives in this repo instead: [`Docker/stacks/compose-review-notes.md`](Docker/stacks/compose-review-notes.md)
 (rationale for compose file changes).
 
-**Start at [`Guides/README.md`](Guides/README.md).** This file
-stays a quick-reference companion: service inventory, ports, `.env`
-contents, and directory layout -- not a how-to guide.
+**Start at [its README.md](https://github.com/praclarush/Homelab-wiki/blob/master/README.md).**
+This file stays a quick-reference companion: service inventory, ports,
+`.env` contents, and directory layout -- not a how-to guide.
 
 ------------------------------------------------------------------------
 
@@ -174,8 +179,8 @@ Internal-only services (no exposed port) are marked with a dash.
 ## Directory Structure
 
 All stacks are stored under `/opt/docker/stacks/` on the host. Following
-[`Guides/operations/git-deployment-guide.md`](Guides/operations/git-deployment-guide.md),
-this path is a symlink into a clone of this
+[`operations/git-deployment-guide.md`](https://github.com/praclarush/Homelab-wiki/blob/master/operations/git-deployment-guide.md)
+in the `Homelab-wiki` repo, this path is a symlink into a clone of this
 repository at `/srv/git/homelab`, pointed at the `Docker/stacks/` tree, so
 config changes made on the host can be committed and pushed directly,
 and changes pushed elsewhere can be pulled and applied with
@@ -256,7 +261,8 @@ other stack but `dockge` joins), then `dockge`, `dashboards-automation`,
 `media-gaming`, `auth`, `tools`, `llm` -- in any order after that. Full
 prerequisites (disabling `systemd-resolved`, mounting the six NAS shares,
 Intel Quick Sync, VLAN trunking) and step-by-step deployment for each
-stack are in [`Guides/getting-started/homelab-guide.md`](Guides/getting-started/homelab-guide.md).
+stack are in [`getting-started/homelab-guide.md`](https://github.com/praclarush/Homelab-wiki/blob/master/getting-started/homelab-guide.md)
+in the `Homelab-wiki` repo.
 
 ------------------------------------------------------------------------
 
@@ -264,19 +270,19 @@ stack are in [`Guides/getting-started/homelab-guide.md`](Guides/getting-started/
 
 Ports are in [Service Quick Reference](#service-quick-reference) above.
 `.env` contents per stack are set up step-by-step in
-[`Guides/getting-started/homelab-guide.md`](Guides/getting-started/homelab-guide.md)
-section 5. Deployment, first-time setup, and stack-specific notes
-(Watchtower's auto-update policy, Postgres backup rotation, memory
-limits, forward-auth wiring, etc.) live in that same guide and the
-per-stack guides under
-[`Guides/stacks/`](Guides/stacks/):
-[dashboards-automation](Guides/stacks/dashboards-automation-guide.md),
-[infrastructure-networking](Guides/stacks/infrastructure-networking-guide.md),
-[media-gaming](Guides/stacks/media-gaming-guide.md),
-[tools](Guides/stacks/tools-guide.md),
-[llm](Guides/stacks/llm-stack-guide.md). `auth` and `dockge` have
-no guide beyond the getting-started guide -- neither has services added
-on top of the base deployment.
+[`getting-started/homelab-guide.md`](https://github.com/praclarush/Homelab-wiki/blob/master/getting-started/homelab-guide.md)
+section 5 of the `Homelab-wiki` repo. Deployment, first-time setup, and
+stack-specific notes (Watchtower's auto-update policy, Postgres backup
+rotation, memory limits, forward-auth wiring, etc.) live in that same
+guide and the per-stack guides under
+[`stacks/`](https://github.com/praclarush/Homelab-wiki/tree/master/stacks/):
+[dashboards-automation](https://github.com/praclarush/Homelab-wiki/blob/master/stacks/dashboards-automation-guide.md),
+[infrastructure-networking](https://github.com/praclarush/Homelab-wiki/blob/master/stacks/infrastructure-networking-guide.md),
+[media-gaming](https://github.com/praclarush/Homelab-wiki/blob/master/stacks/media-gaming-guide.md),
+[tools](https://github.com/praclarush/Homelab-wiki/blob/master/stacks/tools-guide.md),
+[llm](https://github.com/praclarush/Homelab-wiki/blob/master/stacks/llm-stack-guide.md).
+`auth` and `dockge` have no guide beyond the getting-started guide --
+neither has services added on top of the base deployment.
 
 ------------------------------------------------------------------------
 
@@ -328,6 +334,6 @@ Exclude: database volumes (`./immich/postgres`, `./auth/postgres`),
 application caches.
 
 Use Synology Hyper Backup for media protection. See
-[`Guides/stacks/media-gaming-guide.md`](Guides/stacks/media-gaming-guide.md)
-for the Immich database backup command and the per-stack guides for
-other stack-specific backup procedures.
+[`stacks/media-gaming-guide.md`](https://github.com/praclarush/Homelab-wiki/blob/master/stacks/media-gaming-guide.md)
+in the `Homelab-wiki` repo for the Immich database backup command and the
+per-stack guides for other stack-specific backup procedures.

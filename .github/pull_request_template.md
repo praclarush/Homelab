@@ -7,7 +7,6 @@
 - [ ] `Docker/stacks/` (deployed state)
 - [ ] `Docker/config/` (host-level config)
 - [ ] `Migrations/` (staged, not yet deployed)
-- [ ] `Guides/` (documentation)
 - [ ] `Scripts/`
 
 Affected stack(s) / migration item:
@@ -18,7 +17,7 @@ Affected stack(s) / migration item:
 - [ ] Tested on the host: `docker compose up -d` in the affected stack directory
 - [ ] Proxied hostname(s) confirmed working through NPM, if applicable
 - [ ] `.env.example` updated if new variables were introduced
-- [ ] Relevant guide under `Guides/` updated if deployed behavior changed
+- [ ] Relevant guide in the [`Homelab-wiki`](https://github.com/praclarush/Homelab-wiki) repo updated if deployed behavior changed
 
 ## Downtime
 

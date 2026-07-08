@@ -4,8 +4,7 @@
 but not yet deployed to the live homelab, because they depend on something
 not yet in place -- new physical hardware, an unverified assumption, or a
 credential/account that needs to be created first. It sits alongside
-`Docker/stacks/`, `Docker/config/`, and `Guides/` (the live, deployed
-state).
+`Docker/stacks/` and `Docker/config/` (the live, deployed state).
 
 Nothing under `V3/` is running. Each subfolder is one staged item and is
 self-contained: its own `README.md` with setup/deployment instructions, plus
@@ -21,7 +20,7 @@ change has been verified working:
 
 1. Merge its config into the relevant `Docker/stacks/` service or host
    config, following the existing file layout there.
-2. Add or update the relevant guide under `Guides/`.
+2. Add or update the relevant guide in the [`Homelab-wiki`](https://github.com/praclarush/Homelab-wiki) repo.
 3. Remove the item's folder from `Migrations/V3/`.
 
 ## Staged Items
