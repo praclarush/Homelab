@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Infrastructure-as-code for a Docker Compose homelab. No application code, no tests -- but `.github/workflows/` does run CI: `validate-compose.yaml` runs `docker compose config -q` against every stack on any PR/push touching `Docker/stacks/**`, and `lint-scripts.yaml` runs ShellCheck and PSScriptAnalyzer against `Scripts/**`. The authoritative deployment target is `/opt/docker/` on the Linux host.
 
-See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Guides/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
+See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
+
+How-to guides are authored in the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki) repo, git-synced into the WikiJS instance (`tools` stack, `https://wiki.home.bremmer.zone`). This repo has no `Guides/` folder -- new or updated documentation belongs in `Homelab-wiki`, not here. See its [Documentation](#documentation) entry below.
 
 ## Common Commands
 
@@ -44,7 +46,7 @@ Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- t
 
 ## VLAN Bindings
 
-The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables. `Guides/networking/vlan-reference.md` is the source of truth for the full home-network VLAN plan (9 VLANs); only these two are relevant to this repo:
+The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables. [`networking/vlan-reference.md`](https://github.com/praclarush/Homelab-wiki/blob/master/networking/vlan-reference.md) in the `Homelab-wiki` repo is the source of truth for the full home-network VLAN plan (9 VLANs); only these two are relevant to this repo:
 
 | Variable | Value | VLAN | Services |
 |----------|-------|------|----------|
@@ -67,7 +69,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **Dockge stack path:** Configured to manage stacks at `/opt/docker/stacks` via `DOCKGE_STACKS_DIR`. This must match the actual path on the host.
 
-**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `Guides/operations/git-deployment-guide.md`, it resolves to `/srv/git/homelab/Docker/stacks`, a clone of this repository's remote kept in a dedicated repos folder separate from `/opt/docker`. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/srv/git/homelab`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
+**`/opt/docker/stacks` is a symlink, not a plain directory:** Per [`operations/git-deployment-guide.md`](https://github.com/praclarush/Homelab-wiki/blob/master/operations/git-deployment-guide.md) in the `Homelab-wiki` repo, it resolves to `/srv/git/homelab/Docker/stacks`, a clone of this repository's remote kept in a dedicated repos folder separate from `/opt/docker`. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/srv/git/homelab`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
 
 **Immich storage split:** PostgreSQL data (`./immich/postgres`) stays on local NVMe. Media uploads mount from NAS at `/mnt/synology/immich`. Do not move the database to NFS.
 
@@ -97,22 +99,25 @@ All generated runtime data (databases, caches, logs, certificates) is gitignored
 
 ## Documentation
 
-`Guides/` is organized like a wiki (it will eventually move into the WikiJS
-stack): `Guides/README.md` is the index page. See it for the full,
-categorized list. Quick reference:
+Guides are authored in the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki)
+repo, git-synced into the WikiJS instance (`tools` stack,
+`https://wiki.home.bremmer.zone`). Create or edit guides there, not here.
+Start at [its README.md](https://github.com/praclarush/Homelab-wiki/blob/master/README.md)
+for the full, categorized list. Quick reference:
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Repo overview, service/port inventory, directory layout, deployment order pointer |
-| `Guides/getting-started/homelab-guide.md` | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
-| `Guides/networking/nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
-| `Guides/networking/pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
-| `Guides/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
-| `Guides/stacks/tools-guide.md` | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
-| `Guides/stacks/media-gaming-guide.md` | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
-| `Guides/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
-| `Guides/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, ntfy, Tailscale: CrowdSec, and the cross-stack Watchtower auto-update policy |
-| `Guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
+| `README.md` (this repo) | Repo overview, service/port inventory, directory layout, deployment order pointer |
+| `Homelab-wiki/getting-started/homelab-guide.md` | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
+| `Homelab-wiki/networking/nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `Homelab-wiki/networking/pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| `Homelab-wiki/networking/authentik-guide.md` | Authentik admin bootstrap, domain-level forward auth for no-login services, per-service OIDC/OAuth2 SSO setup for every service that supports it, and which services are intentionally excluded |
+| `Homelab-wiki/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
+| `Homelab-wiki/stacks/tools-guide.md` | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
+| `Homelab-wiki/stacks/media-gaming-guide.md` | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
+| `Homelab-wiki/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
+| `Homelab-wiki/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, ntfy, Tailscale: CrowdSec, and the cross-stack Watchtower auto-update policy |
+| `Homelab-wiki/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
 | `Docker/stacks/compose-review-notes.md` | Rationale for compose file changes, including the completed Immich Postgres image migration |
 | `Docker/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `Docker/stacks/` |
 
