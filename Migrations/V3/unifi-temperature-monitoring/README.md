@@ -141,10 +141,10 @@ Once verified:
   into that stack's real `.env.example`.
 - Merge the scrape job into
   `Docker/stacks/dashboards-automation/prometheus/prometheus.yml`.
-- Add a short section to
-  `Guides/stacks/dashboards-automation-guide.md` covering
-  `unpoller` and the Grafana alert rule (Grafana alert rules and contact
-  points live in Grafana's own database, not a repo file, so the guide
-  should document how to recreate them, not just point at a config file).
+- Add a short section to `stacks/dashboards-automation-guide.md` in the
+  `Homelab-wiki` repo covering `unpoller` and the Grafana alert rule
+  (Grafana alert rules and contact points live in Grafana's own database,
+  not a repo file, so the guide should document how to recreate them, not
+  just point at a config file).
 - Remove `Migrations/V3/unifi-temperature-monitoring/` and its row in
   `Migrations/V3/README.md`.
