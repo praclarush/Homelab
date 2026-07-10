@@ -144,6 +144,18 @@ Every issue filed against this repo (not just hotfix issues, see below) must be 
 gh issue create --label bug --assignee praclarush --project "Homelab" --title "..." --body "..."
 ```
 
+### GitHub Pull Requests
+
+Every PR opened against this repo must be created with the same three, set at creation time rather than added after the fact:
+
+- **Project**: added to the `Homelab` GitHub Project.
+- **Label**: from the same taxonomy as issues, chosen by what the PR itself changes (`bug` for a fix, `enhancement` for a new feature/script, `documentation` for docs-only), not necessarily the label of the issue it closes.
+- **Assignee**: `praclarush`.
+
+```bash
+gh pr create --label enhancement --assignee praclarush --project "Homelab" --base master --head <branch> --title "..." --body "..."
+```
+
 ### Hotfix Workflow
 
 Any change made directly to a stack's `compose.yaml` on the live host (i.e. in `/opt/docker/stacks/`, which is `/srv/git/homelab/Docker/stacks` on the host) is a hotfix by default, unless the user says otherwise -- the host is production, so an edit made there means something on it is broken right now.
