@@ -95,9 +95,7 @@ The repository root holds three top-level folders:
 How-to guides (deployment, networking, per-stack setup, operations) live in
 the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki)
 repo, git-synced into the WikiJS instance this homelab runs
-(`https://wiki.home.bremmer.zone`). It links out to the one reference that
-lives in this repo instead: [`Docker/stacks/compose-review-notes.md`](Docker/stacks/compose-review-notes.md)
-(rationale for compose file changes).
+(`https://wiki.home.bremmer.zone`).
 
 **Start at [its README.md](https://github.com/praclarush/Homelab-wiki/blob/master/README.md).**
 This file stays a quick-reference companion: service inventory, ports,
