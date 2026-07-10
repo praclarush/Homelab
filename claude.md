@@ -131,3 +131,14 @@ Root branches are `master` and `release` only. Every other branch must be prefix
 | `task/` | Everything else -- features, docs, refactors, migrations |
 
 `release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump, and is always branched from and merged back into `release` first, then forward-merged (or cherry-picked) into `master`.
+
+### Hotfix Workflow
+
+Any change made directly to a stack's `compose.yaml` on the live host (i.e. in `/opt/docker/stacks/`, which is `/srv/git/homelab/Docker/stacks` on the host) is a hotfix by default, unless the user says otherwise -- the host is production, so an edit made there means something on it is broken right now.
+
+Hotfixes land in a batch branch, not directly against `release`:
+
+1. **Batch branch**: `hotfix/V{major.minor.patch}`, branched from `release`, incrementing the patch version from the latest tag on `release` (e.g. latest tag `v2.1.0` -> batch branch `hotfix/V2.1.1`). If a batch branch for the next patch version is already open, target it instead of creating a new one -- retarget any existing hotfix PRs still pointed at `release` onto it.
+2. **Per-fix branch**: for each individual hotfix, branch off the batch branch (not `release` directly), named `hotfix/{description}`. Apply the fix, commit, and open a PR targeting the batch branch. File a GitHub issue for the bug if one doesn't already exist, and close it from the PR.
+3. Once every per-fix PR is merged into the batch branch, merge the batch branch into `release` and tag the new patch version.
+4. Forward-merge (or cherry-pick) `release` into `master`.
