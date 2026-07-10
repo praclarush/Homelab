@@ -132,6 +132,30 @@ Root branches are `master` and `release` only. Every other branch must be prefix
 
 `release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump, and is always branched from and merged back into `release` first, then forward-merged (or cherry-picked) into `master`.
 
+### GitHub Issues
+
+Every issue filed against this repo (not just hotfix issues, see below) must be created with:
+
+- **Project**: added to the `Homelab` GitHub Project.
+- **Label**: matching the relevant `.github/ISSUE_TEMPLATE/*.yml` template's default label (e.g. `bug` for a bug report, `enhancement` for a stack change) -- `gh issue create` picks this up automatically from the template, but set it explicitly when creating issues via `gh issue create --label` directly.
+- **Assignee**: `praclarush`.
+
+```bash
+gh issue create --label bug --assignee praclarush --project "Homelab" --title "..." --body "..."
+```
+
+### GitHub Pull Requests
+
+Every PR opened against this repo must be created with the same three, set at creation time rather than added after the fact:
+
+- **Project**: added to the `Homelab` GitHub Project.
+- **Label**: from the same taxonomy as issues, chosen by what the PR itself changes (`bug` for a fix, `enhancement` for a new feature/script, `documentation` for docs-only), not necessarily the label of the issue it closes.
+- **Assignee**: `praclarush`.
+
+```bash
+gh pr create --label enhancement --assignee praclarush --project "Homelab" --base master --head <branch> --title "..." --body "..."
+```
+
 ### Hotfix Workflow
 
 Any change made directly to a stack's `compose.yaml` on the live host (i.e. in `/opt/docker/stacks/`, which is `/srv/git/homelab/Docker/stacks` on the host) is a hotfix by default, unless the user says otherwise -- the host is production, so an edit made there means something on it is broken right now.
