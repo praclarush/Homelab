@@ -140,7 +140,7 @@ services:
       - /mnt/synology/audiobooks:/audiobooks
       - /mnt/synology/podcasts:/podcasts
     ports:
-      - "${VLAN61_IP}:13378:13378"
+      - "${VLAN61_IP}:13378:80"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
