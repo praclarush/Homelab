@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-Infrastructure-as-code for a Docker Compose homelab. No application code, no tests -- but `.github/workflows/` does run CI: `validate-compose.yaml` runs `docker compose config -q` against every stack on any PR/push touching `Docker/stacks/**`, and `lint-scripts.yaml` runs ShellCheck and PSScriptAnalyzer against `Scripts/**`. The authoritative deployment target is `/opt/docker/` on the Linux host.
+Infrastructure-as-code for a Docker Compose homelab. No application code, no tests -- but `.github/workflows/` does run CI: `validate-compose.yaml` runs `docker compose config -q` against every stack on any PR/push touching `Docker/stacks/**`, and `lint-scripts.yaml` runs ShellCheck and PSScriptAnalyzer against `Scripts/**`. The authoritative deployment target is `/opt/docker/stacks/` on the Linux host.
 
 See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
 
