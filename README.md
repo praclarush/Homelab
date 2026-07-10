@@ -32,7 +32,7 @@ The environment is organized into three hardware tiers:
 
 ## Current Version
 
-**v2.1.0** -- the version of the state deployed in [`Docker/stacks/`](Docker/stacks/).
+**v2.1.1** -- the version of the state deployed in [`Docker/stacks/`](Docker/stacks/).
 Bump this when a versioned [`Migrations/`](Migrations/) batch (e.g.
 [`Migrations/V3/`](Migrations/V3/)) is promoted into `Docker/stacks/`, per
 the versioning convention in [Repository Layout](#repository-layout).
