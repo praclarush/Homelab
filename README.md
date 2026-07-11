@@ -107,7 +107,7 @@ This file stays a quick-reference companion: service inventory, ports,
 
 | Stack | Services |
 |-------|----------|
-| `dashboards-automation` | Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus, Loki, Promtail |
+| `dashboards-automation` | Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus, Loki, Promtail, nut-exporter |
 | `dockge` | Dockge |
 | `infrastructure-networking` | Pi-hole, Nginx Proxy Manager, Watchtower, ntfy, Tailscale, CrowdSec |
 | `media-gaming` | AMP, Immich, Immich Machine Learning, Jellyfin, Audiobookshelf, Kavita |
@@ -168,6 +168,7 @@ Internal-only services (no exposed port) are marked with a dash.
 | Kavita | `media-gaming` | 5000 | `kavita.home.example.com` | Ebook and comic reader |
 | Loki | `dashboards-automation` | 3100 | — | Log aggregation, queried from Grafana (internal) |
 | Promtail | `dashboards-automation` | — | — | Log collector, ships to Loki (internal) |
+| nut-exporter | `dashboards-automation` | 9995 | — | Prometheus exporter for the host's NUT UPS server (internal) |
 | CrowdSec | `infrastructure-networking` | — | — | Intrusion detection, reads NPM logs (internal) |
 | Ollama | `llm` | 11434 | — | LLM inference API |
 | Open WebUI | `llm` | 3004 | `llm.home.example.com` | Chat interface |
@@ -187,7 +188,7 @@ and changes pushed elsewhere can be pulled and applied with
 ``` text
 /opt/docker/stacks/
 ├── dashboards-automation/
-│   ├── compose.yaml             # Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus, node-exporter, Loki, Promtail
+│   ├── compose.yaml             # Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus, node-exporter, Loki, Promtail, nut-exporter
 │   ├── .env                     # Grafana password
 │   ├── prometheus/config/       # prometheus.yml (copy from repo)
 │   ├── loki/                    # Loki config and data

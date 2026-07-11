@@ -36,7 +36,7 @@ Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- t
 
 | Stack | Services |
 |-------|----------|
-| `dashboards-automation` | Homepage (3000), Home Assistant (8123), Uptime Kuma (3001), Grafana (3002), Prometheus (9090), node-exporter (host), Loki (3100), Promtail |
+| `dashboards-automation` | Homepage (3000), Home Assistant (8123), Uptime Kuma (3001), Grafana (3002), Prometheus (9090), node-exporter (host), Loki (3100), Promtail, nut-exporter (9995, internal) |
 | `dockge` | Dockge stack manager (5001) |
 | `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host), CrowdSec, Postfix Relay (25) |
 | `media-gaming` | AMP (8081), Immich (2283), Immich Machine Learning, Postgres, Postgres Backup, Redis, Jellyfin (8096), Audiobookshelf (13378), Kavita (5000) |
@@ -77,6 +77,8 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **node-exporter:** Runs with `network_mode: host` and `pid: host`. Prometheus reaches it via `host.docker.internal:9100` using the `extra_hosts` entry in the Prometheus service.
 
+**nut-exporter:** Unlike every other exporter in this stack, what it exports (NUT/`upsd`) isn't a container at all -- it's a bare-metal systemd service on the host monitoring a USB-attached UPS (see `Homelab-wiki/hardware-configuration/cyberpower-cp1500pfcrm2u-ups-guide.md`). `nut-exporter` reaches it via `host.docker.internal:3493` using the same `extra_hosts` pattern as node-exporter/Prometheus, and `/etc/nut/upsd.conf` must have `LISTEN 0.0.0.0 3493` (not just localhost) on the host for that connection to succeed -- this is a host-level config change outside `Docker/stacks/`, not something this repo can enforce.
+
 **Immich Postgres image:** On `ghcr.io/immich-app/postgres:14-vectorchord0.4.2-pgvectors0.2.0`, migrated from `tensorchord/pgvecto-rs:pg14-v0.2.0` after Immich v3.0.1 dropped pgvecto.rs support.
 
 **LLM inference is CPU-only:** The mini PC uses Intel UHD integrated graphics. Ollama's GPU acceleration requires NVIDIA or AMD hardware. All inference runs on CPU. Model size ceiling is ~14B parameters (Q4 quantized, ~9 GB) given 16 GB total system RAM. Do not suggest models above 14B for this hardware.
@@ -115,7 +117,8 @@ for the full, categorized list. Quick reference:
 | `Homelab-wiki/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
 | `Homelab-wiki/stacks/tools-guide.md` | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
 | `Homelab-wiki/stacks/media-gaming-guide.md` | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
-| `Homelab-wiki/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
+| `Homelab-wiki/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail, nut-exporter |
+| `Homelab-wiki/hardware-configuration/cyberpower-cp1500pfcrm2u-ups-guide.md` | Host-level UPS monitoring with NUT: USB/udev setup, automatic shutdown on power loss, ntfy alerts, and the Prometheus/Grafana metrics wiring for `nut-exporter` |
 | `Homelab-wiki/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, ntfy, Tailscale: CrowdSec, and the cross-stack Watchtower auto-update policy |
 | `Homelab-wiki/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
 | `Docker/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `Docker/stacks/` |
