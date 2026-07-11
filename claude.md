@@ -8,7 +8,7 @@ Infrastructure-as-code for a Docker Compose homelab. No application code, no tes
 
 See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
 
-How-to guides are authored in the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki) repo, git-synced into the WikiJS instance (`tools` stack, `https://wiki.home.bremmer.zone`). This repo has no `Guides/` folder -- new or updated documentation belongs in `Homelab-wiki`, not here. See its [Documentation](#documentation) entry below.
+How-to guides are authored in the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki) repo, git-synced into the WikiJS instance (`tools` stack, `https://wiki.home.example.com`). This repo has no `Guides/` folder -- new or updated documentation belongs in `Homelab-wiki`, not here. See its [Documentation](#documentation) entry below.
 
 ## Common Commands
 
@@ -26,7 +26,7 @@ Before considering a `compose.yaml` edit done, run `docker compose config -q` fr
 
 ## Migrations Conventions
 
-- **Versioning**: `Migrations/V3/` is a batch of items blocked on hardware or another external dependency, staged toward a future major version. A versioned `Migrations/V2.x/` folder (e.g. the now-fully-promoted `V2.1/`, historically called "V2" -- versioned `V1`/`V2` folders existed before being collapsed into today's `Docker/` layout; see git history around commit `d92985e`) holds a batch of minor, low-risk updates to the *currently-deployed* production state, created fresh whenever there's a new one to stage and removed once every item in it is promoted. Bump the minor version for further low-risk production updates; only start a new major-version batch for changes blocked on hardware or another external dependency, matching the `V3` pattern.
+- **Versioning**: `Migrations/V3/` is a batch of items blocked on hardware or another external dependency, staged toward a future major version. A versioned `Migrations/V2.x/` folder (e.g. the now-fully-promoted `V2.1/`, historically called "V2" -- versioned `V1`/`V2` folders existed before being collapsed into today's `Docker/` layout; see git history around commit `837b8b3`) holds a batch of minor, low-risk updates to the *currently-deployed* production state, created fresh whenever there's a new one to stage and removed once every item in it is promoted. Bump the minor version for further low-risk production updates; only start a new major-version batch for changes blocked on hardware or another external dependency, matching the `V3` pattern.
 - **Full drop-in replacements**: when a migration item replaces an entire stack's `compose.yaml` rather than adding one service for hand-merging, name its subfolder after the target stack (e.g. `infrastructure-networking/`), not a generic `compose/` folder, and say explicitly in that item's `README.md` that the file is a complete copy of the current `compose.yaml` with the new service appended. Diff it against the live file before promoting -- it can go stale if the live file changes after the migration was written.
 - Every item is still self-contained with its own `README.md`: What This Is / What's In This Folder / Setup / Verify / Promotion, matching the existing `V3/` items.
 
@@ -57,7 +57,7 @@ The host mini PC has two VLAN interfaces. Services bind their host ports to the 
 
 ## Proxy Domain
 
-All services with web interfaces are proxied through Nginx Proxy Manager at `*.home.bremmer.zone`. TLS certificates are issued via Let's Encrypt DNS-01 challenge using Cloudflare. Pi-hole resolves `*.home.bremmer.zone` internally to `192.168.11.10` via a dnsmasq wildcard entry at `/opt/docker/stacks/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf`.
+All services with web interfaces are proxied through Nginx Proxy Manager at `*.home.example.com`. TLS certificates are issued via Let's Encrypt DNS-01 challenge using Cloudflare. Pi-hole resolves `*.home.example.com` internally to `192.168.11.10` via a dnsmasq wildcard entry at `/opt/docker/stacks/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf`.
 
 ## Shared Network Dependency
 
@@ -87,12 +87,12 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 | Stack | Required Variables |
 |-------|-------------------|
-| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
+| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
-| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
+| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
-| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
+| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
 | `llm` | `VLAN11_IP` |
 
 All generated runtime data (databases, caches, logs, certificates) is gitignored. Only `compose.yaml` files and static configuration belong in version control.
@@ -101,7 +101,7 @@ All generated runtime data (databases, caches, logs, certificates) is gitignored
 
 Guides are authored in the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki)
 repo, git-synced into the WikiJS instance (`tools` stack,
-`https://wiki.home.bremmer.zone`). Create or edit guides there, not here.
+`https://wiki.home.example.com`). Create or edit guides there, not here.
 Start at [its README.md](https://github.com/praclarush/Homelab-wiki/blob/master/README.md)
 for the full, categorized list. Quick reference:
 

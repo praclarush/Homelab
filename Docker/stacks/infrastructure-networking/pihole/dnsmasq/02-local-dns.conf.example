@@ -1,0 +1,4 @@
+# Copy to 02-local-dns.conf (gitignored) in the same folder and replace
+# home.example.com with your real wildcard domain before deploying.
+# dnsmasq only loads *.conf files, so this .example file is inert on its own.
+address=/.home.example.com/192.168.11.10

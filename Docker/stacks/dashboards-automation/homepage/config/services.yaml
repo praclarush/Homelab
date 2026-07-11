@@ -2,7 +2,7 @@
 - Media:
     - Immich:
         icon: immich.png
-        href: https://photos.home.bremmer.zone
+        href: https://photos.{{HOMEPAGE_VAR_DOMAIN}}
         description: Photos & video, CLIP search
         container: immich_server
         server: my-docker
@@ -13,7 +13,7 @@
 
     - Jellyfin:
         icon: jellyfin.png
-        href: https://jellyfin.home.bremmer.zone
+        href: https://jellyfin.{{HOMEPAGE_VAR_DOMAIN}}
         description: Media server
         container: jellyfin
         server: my-docker
@@ -24,14 +24,14 @@
 
     - Audiobookshelf:
         icon: audiobookshelf.png
-        href: https://abs.home.bremmer.zone
+        href: https://abs.{{HOMEPAGE_VAR_DOMAIN}}
         description: Audiobooks & podcasts
         container: audiobookshelf
         server: my-docker
 
     - Kavita:
         icon: kavita.png
-        href: https://kavita.home.bremmer.zone
+        href: https://kavita.{{HOMEPAGE_VAR_DOMAIN}}
         description: Ebook & comic reader
         container: kavita
         server: my-docker
@@ -46,25 +46,25 @@
 
     - Uptime Kuma:
         icon: uptime-kuma.png
-        href: https://uptime.home.bremmer.zone
+        href: https://uptime.{{HOMEPAGE_VAR_DOMAIN}}
         description: Uptime & alerting
         container: uptime-kuma
         server: my-docker
         widget:
           type: uptimekuma
-          url: https://uptime.home.bremmer.zone
+          url: https://uptime.{{HOMEPAGE_VAR_DOMAIN}}
           slug: default
 
     - Watchtower:
         icon: watchtower.png
-        href: https://ntfy.home.bremmer.zone
+        href: https://ntfy.{{HOMEPAGE_VAR_DOMAIN}}
         description: Automated container updates
         container: watchtower
         server: my-docker
 
     - ntfy:
         icon: ntfy.png
-        href: https://ntfy.home.bremmer.zone
+        href: https://ntfy.{{HOMEPAGE_VAR_DOMAIN}}
         description: Push notifications
         container: ntfy
         server: my-docker
@@ -79,21 +79,21 @@
 
     - Homepage:
         icon: homepage.png
-        href: https://homepage.home.bremmer.zone
+        href: https://homepage.{{HOMEPAGE_VAR_DOMAIN}}
         description: This dashboard
         container: homepage
         server: my-docker
 
     - pgAdmin:
         icon: pgadmin.png
-        href: https://pgadmin.home.bremmer.zone
+        href: https://pgadmin.{{HOMEPAGE_VAR_DOMAIN}}
         description: PostgreSQL web admin
         container: pgadmin
         server: my-docker
 
     - Backrest:
         icon: backrest.png
-        href: https://backrest.home.bremmer.zone
+        href: https://backrest.{{HOMEPAGE_VAR_DOMAIN}}
         description: Restic backups to NAS
         container: backrest
         server: my-docker
@@ -109,23 +109,23 @@
 
     - Open WebUI:
         icon: open-webui.png
-        href: https://llm.home.bremmer.zone
+        href: https://llm.{{HOMEPAGE_VAR_DOMAIN}}
         description: Chat with local LLMs
         container: open-webui
         server: my-docker
-        ping: https://llm.home.bremmer.zone
+        ping: https://llm.{{HOMEPAGE_VAR_DOMAIN}}
 
 - Observability:
     - Grafana:
         icon: grafana.png
-        href: https://grafana.home.bremmer.zone
+        href: https://grafana.{{HOMEPAGE_VAR_DOMAIN}}
         description: Metrics dashboards
         container: grafana
         server: my-docker
 
     - Prometheus:
         icon: prometheus.png
-        href: https://prometheus.home.bremmer.zone
+        href: https://prometheus.{{HOMEPAGE_VAR_DOMAIN}}
         description: Metrics collection
         container: prometheus
         server: my-docker
@@ -147,13 +147,13 @@
 - Network:
     - Pi-hole:
         icon: pi-hole.png
-        href: https://pihole.home.bremmer.zone
+        href: https://pihole.{{HOMEPAGE_VAR_DOMAIN}}
         description: Network-wide DNS filtering
         container: pihole
         server: my-docker
         widget:
           type: pihole
-          url: https://pihole.home.bremmer.zone
+          url: https://pihole.{{HOMEPAGE_VAR_DOMAIN}}
           key: "{{HOMEPAGE_VAR_PIHOLE_KEY}}"
 
     - Tailscale:
@@ -166,7 +166,7 @@
 - Security:
     - Authentik:
         icon: authentik.png
-        href: https://auth.home.bremmer.zone
+        href: https://auth.{{HOMEPAGE_VAR_DOMAIN}}
         description: Single sign-on / identity provider
         container: authentik-server
         server: my-docker
@@ -181,63 +181,63 @@
 - Tools:
     - WikiJS:
         icon: wikijs.png
-        href: https://wiki.home.bremmer.zone
+        href: https://wiki.{{HOMEPAGE_VAR_DOMAIN}}
         description: Internal wiki & documentation
         container: wikijs
         server: my-docker
 
     - n8n:
         icon: n8n.png
-        href: https://n8n.home.bremmer.zone
+        href: https://n8n.{{HOMEPAGE_VAR_DOMAIN}}
         description: Workflow automation
         container: n8n
         server: my-docker
 
     - Mealie:
         icon: mealie.png
-        href: https://mealie.home.bremmer.zone
+        href: https://mealie.{{HOMEPAGE_VAR_DOMAIN}}
         description: Recipe manager
         container: mealie
         server: my-docker
 
     - Paperless-ngx:
         icon: paperless-ngx.png
-        href: https://paperless.home.bremmer.zone
+        href: https://paperless.{{HOMEPAGE_VAR_DOMAIN}}
         description: Document management & OCR
         container: paperless-ngx
         server: my-docker
 
     - Grocy:
         icon: grocy.png
-        href: https://grocy.home.bremmer.zone
+        href: https://grocy.{{HOMEPAGE_VAR_DOMAIN}}
         description: Household groceries & inventory
         container: grocy
         server: my-docker
 
     - Linkwarden:
         icon: linkwarden.png
-        href: https://links.home.bremmer.zone
+        href: https://links.{{HOMEPAGE_VAR_DOMAIN}}
         description: Bookmark manager with archiving
         container: linkwarden
         server: my-docker
 
     - Actual Budget:
         icon: actual-budget.png
-        href: https://budget.home.bremmer.zone
+        href: https://budget.{{HOMEPAGE_VAR_DOMAIN}}
         description: Personal finance
         container: actual-budget
         server: my-docker
 
     - Stirling PDF:
         icon: stirling-pdf.png
-        href: https://pdf.home.bremmer.zone
+        href: https://pdf.{{HOMEPAGE_VAR_DOMAIN}}
         description: PDF tools
         container: stirling-pdf
         server: my-docker
 
     - IT Tools:
         icon: it-tools.png
-        href: https://it-tools.home.bremmer.zone
+        href: https://it-tools.{{HOMEPAGE_VAR_DOMAIN}}
         description: Developer utilities
         container: it-tools
         server: my-docker

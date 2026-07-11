@@ -117,7 +117,7 @@ services:
     container_name: postfix_relay
     image: boky/postfix:latest
     environment:
-      - ALLOWED_SENDER_DOMAINS=home.bremmer.zone
+      - ALLOWED_SENDER_DOMAINS=${DOMAIN}
       - RELAYHOST=[smtp.gmail.com]:587
       - RELAYHOST_USERNAME=${SMTP_RELAY_USERNAME}
       - RELAYHOST_PASSWORD=${SMTP_RELAY_PASSWORD}

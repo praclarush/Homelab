@@ -74,6 +74,9 @@ logs/
 # Pi-hole runtime data and admin password hash (pihole.toml lives here)
 **/pihole/config/
 
+# Pi-hole wildcard DNS entry (real domain) -- copy from the tracked .example
+**/pihole/dnsmasq/02-local-dns.conf
+
 # Tailscale node identity/keys
 **/tailscale/state/
 
