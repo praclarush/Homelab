@@ -166,7 +166,7 @@ Reload: **Developer Tools > YAML > Rest Commands** and **> Automations**
 ### 8. Subscribe to the ntfy topic
 
 The alert posts to the `rack-temp` topic on the existing ntfy instance
-(`https://ntfy.home.bremmer.zone/rack-temp` or the ntfy app pointed at that
+(`https://ntfy.home.example.com/rack-temp` or the ntfy app pointed at that
 server/topic). Subscribe there to receive it. Change the topic name in
 `configuration-additions.yaml` before merging if you'd rather use a
 different one.
@@ -189,7 +189,7 @@ Once verified against real hardware:
   the host as-is (they're gitignored runtime state either way).
 - Move `esphome/rack-ble-proxy.yaml` (without secrets) into a tracked
   location, e.g. `Docker/stacks/dashboards-automation/esphome/`, and add
-  a short section to
-  `Guides/stacks/dashboards-automation-guide.md` covering it.
+  a short section to `stacks/dashboards-automation-guide.md` in the
+  `Homelab-wiki` repo covering it.
 - Remove `Migrations/V3/rack-temperature-monitoring/` and its row in
   `Migrations/V3/README.md`.

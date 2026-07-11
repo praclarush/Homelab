@@ -1,10 +1,21 @@
 param(
     [string]$NpmUrl = "http://192.168.11.10:81",
-    [string]$Email = "praclarushfire@gmail.com",
+    [Parameter(Mandatory = $true)]
+    [string]$Email,
+    [Parameter(Mandatory = $true)]
+    [string]$Domain,
     [string]$NasIp = "192.168.61.7"
 )
 
 $Email = $Email.Trim()
+if (-not $Email) {
+    throw "Email cannot be empty. Pass -Email <NPM admin email>."
+}
+
+$Domain = $Domain.Trim()
+if (-not $Domain) {
+    throw "Domain cannot be empty. Pass -Domain <your wildcard home domain, e.g. home.example.com>."
+}
 $Password = Read-Host "NPM admin password for $Email" -AsSecureString
 $Credential = New-Object System.Management.Automation.PSCredential($Email, $Password)
 $PlainPassword = $Credential.GetNetworkCredential().Password
@@ -25,12 +36,12 @@ catch {
 $headers = @{ Authorization = "Bearer $($tokenResp.token)" }
 
 $certs = Invoke-RestMethod -Uri "$NpmUrl/api/nginx/certificates" -Headers $headers -ErrorAction Stop
-$wildcardCert = $certs | Where-Object { $_.domain_names -contains "*.home.bremmer.zone" } | Select-Object -First 1
+$wildcardCert = $certs | Where-Object { $_.domain_names -contains "*.$Domain" } | Select-Object -First 1
 if (-not $wildcardCert) {
-    throw "Could not find a certificate covering *.home.bremmer.zone. Check it exists in NPM's SSL Certificates list."
+    throw "Could not find a certificate covering *.$Domain. Check it exists in NPM's SSL Certificates list."
 }
 $certId = $wildcardCert.id
-Write-Host "Using certificate id $certId for *.home.bremmer.zone"
+Write-Host "Using certificate id $certId for *.$Domain"
 
 $existingHosts = Invoke-RestMethod -Uri "$NpmUrl/api/nginx/proxy-hosts" -Headers $headers -ErrorAction Stop
 $existingDomains = $existingHosts | ForEach-Object { $_.domain_names } | ForEach-Object { $_ }
@@ -45,39 +56,39 @@ proxy_set_header Connection "upgrade";
 "@
 
 $newHosts = @(
-    @{ domain = "homepage.home.bremmer.zone";       forwardHost = "homepage";        port = 3000;  ws = $false }
-    @{ domain = "homeassistant.home.bremmer.zone";  forwardHost = "homeassistant";   port = 8123;  ws = $true; advancedConfig = $haAdvancedConfig }
-    @{ domain = "uptime.home.bremmer.zone";         forwardHost = "uptime_kuma";     port = 3001;  ws = $true }
-    @{ domain = "grafana.home.bremmer.zone";        forwardHost = "grafana";         port = 3000;  ws = $false }
-    @{ domain = "prometheus.home.bremmer.zone";     forwardHost = "prometheus";      port = 9090;  ws = $false }
-    @{ domain = "dockge.home.bremmer.zone";         forwardHost = "192.168.11.10";   port = 5001;  ws = $false }
-    @{ domain = "pihole.home.bremmer.zone";         forwardHost = "pihole";          port = 80;    ws = $false }
-    @{ domain = "ntfy.home.bremmer.zone";           forwardHost = "ntfy";            port = 80;    ws = $true }
-    @{ domain = "auth.home.bremmer.zone";           forwardHost = "authentik_server"; port = 9000; ws = $true }
-    @{ domain = "wiki.home.bremmer.zone";           forwardHost = "wikijs";          port = 3000;  ws = $true }
-    @{ domain = "photos.home.bremmer.zone";         forwardHost = "immich_server";   port = 2283;  ws = $true }
-    @{ domain = "jellyfin.home.bremmer.zone";       forwardHost = "jellyfin";        port = 8096;  ws = $true }
-    @{ domain = "amp.home.bremmer.zone";            forwardHost = "amp";             port = 8081;  ws = $false }
-    @{ domain = "abs.home.bremmer.zone";            forwardHost = "audiobookshelf";  port = 13378; ws = $true }
-    @{ domain = "kavita.home.bremmer.zone";         forwardHost = "kavita";          port = 5000;  ws = $true }
-    @{ domain = "pgadmin.home.bremmer.zone";        forwardHost = "pgadmin";         port = 80;    ws = $false }
-    @{ domain = "pdf.home.bremmer.zone";            forwardHost = "stirling_pdf";    port = 8080;  ws = $false }
-    @{ domain = "mealie.home.bremmer.zone";         forwardHost = "mealie";          port = 9000;  ws = $false }
-    @{ domain = "n8n.home.bremmer.zone";            forwardHost = "n8n";             port = 5678;  ws = $true }
-    @{ domain = "it-tools.home.bremmer.zone";       forwardHost = "it_tools";        port = 80;    ws = $false }
-    @{ domain = "budget.home.bremmer.zone";         forwardHost = "actual_budget";   port = 5006;  ws = $false }
-    @{ domain = "paperless.home.bremmer.zone";      forwardHost = "paperless_ngx";   port = 8000;  ws = $false }
-    @{ domain = "grocy.home.bremmer.zone";          forwardHost = "grocy";           port = 80;    ws = $false }
-    @{ domain = "links.home.bremmer.zone";          forwardHost = "linkwarden";      port = 3000;  ws = $true }
-    @{ domain = "backrest.home.bremmer.zone";       forwardHost = "backrest";        port = 9898;  ws = $false }
-    @{ domain = "llm.home.bremmer.zone";            forwardHost = "open_webui";      port = 8080;  ws = $true }
+    @{ domain = "homepage.$Domain";       forwardHost = "homepage";        port = 3000;  ws = $false }
+    @{ domain = "homeassistant.$Domain";  forwardHost = "homeassistant";   port = 8123;  ws = $true; advancedConfig = $haAdvancedConfig }
+    @{ domain = "uptime.$Domain";         forwardHost = "uptime_kuma";     port = 3001;  ws = $true }
+    @{ domain = "grafana.$Domain";        forwardHost = "grafana";         port = 3000;  ws = $false }
+    @{ domain = "prometheus.$Domain";     forwardHost = "prometheus";      port = 9090;  ws = $false }
+    @{ domain = "dockge.$Domain";         forwardHost = "192.168.11.10";   port = 5001;  ws = $false }
+    @{ domain = "pihole.$Domain";         forwardHost = "pihole";          port = 80;    ws = $false }
+    @{ domain = "ntfy.$Domain";           forwardHost = "ntfy";            port = 80;    ws = $true }
+    @{ domain = "auth.$Domain";           forwardHost = "authentik_server"; port = 9000; ws = $true }
+    @{ domain = "wiki.$Domain";           forwardHost = "wikijs";          port = 3000;  ws = $true }
+    @{ domain = "photos.$Domain";         forwardHost = "immich_server";   port = 2283;  ws = $true }
+    @{ domain = "jellyfin.$Domain";       forwardHost = "jellyfin";        port = 8096;  ws = $true }
+    @{ domain = "amp.$Domain";            forwardHost = "amp";             port = 8081;  ws = $false }
+    @{ domain = "abs.$Domain";            forwardHost = "audiobookshelf";  port = 13378; ws = $true }
+    @{ domain = "kavita.$Domain";         forwardHost = "kavita";          port = 5000;  ws = $true }
+    @{ domain = "pgadmin.$Domain";        forwardHost = "pgadmin";         port = 80;    ws = $false }
+    @{ domain = "pdf.$Domain";            forwardHost = "stirling_pdf";    port = 8080;  ws = $false }
+    @{ domain = "mealie.$Domain";         forwardHost = "mealie";          port = 9000;  ws = $false }
+    @{ domain = "n8n.$Domain";            forwardHost = "n8n";             port = 5678;  ws = $true }
+    @{ domain = "it-tools.$Domain";       forwardHost = "it_tools";        port = 80;    ws = $false }
+    @{ domain = "budget.$Domain";         forwardHost = "actual_budget";   port = 5006;  ws = $false }
+    @{ domain = "paperless.$Domain";      forwardHost = "paperless_ngx";   port = 8000;  ws = $false }
+    @{ domain = "grocy.$Domain";          forwardHost = "grocy";           port = 80;    ws = $false }
+    @{ domain = "links.$Domain";          forwardHost = "linkwarden";      port = 3000;  ws = $true }
+    @{ domain = "backrest.$Domain";       forwardHost = "backrest";        port = 9898;  ws = $false }
+    @{ domain = "llm.$Domain";            forwardHost = "open_webui";      port = 8080;  ws = $true }
 )
 
 if ($NasIp) {
-    $newHosts += @{ domain = "nas.home.bremmer.zone"; forwardHost = $NasIp; port = 5000; ws = $false }
+    $newHosts += @{ domain = "nas.$Domain"; forwardHost = $NasIp; port = 5000; ws = $false }
 }
 else {
-    Write-Host "Skipping nas.home.bremmer.zone - pass -NasIp <ip> to include the Synology DSM proxy host"
+    Write-Host "Skipping nas.$Domain - pass -NasIp <ip> to include the Synology DSM proxy host"
 }
 
 foreach ($h in $newHosts) {

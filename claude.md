@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-Infrastructure-as-code for a Docker Compose homelab. No application code, no tests -- but `.github/workflows/` does run CI: `validate-compose.yaml` runs `docker compose config -q` against every stack on any PR/push touching `Docker/stacks/**`, and `lint-scripts.yaml` runs ShellCheck and PSScriptAnalyzer against `Scripts/**`. The authoritative deployment target is `/opt/docker/` on the Linux host.
+Infrastructure-as-code for a Docker Compose homelab. No application code, no tests -- but `.github/workflows/` does run CI: `validate-compose.yaml` runs `docker compose config -q` against every stack on any PR/push touching `Docker/stacks/**`, and `lint-scripts.yaml` runs ShellCheck and PSScriptAnalyzer against `Scripts/**`. The authoritative deployment target is `/opt/docker/stacks/` on the Linux host.
 
-See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Guides/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
+See [README.md's "Repository Layout" section](README.md#repository-layout) for the top-level folder breakdown (`Docker/`, `Migrations/`, `Scripts/`) -- that's the canonical copy; update it, not this file, if the layout changes. `Docker/` holds the current, deployed state, and what most of the rest of this file describes.
+
+How-to guides are authored in the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki) repo, git-synced into the WikiJS instance (`tools` stack, `https://wiki.home.example.com`). This repo has no `Guides/` folder -- new or updated documentation belongs in `Homelab-wiki`, not here. See its [Documentation](#documentation) entry below.
 
 ## Common Commands
 
@@ -24,7 +26,7 @@ Before considering a `compose.yaml` edit done, run `docker compose config -q` fr
 
 ## Migrations Conventions
 
-- **Versioning**: `Migrations/V3/` is a batch of items blocked on hardware or another external dependency, staged toward a future major version. A versioned `Migrations/V2.x/` folder (e.g. the now-fully-promoted `V2.1/`, historically called "V2" -- versioned `V1`/`V2` folders existed before being collapsed into today's `Docker/` layout; see git history around commit `d92985e`) holds a batch of minor, low-risk updates to the *currently-deployed* production state, created fresh whenever there's a new one to stage and removed once every item in it is promoted. Bump the minor version for further low-risk production updates; only start a new major-version batch for changes blocked on hardware or another external dependency, matching the `V3` pattern.
+- **Versioning**: `Migrations/V3/` is a batch of items blocked on hardware or another external dependency, staged toward a future major version. A versioned `Migrations/V2.x/` folder (e.g. the now-fully-promoted `V2.1/`, historically called "V2" -- versioned `V1`/`V2` folders existed before being collapsed into today's `Docker/` layout; see git history around commit `837b8b3`) holds a batch of minor, low-risk updates to the *currently-deployed* production state, created fresh whenever there's a new one to stage and removed once every item in it is promoted. Bump the minor version for further low-risk production updates; only start a new major-version batch for changes blocked on hardware or another external dependency, matching the `V3` pattern.
 - **Full drop-in replacements**: when a migration item replaces an entire stack's `compose.yaml` rather than adding one service for hand-merging, name its subfolder after the target stack (e.g. `infrastructure-networking/`), not a generic `compose/` folder, and say explicitly in that item's `README.md` that the file is a complete copy of the current `compose.yaml` with the new service appended. Diff it against the live file before promoting -- it can go stale if the live file changes after the migration was written.
 - Every item is still self-contained with its own `README.md`: What This Is / What's In This Folder / Setup / Verify / Promotion, matching the existing `V3/` items.
 
@@ -44,7 +46,7 @@ Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- t
 
 ## VLAN Bindings
 
-The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables. `Guides/networking/vlan-reference.md` is the source of truth for the full home-network VLAN plan (9 VLANs); only these two are relevant to this repo:
+The host mini PC has two VLAN interfaces. Services bind their host ports to the correct VLAN IP via `.env` variables. [`networking/vlan-reference.md`](https://github.com/praclarush/Homelab-wiki/blob/master/networking/vlan-reference.md) in the `Homelab-wiki` repo is the source of truth for the full home-network VLAN plan (9 VLANs); only these two are relevant to this repo:
 
 | Variable | Value | VLAN | Services |
 |----------|-------|------|----------|
@@ -55,7 +57,7 @@ The host mini PC has two VLAN interfaces. Services bind their host ports to the 
 
 ## Proxy Domain
 
-All services with web interfaces are proxied through Nginx Proxy Manager at `*.home.bremmer.zone`. TLS certificates are issued via Let's Encrypt DNS-01 challenge using Cloudflare. Pi-hole resolves `*.home.bremmer.zone` internally to `192.168.11.10` via a dnsmasq wildcard entry at `/opt/docker/stacks/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf`.
+All services with web interfaces are proxied through Nginx Proxy Manager at `*.home.example.com`. TLS certificates are issued via Let's Encrypt DNS-01 challenge using Cloudflare. Pi-hole resolves `*.home.example.com` internally to `192.168.11.10` via a dnsmasq wildcard entry at `/opt/docker/stacks/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf`.
 
 ## Shared Network Dependency
 
@@ -67,7 +69,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **Dockge stack path:** Configured to manage stacks at `/opt/docker/stacks` via `DOCKGE_STACKS_DIR`. This must match the actual path on the host.
 
-**`/opt/docker/stacks` is a symlink, not a plain directory:** Per `Guides/operations/git-deployment-guide.md`, it resolves to `/srv/git/homelab/Docker/stacks`, a clone of this repository's remote kept in a dedicated repos folder separate from `/opt/docker`. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/srv/git/homelab`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
+**`/opt/docker/stacks` is a symlink, not a plain directory:** Per [`operations/git-deployment-guide.md`](https://github.com/praclarush/Homelab-wiki/blob/master/operations/git-deployment-guide.md) in the `Homelab-wiki` repo, it resolves to `/srv/git/homelab/Docker/stacks`, a clone of this repository's remote kept in a dedicated repos folder separate from `/opt/docker`. Compose and Dockge both follow the symlink transparently. Config changes made directly on the host are committed and pushed from `/srv/git/homelab`; changes pushed elsewhere are pulled there and applied with `docker compose up -d` in the affected stack directory.
 
 **Immich storage split:** PostgreSQL data (`./immich/postgres`) stays on local NVMe. Media uploads mount from NAS at `/mnt/synology/immich`. Do not move the database to NFS.
 
@@ -75,7 +77,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **node-exporter:** Runs with `network_mode: host` and `pid: host`. Prometheus reaches it via `host.docker.internal:9100` using the `extra_hosts` entry in the Prometheus service.
 
-**Immich Postgres image:** On `ghcr.io/immich-app/postgres:14-vectorchord0.4.2-pgvectors0.2.0`, migrated from `tensorchord/pgvecto-rs:pg14-v0.2.0` after Immich v3.0.1 dropped pgvecto.rs support. See `Docker/stacks/compose-review-notes.md` for the migration record.
+**Immich Postgres image:** On `ghcr.io/immich-app/postgres:14-vectorchord0.4.2-pgvectors0.2.0`, migrated from `tensorchord/pgvecto-rs:pg14-v0.2.0` after Immich v3.0.1 dropped pgvecto.rs support.
 
 **LLM inference is CPU-only:** The mini PC uses Intel UHD integrated graphics. Ollama's GPU acceleration requires NVIDIA or AMD hardware. All inference runs on CPU. Model size ceiling is ~14B parameters (Q4 quantized, ~9 GB) given 16 GB total system RAM. Do not suggest models above 14B for this hardware.
 
@@ -85,40 +87,44 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 | Stack | Required Variables |
 |-------|-------------------|
-| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
+| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
-| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
+| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
-| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
+| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
 | `llm` | `VLAN11_IP` |
 
 All generated runtime data (databases, caches, logs, certificates) is gitignored. Only `compose.yaml` files and static configuration belong in version control.
 
 ## Documentation
 
-`Guides/` is organized like a wiki (it will eventually move into the WikiJS
-stack): `Guides/README.md` is the index page. See it for the full,
-categorized list. Quick reference:
+Guides are authored in the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki)
+repo, git-synced into the WikiJS instance (`tools` stack,
+`https://wiki.home.example.com`). Create or edit guides there, not here.
+Start at [its README.md](https://github.com/praclarush/Homelab-wiki/blob/master/README.md)
+for the full, categorized list. Quick reference:
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Repo overview, service/port inventory, directory layout, deployment order pointer |
-| `Guides/getting-started/homelab-guide.md` | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
-| `Guides/networking/nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
-| `Guides/networking/pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
-| `Guides/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
-| `Guides/stacks/tools-guide.md` | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
-| `Guides/stacks/media-gaming-guide.md` | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
-| `Guides/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
-| `Guides/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, ntfy, Tailscale: CrowdSec, and the cross-stack Watchtower auto-update policy |
-| `Guides/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
-| `Docker/stacks/compose-review-notes.md` | Rationale for compose file changes, including the completed Immich Postgres image migration |
+| `README.md` (this repo) | Repo overview, service/port inventory, directory layout, deployment order pointer |
+| `Homelab-wiki/getting-started/homelab-guide.md` | Full setup guide: Linux basics, prerequisites, NordVPN Meshnet remote access, and initial deployment of all six core stacks |
+| `Homelab-wiki/networking/nginx-proxy-manager-guide.md` | NPM reverse proxy setup, Cloudflare/Let's Encrypt TLS, all proxy host configurations |
+| `Homelab-wiki/networking/pihole-guide.md` | Pi-hole deployment, network-wide DNS handoff, local/wildcard DNS records, blocklist and Teleporter maintenance |
+| `Homelab-wiki/networking/authentik-guide.md` | Authentik admin bootstrap, domain-level forward auth for no-login services, per-service OIDC/OAuth2 SSO setup for every service that supports it, and which services are intentionally excluded |
+| `Homelab-wiki/operations/git-deployment-guide.md` | Cloning this repo onto the Ubuntu Server host as a live git working tree, gitignore correctness, and the push/pull workflow for config changes |
+| `Homelab-wiki/stacks/tools-guide.md` | `tools` stack beyond WikiJS: pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
+| `Homelab-wiki/stacks/media-gaming-guide.md` | `media-gaming` stack beyond AMP and Immich: Jellyfin, Audiobookshelf, Kavita |
+| `Homelab-wiki/stacks/dashboards-automation-guide.md` | `dashboards-automation` stack beyond Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus: Loki, Promtail |
+| `Homelab-wiki/stacks/infrastructure-networking-guide.md` | `infrastructure-networking` stack beyond NPM, Pi-hole, ntfy, Tailscale: CrowdSec, and the cross-stack Watchtower auto-update policy |
+| `Homelab-wiki/stacks/llm-stack-guide.md` | Local LLM stack setup (Ollama + Open WebUI), model management, air-gapped operation, cross-stack `mem_limit`/OOM-killer rationale |
 | `Docker/config/README.md` | Complete reference copies of host-level Linux configs (`/etc/fstab`, Netplan, CrowdSec bouncer) that live outside `Docker/stacks/` |
 
 ## Branching
 
-Root branches are `master` and `release` only. Every other branch must be prefixed `{kind}/{branchName}`:
+Root branches are `master` and `release` only. Both are protected -- no direct pushes; the only way code moves into either is via Pull Request. (GitHub-side branch protection rules are not yet enforced on the `praclarush/Homelab` remote -- the private repo is on the free plan, which doesn't support the branch protection API. Enforce this by convention until the repo is public or upgraded to Pro.)
+
+Every other branch must be prefixed `{kind}/{branchName}`:
 
 | Kind | Use |
 |------|-----|
@@ -127,3 +133,38 @@ Root branches are `master` and `release` only. Every other branch must be prefix
 | `task/` | Everything else -- features, docs, refactors, migrations |
 
 `release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump, and is always branched from and merged back into `release` first, then forward-merged (or cherry-picked) into `master`.
+
+### GitHub Issues
+
+Every issue filed against this repo (not just hotfix issues, see below) must be created with:
+
+- **Project**: added to the `Homelab` GitHub Project.
+- **Label**: matching the relevant `.github/ISSUE_TEMPLATE/*.yml` template's default label (e.g. `bug` for a bug report, `enhancement` for a stack change) -- `gh issue create` picks this up automatically from the template, but set it explicitly when creating issues via `gh issue create --label` directly.
+- **Assignee**: `praclarush`.
+
+```bash
+gh issue create --label bug --assignee praclarush --project "Homelab" --title "..." --body "..."
+```
+
+### GitHub Pull Requests
+
+Every PR opened against this repo must be created with the same three, set at creation time rather than added after the fact:
+
+- **Project**: added to the `Homelab` GitHub Project.
+- **Label**: from the same taxonomy as issues, chosen by what the PR itself changes (`bug` for a fix, `enhancement` for a new feature/script, `documentation` for docs-only), not necessarily the label of the issue it closes.
+- **Assignee**: `praclarush`.
+
+```bash
+gh pr create --label enhancement --assignee praclarush --project "Homelab" --base master --head <branch> --title "..." --body "..."
+```
+
+### Hotfix Workflow
+
+Any change made directly to a stack's `compose.yaml` on the live host (i.e. in `/opt/docker/stacks/`, which is `/srv/git/homelab/Docker/stacks` on the host) is a hotfix by default, unless the user says otherwise -- the host is production, so an edit made there means something on it is broken right now.
+
+Hotfixes land in a batch branch, not directly against `release`:
+
+1. **Batch branch**: `hotfix/V{major.minor.patch}`, branched from `release`, incrementing the patch version from the latest tag on `release` (e.g. latest tag `v2.1.0` -> batch branch `hotfix/V2.1.1`). If a batch branch for the next patch version is already open, target it instead of creating a new one -- retarget any existing hotfix PRs still pointed at `release` onto it.
+2. **Per-fix branch**: for each individual hotfix, branch off the batch branch (not `release` directly), named `hotfix/{description}`. Apply the fix, commit, and open a PR targeting the batch branch. File a GitHub issue for the bug if one doesn't already exist, and close it from the PR.
+3. Once every per-fix PR is merged into the batch branch, merge the batch branch into `release` and tag the new patch version.
+4. Forward-merge (or cherry-pick) `release` into `master`.

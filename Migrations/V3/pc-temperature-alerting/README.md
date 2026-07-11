@@ -85,6 +85,6 @@ Once verified:
   either way).
 - Remove `Migrations/V3/pc-temperature-alerting/` and its row in
   `Migrations/V3/README.md`.
-- Optionally add a short note to
-  `Guides/stacks/dashboards-automation-guide.md` describing the
-  sensor/automation for future reference.
+- Optionally add a short note to `stacks/dashboards-automation-guide.md`
+  in the `Homelab-wiki` repo describing the sensor/automation for future
+  reference.

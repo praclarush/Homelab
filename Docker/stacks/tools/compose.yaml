@@ -99,7 +99,7 @@ services:
     environment:
       - ALLOW_SIGNUP=false
       - TZ=America/Chicago
-      - BASE_URL=https://mealie.home.bremmer.zone
+      - BASE_URL=https://mealie.${DOMAIN}
     volumes:
       - ./mealie:/app/data
     ports:
@@ -115,10 +115,10 @@ services:
     image: n8nio/n8n:latest
     environment:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-      - N8N_HOST=n8n.home.bremmer.zone
+      - N8N_HOST=n8n.${DOMAIN}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
-      - WEBHOOK_URL=https://n8n.home.bremmer.zone/
+      - WEBHOOK_URL=https://n8n.${DOMAIN}/
       - GENERIC_TIMEZONE=America/Chicago
     volumes:
       - ./n8n:/home/node/.n8n
@@ -219,7 +219,7 @@ services:
       - PAPERLESS_SECRET_KEY=${PAPERLESS_SECRET_KEY}
       - PAPERLESS_TIME_ZONE=America/Chicago
       - PAPERLESS_OCR_LANGUAGE=eng
-      - PAPERLESS_URL=https://paperless.home.bremmer.zone
+      - PAPERLESS_URL=https://paperless.${DOMAIN}
       - PAPERLESS_CONSUMER_RECURSIVE=true
       - PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS=true
     volumes:
@@ -303,7 +303,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${LINKWARDEN_DB_USER}:${LINKWARDEN_DB_PASS}@linkwarden_postgres:5432/linkwarden
       - NEXTAUTH_SECRET=${LINKWARDEN_SECRET}
-      - NEXTAUTH_URL=https://links.home.bremmer.zone
+      - NEXTAUTH_URL=https://links.${DOMAIN}
     volumes:
       - ./linkwarden/data:/data/data
     ports:
