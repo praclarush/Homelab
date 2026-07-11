@@ -292,6 +292,13 @@ respective stores. Connect them using your server URL and credentials.
 Navigate to `http://192.168.11.10:9898`. Create an admin account on
 first start.
 
+**Set the instance ID before touching repos:** go to the gear icon
+(**Settings**) and set **Instance ID** (e.g. `homelab`), then click
+**Save**. This writes `config.json` for the first time. Skipping this
+and going straight to **Repos > Add Repo** fails with `instance is a
+required field in the backrest config`, because on a fresh install
+there's no config file yet for the repo write to attach to.
+
 **Configure a repository** (where backups are stored):
 
 1. Go to **Repos > Add Repo**
@@ -300,13 +307,19 @@ first start.
    Store it securely. Without it, backups cannot be restored.
 4. Click **Initialize**
 
-**Configure a plan** (what to back up):
+**Configure a plan** (what to back up). The Add Plan dialog is tabbed
+-- Details, Scope, Schedule, Retention, Advanced:
 
 1. Go to **Plans > Add Plan**
-2. Select your repository
-3. Set the path to `/opt/docker/stacks` to back up all stack data
-4. Set a schedule (e.g., daily at 2:00 AM via cron: `0 2 * * *`)
-5. Set a retention policy (e.g., keep 7 daily, 4 weekly)
+2. **Details:** select your repository
+3. **Scope:** under Paths, add `/opt/docker/stacks` to back up all
+   stack data. Excludes are optional -- leave blank unless you need to
+   skip something under that path.
+4. **Schedule:** set a cron expression (e.g., daily at 2:00 AM:
+   `0 2 * * *`)
+5. **Retention:** set a policy (e.g., keep 7 daily, 4 weekly)
+6. Advanced is optional -- leave defaults unless you need custom
+   restic flags or hooks.
 
 Run an initial backup manually from the Plans page to verify the
 configuration before relying on the schedule.
