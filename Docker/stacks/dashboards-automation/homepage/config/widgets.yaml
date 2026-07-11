@@ -8,7 +8,7 @@
 # "Current Version" section). Bump both when a Migrations/ batch is promoted.
 - greeting:
     text_size: xl
-    text: "Homelab v2.1.0"
+    text: "Homelab v2.2.0"
 
 - resources:
     label: mini-pc
