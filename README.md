@@ -95,7 +95,7 @@ The repository root holds three top-level folders:
 How-to guides (deployment, networking, per-stack setup, operations) live in
 the separate [`praclarush/Homelab-wiki`](https://github.com/praclarush/Homelab-wiki)
 repo, git-synced into the WikiJS instance this homelab runs
-(`https://wiki.home.bremmer.zone`).
+(`https://wiki.home.example.com`).
 
 **Start at [its README.md](https://github.com/praclarush/Homelab-wiki/blob/master/README.md).**
 This file stays a quick-reference companion: service inventory, ports,
@@ -123,54 +123,54 @@ representing its full current state.
 ## Service Quick Reference
 
 All hosted services, their stack, direct access port, and proxy URL.
-Services are available at both the direct IP:port and via NPM at `*.home.bremmer.zone`.
+Services are available at both the direct IP:port and via NPM at `*.home.example.com`.
 Internal-only services (no exposed port) are marked with a dash.
 
 | Service | Stack | Port | Proxy URL | Purpose |
 |---------|-------|------|-----------|---------|
-| Homepage | `dashboards-automation` | 3000 | `homepage.home.bremmer.zone` | Service dashboard |
-| Home Assistant | `dashboards-automation` | 8123 | `homeassistant.home.bremmer.zone` | Home automation |
-| Uptime Kuma | `dashboards-automation` | 3001 | `uptime.home.bremmer.zone` | Uptime monitoring |
-| Grafana | `dashboards-automation` | 3002 | `grafana.home.bremmer.zone` | Metrics dashboards |
-| Prometheus | `dashboards-automation` | 9090 | `prometheus.home.bremmer.zone` | Metrics collection |
+| Homepage | `dashboards-automation` | 3000 | `homepage.home.example.com` | Service dashboard |
+| Home Assistant | `dashboards-automation` | 8123 | `homeassistant.home.example.com` | Home automation |
+| Uptime Kuma | `dashboards-automation` | 3001 | `uptime.home.example.com` | Uptime monitoring |
+| Grafana | `dashboards-automation` | 3002 | `grafana.home.example.com` | Metrics dashboards |
+| Prometheus | `dashboards-automation` | 9090 | `prometheus.home.example.com` | Metrics collection |
 | node-exporter | `dashboards-automation` | 9100 | — | Host system metrics (host network) |
-| Dockge | `dockge` | 5001 | `dockge.home.bremmer.zone` | Docker stack manager |
+| Dockge | `dockge` | 5001 | `dockge.home.example.com` | Docker stack manager |
 | Nginx Proxy Manager | `infrastructure-networking` | 80 / 443 / 81 (admin) | — | Reverse proxy and SSL (admin direct only) |
-| Pi-hole | `infrastructure-networking` | 53 (DNS), 8080 (web) | `pihole.home.bremmer.zone` | Network-wide DNS filtering |
+| Pi-hole | `infrastructure-networking` | 53 (DNS), 8080 (web) | `pihole.home.example.com` | Network-wide DNS filtering |
 | Watchtower | `infrastructure-networking` | — | — | Automated container updates |
-| ntfy | `infrastructure-networking` | 8082 | `ntfy.home.bremmer.zone` | Push notifications |
+| ntfy | `infrastructure-networking` | 8082 | `ntfy.home.example.com` | Push notifications |
 | Tailscale | `infrastructure-networking` | — | — | Remote access (host network) |
-| AMP | `media-gaming` | 8081 | `amp.home.bremmer.zone` | Game server management |
-| Immich | `media-gaming` | 2283 | `photos.home.bremmer.zone` | Photo and video library |
+| AMP | `media-gaming` | 8081 | `amp.home.example.com` | Game server management |
+| Immich | `media-gaming` | 2283 | `photos.home.example.com` | Photo and video library |
 | Immich Machine Learning | `media-gaming` | — | — | Smart search and face recognition (internal) |
 | Immich PostgreSQL | `media-gaming` | — | — | Immich database (internal) |
 | Immich Redis | `media-gaming` | — | — | Immich job queue (internal) |
-| Jellyfin | `media-gaming` | 8096 | `jellyfin.home.bremmer.zone` | Media server |
-| Authentik | `auth` | 9000 / 9443 | `auth.home.bremmer.zone` | Single sign-on and identity provider |
+| Jellyfin | `media-gaming` | 8096 | `jellyfin.home.example.com` | Media server |
+| Authentik | `auth` | 9000 / 9443 | `auth.home.example.com` | Single sign-on and identity provider |
 | Authentik PostgreSQL | `auth` | — | — | Authentik database (internal) |
 | Authentik Redis | `auth` | — | — | Authentik cache (internal) |
-| WikiJS | `tools` | 3003 | `wiki.home.bremmer.zone` | Internal wiki and documentation |
+| WikiJS | `tools` | 3003 | `wiki.home.example.com` | Internal wiki and documentation |
 | WikiJS PostgreSQL | `tools` | — | — | WikiJS database (internal) |
-| pgAdmin | `tools` | 5050 | `pgadmin.home.bremmer.zone` | PostgreSQL web admin |
-| Stirling PDF | `tools` | 8083 | `pdf.home.bremmer.zone` | PDF tools |
-| Mealie | `tools` | 9925 | `mealie.home.bremmer.zone` | Recipe manager |
-| n8n | `tools` | 5678 | `n8n.home.bremmer.zone` | Workflow automation |
-| IT Tools | `tools` | 8084 | `it-tools.home.bremmer.zone` | Developer utilities |
-| Actual Budget | `tools` | 5006 | `budget.home.bremmer.zone` | Personal finance |
-| Paperless-ngx | `tools` | 8085 | `paperless.home.bremmer.zone` | Document management |
+| pgAdmin | `tools` | 5050 | `pgadmin.home.example.com` | PostgreSQL web admin |
+| Stirling PDF | `tools` | 8083 | `pdf.home.example.com` | PDF tools |
+| Mealie | `tools` | 9925 | `mealie.home.example.com` | Recipe manager |
+| n8n | `tools` | 5678 | `n8n.home.example.com` | Workflow automation |
+| IT Tools | `tools` | 8084 | `it-tools.home.example.com` | Developer utilities |
+| Actual Budget | `tools` | 5006 | `budget.home.example.com` | Personal finance |
+| Paperless-ngx | `tools` | 8085 | `paperless.home.example.com` | Document management |
 | Paperless PostgreSQL | `tools` | — | — | Paperless database (internal) |
 | Paperless Redis | `tools` | — | — | Paperless queue (internal) |
-| Grocy | `tools` | 9283 | `grocy.home.bremmer.zone` | Household groceries, inventory, and chores |
-| Linkwarden | `tools` | 3005 | `links.home.bremmer.zone` | Bookmark manager with page archiving |
+| Grocy | `tools` | 9283 | `grocy.home.example.com` | Household groceries, inventory, and chores |
+| Linkwarden | `tools` | 3005 | `links.home.example.com` | Bookmark manager with page archiving |
 | Linkwarden PostgreSQL | `tools` | — | — | Linkwarden database (internal) |
-| Backrest | `tools` | 9898 | `backrest.home.bremmer.zone` | Restic backup UI, backs up to NAS |
-| Audiobookshelf | `media-gaming` | 13378 | `abs.home.bremmer.zone` | Audiobooks and podcasts |
-| Kavita | `media-gaming` | 5000 | `kavita.home.bremmer.zone` | Ebook and comic reader |
+| Backrest | `tools` | 9898 | `backrest.home.example.com` | Restic backup UI, backs up to NAS |
+| Audiobookshelf | `media-gaming` | 13378 | `abs.home.example.com` | Audiobooks and podcasts |
+| Kavita | `media-gaming` | 5000 | `kavita.home.example.com` | Ebook and comic reader |
 | Loki | `dashboards-automation` | 3100 | — | Log aggregation, queried from Grafana (internal) |
 | Promtail | `dashboards-automation` | — | — | Log collector, ships to Loki (internal) |
 | CrowdSec | `infrastructure-networking` | — | — | Intrusion detection, reads NPM logs (internal) |
 | Ollama | `llm` | 11434 | — | LLM inference API |
-| Open WebUI | `llm` | 3004 | `llm.home.bremmer.zone` | Chat interface |
+| Open WebUI | `llm` | 3004 | `llm.home.example.com` | Chat interface |
 
 ------------------------------------------------------------------------
 

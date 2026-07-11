@@ -166,7 +166,7 @@ Reload: **Developer Tools > YAML > Rest Commands** and **> Automations**
 ### 8. Subscribe to the ntfy topic
 
 The alert posts to the `rack-temp` topic on the existing ntfy instance
-(`https://ntfy.home.bremmer.zone/rack-temp` or the ntfy app pointed at that
+(`https://ntfy.home.example.com/rack-temp` or the ntfy app pointed at that
 server/topic). Subscribe there to receive it. Change the topic name in
 `configuration-additions.yaml` before merging if you'd rather use a
 different one.
