@@ -220,6 +220,8 @@ services:
       - PAPERLESS_TIME_ZONE=America/Chicago
       - PAPERLESS_OCR_LANGUAGE=eng
       - PAPERLESS_URL=https://paperless.home.bremmer.zone
+      - PAPERLESS_CONSUMER_RECURSIVE=true
+      - PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS=true
     volumes:
       - ./paperless/data:/usr/src/paperless/data
       - ./paperless/media:/usr/src/paperless/media
