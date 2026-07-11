@@ -131,3 +131,16 @@ services:
     restart: unless-stopped
     networks:
       - proxy_net
+
+  nut-exporter:
+    container_name: nut_exporter
+    image: hon95/prometheus-nut-exporter:latest
+    environment:
+      - HTTP_PATH=/metrics
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
