@@ -122,7 +122,9 @@ for the full, categorized list. Quick reference:
 
 ## Branching
 
-Root branches are `master` and `release` only. Every other branch must be prefixed `{kind}/{branchName}`:
+Root branches are `master` and `release` only. Both are protected -- no direct pushes; the only way code moves into either is via Pull Request. (GitHub-side branch protection rules are not yet enforced on the `praclarush/Homelab` remote -- the private repo is on the free plan, which doesn't support the branch protection API. Enforce this by convention until the repo is public or upgraded to Pro.)
+
+Every other branch must be prefixed `{kind}/{branchName}`:
 
 | Kind | Use |
 |------|-----|
