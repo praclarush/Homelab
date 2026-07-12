@@ -7,14 +7,21 @@
 # need same-subnet NAS access. Requires adding VLAN11_IP to this stack's
 # .env (see .env.example). TZ is hardcoded here the same way
 # jellyfin/audiobookshelf do it in this stack rather than sourced from .env.
+#
+# Volume is /data, not /config, and the port is 9191, not 5500 -- this is
+# an all-in-one image (DISPATCHARR_ENV=aio by default) with its own bundled
+# Postgres+Redis persisted under /data/db; the entrypoint writes its Django
+# secret to /data/jwt and fails to start if /data isn't mounted. Confirmed
+# against Dispatcharr's own docker/docker-compose.aio.yml, not the source
+# article this item was originally drafted from.
 
   dispatcharr:
     container_name: dispatcharr
     image: ghcr.io/dispatcharr/dispatcharr:latest
     volumes:
-      - ./dispatcharr/config:/config
+      - ./dispatcharr/data:/data
     ports:
-      - "${VLAN11_IP}:5500:5500"
+      - "${VLAN11_IP}:9191:9191"
     environment:
       - TZ=America/Chicago
     labels:

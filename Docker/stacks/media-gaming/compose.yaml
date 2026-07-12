@@ -165,9 +165,9 @@ services:
     container_name: dispatcharr
     image: ghcr.io/dispatcharr/dispatcharr:latest
     volumes:
-      - ./dispatcharr/config:/config
+      - ./dispatcharr/data:/data
     ports:
-      - "${VLAN11_IP}:5500:5500"
+      - "${VLAN11_IP}:9191:9191"
     environment:
       - TZ=America/Chicago
     labels:
