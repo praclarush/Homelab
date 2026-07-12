@@ -1,9 +1,12 @@
 # Add this service to Docker/stacks/media-gaming/compose.yaml
 # (indent to match the existing `services:` block).
 #
-# No new .env entries needed -- reuses the stack's existing VLAN61_IP,
-# and TZ is hardcoded here the same way jellyfin/audiobookshelf do it in
-# this stack rather than sourced from .env.
+# Bound to VLAN11_IP, not VLAN61_IP like the rest of this stack --
+# Dispatcharr has no NAS/NFS traffic, only internet-facing IPTV sources
+# and container-name traffic to Jellyfin over proxy_net, so it doesn't
+# need same-subnet NAS access. Requires adding VLAN11_IP to this stack's
+# .env (see .env.example). TZ is hardcoded here the same way
+# jellyfin/audiobookshelf do it in this stack rather than sourced from .env.
 
   dispatcharr:
     container_name: dispatcharr
@@ -11,7 +14,7 @@
     volumes:
       - ./dispatcharr/config:/config
     ports:
-      - "${VLAN61_IP}:5500:5500"
+      - "${VLAN11_IP}:5500:5500"
     environment:
       - TZ=America/Chicago
     labels:
