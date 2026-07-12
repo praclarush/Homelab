@@ -160,3 +160,18 @@ services:
     restart: unless-stopped
     networks:
       - proxy_net
+
+  dispatcharr:
+    container_name: dispatcharr
+    image: ghcr.io/dispatcharr/dispatcharr:latest
+    volumes:
+      - ./dispatcharr/config:/config
+    ports:
+      - "${VLAN11_IP}:5500:5500"
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
