@@ -1,0 +1,21 @@
+# Add this service to Docker/stacks/media-gaming/compose.yaml
+# (indent to match the existing `services:` block).
+#
+# No new .env entries needed -- reuses the stack's existing VLAN61_IP,
+# and TZ is hardcoded here the same way jellyfin/audiobookshelf do it in
+# this stack rather than sourced from .env.
+
+  dispatcharr:
+    container_name: dispatcharr
+    image: ghcr.io/dispatcharr/dispatcharr:latest
+    volumes:
+      - ./dispatcharr/config:/config
+    ports:
+      - "${VLAN61_IP}:5500:5500"
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
