@@ -67,15 +67,15 @@ This produces `http://localhost:3000/guide.xml`, but it needs a
 to get the test playlist working end-to-end, and not included as a service
 in this migration item.
 
-### VLAN placement (judgment call)
+### VLAN placement
 
-This service block puts Dispatcharr on `VLAN61_IP`, matching every other
-service in `media-gaming` for consistency. Unlike Jellyfin/Immich/etc.,
-Dispatcharr has no actual NAS/NFS traffic -- it only talks to IPTV sources
-over the internet and to Jellyfin over `proxy_net` by container name. If
-you'd rather keep VLAN61 strictly to NAS-adjacent traffic, `VLAN11_IP` (the
-general services VLAN) is an equally valid choice; swap it in
-`compose/dispatcharr-service-addition.yaml` before merging.
+Decided: `VLAN11_IP`, not `VLAN61_IP` like the rest of `media-gaming`.
+Unlike Jellyfin/Immich/etc., Dispatcharr has no actual NAS/NFS traffic --
+it only talks to IPTV sources over the internet and to Jellyfin over
+`proxy_net` by container name, so it doesn't need same-subnet NAS access.
+Keeps VLAN61 strictly to NAS-adjacent traffic. This requires adding
+`VLAN11_IP` to `media-gaming`'s `.env` (new for this stack -- see
+`.env.example`).
 
 ## What's In This Folder
 
@@ -92,7 +92,7 @@ comment in the compose file).
    `compose/dispatcharr-service-addition.yaml` into
    `Docker/stacks/media-gaming/compose.yaml`.
 2. `docker compose up -d` in `media-gaming`.
-3. Open `http://<VLAN61_IP>:5500` and complete whatever first-run/admin
+3. Open `http://<VLAN11_IP>:5500` and complete whatever first-run/admin
    setup Dispatcharr presents -- the source article doesn't document this
    flow, so there's no verified script for it here.
 4. In Dispatcharr, add an IPTV provider pointing at one of the iptv-org
@@ -112,9 +112,9 @@ comment in the compose file).
 
 ## Verify
 
-- Dispatcharr dashboard loads at `http://<VLAN61_IP>:5500` and shows the
+- Dispatcharr dashboard loads at `http://<VLAN11_IP>:5500` and shows the
   test provider's channels populated.
-- `curl -s http://<VLAN61_IP>:5500/output/playlist.m3u` returns a
+- `curl -s http://<VLAN11_IP>:5500/output/playlist.m3u` returns a
   non-empty M3U playlist.
 - Jellyfin's Live TV guide shows channels and program data.
 - A channel actually plays back in Jellyfin without buffering/failing
