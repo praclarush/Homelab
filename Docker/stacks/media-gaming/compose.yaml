@@ -160,3 +160,33 @@ services:
     restart: unless-stopped
     networks:
       - proxy_net
+
+  dispatcharr:
+    container_name: dispatcharr
+    image: ghcr.io/dispatcharr/dispatcharr:latest
+    volumes:
+      - ./dispatcharr/data:/data
+    ports:
+      - "${VLAN11_IP}:9191:9191"
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  iptv-epg:
+    container_name: iptv_epg
+    image: ghcr.io/iptv-org/epg:master
+    volumes:
+      - ./iptv-epg/channels.xml:/epg/public/channels.xml:ro
+      - ./iptv-epg/guides:/epg/public/guides
+    ports:
+      - "${VLAN11_IP}:9192:3000"
+    environment:
+      - TZ=America/Chicago
+      - CRON_SCHEDULE=0 6 * * *
+    restart: unless-stopped
+    networks:
+      - proxy_net
