@@ -1,14 +1,17 @@
 # Dispatcharr IPTV Connection Manager
 
-**Status: staged, not deployed.** No hardware dependency, no new secrets --
-config-only change. Sourced from
+**Status: staged, not yet verified end-to-end.** No hardware dependency,
+no new secrets -- config-only change. Originally sourced from
 [jellywatch.app's Dispatcharr writeup](https://jellywatch.app/blog/dispatcharr-jellyfin-emby-iptv-connection-manager-2026)
 for the service itself, and
 [iptv-org/iptv](https://github.com/iptv-org/iptv) for a free test playlist
-source. Neither source is Dispatcharr's own repository, so the exact image
-tag, volume layout, and first-run flow below are inferred from that
-article, not verified against Dispatcharr's own docs -- confirm those
-before promoting.
+source. The volume layout and port below were wrong as inferred from that
+article (container crash-looped on deploy) and have been corrected against
+Dispatcharr's own
+[docker-compose.aio.yml](https://github.com/Dispatcharr/Dispatcharr/blob/main/docker/docker-compose.aio.yml)
+and [docs](https://dispatcharr.github.io/Dispatcharr-Docs/getting-started/).
+The M3U/EPG output paths are also corrected below -- they're UI-generated
+per-instance, not fixed paths.
 
 ## What This Is
 
@@ -19,16 +22,14 @@ M3U playlist + XMLTV guide that Jellyfin consumes as a single Live TV
 tuner:
 
 ```
-IPTV provider(s) / iptv-org test playlist  -->  Dispatcharr (:5500)  -->
+IPTV provider(s) / iptv-org test playlist  -->  Dispatcharr (:9191)  -->
   Jellyfin Live TV (M3U Tuner + XMLTV guide)
 ```
 
-Per the source article, Dispatcharr exposes its merged output at fixed
-paths on its own port:
-
-- Dashboard: `http://<host>:5500`
-- M3U output: `http://<host>:5500/output/playlist.m3u`
-- XMLTV/EPG output: `http://<host>:5500/output/epg.xml`
+Dispatcharr exposes its merged output as URLs generated per-instance
+through its own UI, not fixed paths: on the **Channels** page, an **M3U**
+button and an **EPG** button each copy a ready-to-paste URL. Grab those
+from the running instance rather than assuming a path.
 
 Jellyfin connects to those two output URLs directly -- this is Jellyfin's
 Live TV **M3U Tuner** source type, not HDHomeRun emulation.
@@ -67,15 +68,15 @@ This produces `http://localhost:3000/guide.xml`, but it needs a
 to get the test playlist working end-to-end, and not included as a service
 in this migration item.
 
-### VLAN placement (judgment call)
+### VLAN placement
 
-This service block puts Dispatcharr on `VLAN61_IP`, matching every other
-service in `media-gaming` for consistency. Unlike Jellyfin/Immich/etc.,
-Dispatcharr has no actual NAS/NFS traffic -- it only talks to IPTV sources
-over the internet and to Jellyfin over `proxy_net` by container name. If
-you'd rather keep VLAN61 strictly to NAS-adjacent traffic, `VLAN11_IP` (the
-general services VLAN) is an equally valid choice; swap it in
-`compose/dispatcharr-service-addition.yaml` before merging.
+Decided: `VLAN11_IP`, not `VLAN61_IP` like the rest of `media-gaming`.
+Unlike Jellyfin/Immich/etc., Dispatcharr has no actual NAS/NFS traffic --
+it only talks to IPTV sources over the internet and to Jellyfin over
+`proxy_net` by container name, so it doesn't need same-subnet NAS access.
+Keeps VLAN61 strictly to NAS-adjacent traffic. This requires adding
+`VLAN11_IP` to `media-gaming`'s `.env` (new for this stack -- see
+`.env.example`).
 
 ## What's In This Folder
 
@@ -92,9 +93,8 @@ comment in the compose file).
    `compose/dispatcharr-service-addition.yaml` into
    `Docker/stacks/media-gaming/compose.yaml`.
 2. `docker compose up -d` in `media-gaming`.
-3. Open `http://<VLAN61_IP>:5500` and complete whatever first-run/admin
-   setup Dispatcharr presents -- the source article doesn't document this
-   flow, so there's no verified script for it here.
+3. Open `http://<VLAN11_IP>:9191` and complete whatever first-run/admin
+   setup Dispatcharr presents.
 4. In Dispatcharr, add an IPTV provider pointing at one of the iptv-org
    test playlist URLs above (or your real provider's M3U/credentials, if
    you're confident enough to skip straight to it) and set its max
@@ -103,19 +103,23 @@ comment in the compose file).
    dashboard, matching every other web-UI service in this repo (NPM's
    config lives in its own database, not a repo file, so this is a manual
    step, not a file change).
-6. In Jellyfin: **Admin Dashboard > Live TV > Tuner Devices > Add** ->
-   **M3U Tuner** -> `http://dispatcharr:5500/output/playlist.m3u`
+6. On Dispatcharr's **Channels** page, click the **M3U** button and copy
+   the generated URL.
+7. In Jellyfin: **Admin Dashboard > Live TV > Tuner Devices > Add** ->
+   **M3U Tuner** -> paste that URL, swapping the host for `dispatcharr`
    (container-name resolution works since both are on `proxy_net`).
-7. In Jellyfin: **Admin Dashboard > Live TV > Guide Data Providers > Add**
-   -> **XMLTV** -> `http://dispatcharr:5500/output/epg.xml`.
-8. Map channels in Jellyfin's Live TV setup.
+8. Back on Dispatcharr's **Channels** page, click the **EPG** button and
+   copy that URL.
+9. In Jellyfin: **Admin Dashboard > Live TV > Guide Data Providers > Add**
+   -> **XMLTV** -> paste that URL (same `dispatcharr` host swap).
+10. Map channels in Jellyfin's Live TV setup.
 
 ## Verify
 
-- Dispatcharr dashboard loads at `http://<VLAN61_IP>:5500` and shows the
+- Dispatcharr dashboard loads at `http://<VLAN11_IP>:9191` and shows the
   test provider's channels populated.
-- `curl -s http://<VLAN61_IP>:5500/output/playlist.m3u` returns a
-  non-empty M3U playlist.
+- The M3U URL copied from the Channels page returns a non-empty playlist
+  (`curl -s <url>`).
 - Jellyfin's Live TV guide shows channels and program data.
 - A channel actually plays back in Jellyfin without buffering/failing
   immediately.

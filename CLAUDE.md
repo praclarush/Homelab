@@ -39,7 +39,7 @@ Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- t
 | `dashboards-automation` | Homepage (3000), Home Assistant (8123), Uptime Kuma (3001), Grafana (3002), Prometheus (9090), node-exporter (host), Loki (3100), Promtail, nut-exporter (9995, internal) |
 | `dockge` | Dockge stack manager (5001) |
 | `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host), CrowdSec, Postfix Relay (25) |
-| `media-gaming` | AMP (8081), Immich (2283), Immich Machine Learning, Postgres, Postgres Backup, Redis, Jellyfin (8096), Audiobookshelf (13378), Kavita (5000) |
+| `media-gaming` | AMP (8081), Immich (2283), Immich Machine Learning, Postgres, Postgres Backup, Redis, Jellyfin (8096), Audiobookshelf (13378), Kavita (5000), Dispatcharr (9191) |
 | `auth` | Authentik (9000/9443), Postgres, Postgres Backup, Redis |
 | `tools` | WikiJS (3003), Postgres, Postgres Backup, pgAdmin (5050), Stirling PDF (8083), Mealie (9925), n8n (5678), IT Tools (8084), Actual Budget (5006), Paperless-ngx (8085), Paperless Postgres, Paperless Postgres Backup, Paperless Redis, Grocy (9283), Linkwarden (3005), Linkwarden Postgres, Linkwarden Postgres Backup, Backrest (9898) |
 | `llm` | Ollama (11434), Open WebUI (3004) |
@@ -50,7 +50,7 @@ The host mini PC has two VLAN interfaces. Services bind their host ports to the 
 
 | Variable | Value | VLAN | Services |
 |----------|-------|------|----------|
-| `VLAN11_IP` | `192.168.11.10` | VLAN 11 (Services) | All management and dashboard services |
+| `VLAN11_IP` | `192.168.11.10` | VLAN 11 (Services) | All management and dashboard services, plus Dispatcharr in `media-gaming` -- it has no NAS/NFS traffic, only internet-facing IPTV sources and container-name traffic to Jellyfin over `proxy_net` |
 | `VLAN61_IP` | `192.168.61.10` | VLAN 61 (NAS) | Immich, Jellyfin, AMP, Audiobookshelf, Kavita -- bound here for same-subnet NFS access to the Synology NAS, which also lives on VLAN 61 |
 
 `VLAN61_IP=192.168.61.10` must be reserved in Ubiquiti before deploying `media-gaming`. VLAN 61 is a newly created VLAN.
@@ -92,7 +92,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 | `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
 | `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
-| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP` |
+| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
 | `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
 | `llm` | `VLAN11_IP` |
@@ -137,6 +137,8 @@ Every other branch must be prefixed `{kind}/{branchName}`:
 
 `release` is tagged at each release point using `major.minor.patch` semantic versioning. A `hotfix/` is always a patch bump, and is always branched from and merged back into `release` first, then forward-merged (or cherry-picked) into `master`.
 
+Every tag must be an annotated tag (`git tag -a`, not lightweight) with a description covering the probable cause of the release -- what prompted it, not just the version number. For a `hotfix/` batch, list each fix bundled into it with its PR number; for a regular release, summarize the notable changes since the last tag the same way. A bare `git tag v2.1.2` with no `-m`/`-F` message is incomplete -- `git tag -l -n99 <tag>` should always explain why the tag exists.
+
 ### GitHub Issues
 
 Every issue filed against this repo (not just hotfix issues, see below) must be created with:
@@ -169,5 +171,5 @@ Hotfixes land in a batch branch, not directly against `release`:
 
 1. **Batch branch**: `hotfix/V{major.minor.patch}`, branched from `release`, incrementing the patch version from the latest tag on `release` (e.g. latest tag `v2.1.0` -> batch branch `hotfix/V2.1.1`). If a batch branch for the next patch version is already open, target it instead of creating a new one -- retarget any existing hotfix PRs still pointed at `release` onto it.
 2. **Per-fix branch**: for each individual hotfix, branch off the batch branch (not `release` directly), named `hotfix/{description}`. Apply the fix, commit, and open a PR targeting the batch branch. File a GitHub issue for the bug if one doesn't already exist, and close it from the PR.
-3. Once every per-fix PR is merged into the batch branch, merge the batch branch into `release` and tag the new patch version.
+3. Once every per-fix PR is merged into the batch branch, merge the batch branch into `release` and tag the new patch version with an annotated tag describing the fixes bundled into it (see [Branching](#branching)).
 4. Forward-merge (or cherry-pick) `release` into `master`.
