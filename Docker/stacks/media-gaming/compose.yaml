@@ -182,6 +182,8 @@ services:
     volumes:
       - ./iptv-epg/channels.xml:/epg/public/channels.xml:ro
       - ./iptv-epg/guides:/epg/public/guides
+    ports:
+      - "${VLAN11_IP}:9192:3000"
     environment:
       - TZ=America/Chicago
       - CRON_SCHEDULE=0 6 * * *
