@@ -175,3 +175,16 @@ services:
     restart: unless-stopped
     networks:
       - proxy_net
+
+  iptv-epg:
+    container_name: iptv_epg
+    image: ghcr.io/iptv-org/epg:master
+    volumes:
+      - ./iptv-epg/channels.xml:/epg/public/channels.xml:ro
+      - ./iptv-epg/guides:/epg/public/guides
+    environment:
+      - TZ=America/Chicago
+      - CRON_SCHEDULE=0 6 * * *
+    restart: unless-stopped
+    networks:
+      - proxy_net
