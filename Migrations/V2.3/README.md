@@ -26,3 +26,4 @@ Once a `V2.3/` item is verified working:
 | Item | Depends on | Summary |
 |------|-----------|---------|
 | [dispatcharr-iptv](dispatcharr-iptv/README.md) | Nothing (config-only; an IPTV provider subscription is only needed to watch anything beyond the free test source) | Dispatcharr IPTV connection manager, added to `media-gaming`, sitting between IPTV source(s) and Jellyfin Live TV |
+| [proxy-net-network-ownership](proxy-net-network-ownership/README.md) | A planned maintenance window (requires a brief full-homelab outage) | `proxy_net` is Docker-labeled as owned by `dashboards-automation` instead of `infrastructure-networking` -- cosmetic today, documents the fix procedure for later |
