@@ -61,7 +61,7 @@ The host also runs NordVPN Meshnet (`nordlynx` interface) for remote access to s
 
 | Variable | Value | Services bound here |
 |----------|-------|----------------------|
-| `MESHNET_IP` | `100.124.229.64` | `ntfy` (`infrastructure-networking`), `mealie` (`tools`) |
+| `MESHNET_IP` | `100.124.229.64` | `ntfy` (`infrastructure-networking`), `mealie` (`tools`), `homeassistant` (`dashboards-automation`) |
 
 This is opt-in per service, not a blanket default like `VLAN11_IP` -- only add it to a service that's intentionally meant to be reachable from a paired Meshnet device (e.g. a phone off the home network), since some services (database admin UIs, tools with no login of their own) shouldn't be remotely reachable without more thought first.
 
@@ -99,7 +99,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 | Stack | Required Variables |
 |-------|-------------------|
-| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
+| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
 | `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP` |
