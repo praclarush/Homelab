@@ -104,6 +104,7 @@ services:
       - ./mealie:/app/data
     ports:
       - "${VLAN11_IP}:9925:9000"
+      - "${MESHNET_IP}:9925:9000"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
