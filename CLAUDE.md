@@ -61,7 +61,7 @@ The host also runs NordVPN Meshnet (`nordlynx` interface) for remote access to s
 
 | Variable | Value | Services bound here |
 |----------|-------|----------------------|
-| `MESHNET_IP` | `100.124.229.64` | `ntfy` (`infrastructure-networking`), `mealie` + `paperless-ngx` (`tools`), `homeassistant` (`dashboards-automation`), `immich-server` + `jellyfin` + `audiobookshelf` + `kavita` (`media-gaming`) |
+| `MESHNET_IP` | `100.124.229.64` | `ntfy` (`infrastructure-networking`), `wikijs` + `mealie` + `paperless-ngx` + `grocy` (`tools`), `homeassistant` (`dashboards-automation`), `immich-server` + `jellyfin` + `audiobookshelf` + `kavita` (`media-gaming`) |
 
 This is opt-in per service, not a blanket default like `VLAN11_IP` -- only add it to a service that's intentionally meant to be reachable from a paired Meshnet device (e.g. a phone off the home network), since some services (database admin UIs, tools with no login of their own) shouldn't be remotely reachable without more thought first.
 
