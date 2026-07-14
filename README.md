@@ -189,7 +189,7 @@ and changes pushed elsewhere can be pulled and applied with
 /opt/docker/stacks/
 ├── dashboards-automation/
 │   ├── compose.yaml             # Homepage, Home Assistant, Uptime Kuma, Grafana, Prometheus, node-exporter, Loki, Promtail, nut-exporter
-│   ├── .env                     # Grafana password
+│   ├── .env                     # Grafana password, MESHNET_IP (Home Assistant remote access)
 │   ├── prometheus/config/       # prometheus.yml (copy from repo)
 │   ├── loki/                    # Loki config and data
 │   ├── promtail/                # Promtail config
@@ -200,7 +200,7 @@ and changes pushed elsewhere can be pulled and applied with
 │
 ├── infrastructure-networking/
 │   ├── compose.yaml             # NPM, Pi-hole, Watchtower, ntfy, Tailscale, CrowdSec
-│   ├── .env                     # Pi-hole password, Tailscale auth key, ntfy topic/token
+│   ├── .env                     # Pi-hole password, Tailscale auth key, ntfy topic/token, MESHNET_IP (ntfy remote access)
 │   ├── pihole/config/
 │   ├── pihole/dnsmasq/
 │   ├── npm/
@@ -212,7 +212,7 @@ and changes pushed elsewhere can be pulled and applied with
 │
 ├── media-gaming/
 │   ├── compose.yaml             # AMP, Immich, Immich Machine Learning, Jellyfin, Audiobookshelf, Kavita
-│   ├── .env                     # Immich database credentials
+│   ├── .env                     # Immich database credentials, MESHNET_IP (Immich/Jellyfin/Audiobookshelf/Kavita remote access)
 │   ├── amp/datastore/
 │   ├── immich/postgres/         # Keep on NVMe
 │   ├── immich/redis/
@@ -232,7 +232,7 @@ and changes pushed elsewhere can be pulled and applied with
 │
 ├── tools/
 │   ├── compose.yaml             # WikiJS, pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest
-│   ├── .env                     # Stack credentials (gitignored)
+│   ├── .env                     # Stack credentials (gitignored), MESHNET_IP (WikiJS/Mealie/Paperless-ngx/Grocy remote access)
 │   ├── postgres/                # WikiJS database data
 │   ├── pgadmin/                 # pgAdmin data
 │   ├── stirling-pdf/            # Stirling PDF config and OCR data
