@@ -230,6 +230,7 @@ services:
       - ./paperless/consume:/usr/src/paperless/consume
     ports:
       - "${VLAN11_IP}:8085:8000"
+      - "${MESHNET_IP}:8085:8000"
     depends_on:
       paperless-postgres:
         condition: service_healthy
