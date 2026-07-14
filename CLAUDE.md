@@ -39,7 +39,7 @@ Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- t
 | `dashboards-automation` | Homepage (3000), Home Assistant (8123), Uptime Kuma (3001), Grafana (3002), Prometheus (9090), node-exporter (host), Loki (3100), Promtail, nut-exporter (9995, internal) |
 | `dockge` | Dockge stack manager (5001) |
 | `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host), CrowdSec, Postfix Relay (25) |
-| `media-gaming` | AMP (8081), Immich (2283), Immich Machine Learning, Postgres, Postgres Backup, Redis, Jellyfin (8096), Audiobookshelf (13378), Kavita (5000), Dispatcharr (5500) |
+| `media-gaming` | AMP (8081), Immich (2283), Immich Machine Learning, Postgres, Postgres Backup, Redis, Jellyfin (8096), Audiobookshelf (13378), Kavita (5000), Dispatcharr (9191) |
 | `auth` | Authentik (9000/9443), Postgres, Postgres Backup, Redis |
 | `tools` | WikiJS (3003), Postgres, Postgres Backup, pgAdmin (5050), Stirling PDF (8083), Mealie (9925), n8n (5678), IT Tools (8084), Actual Budget (5006), Paperless-ngx (8085), Paperless Postgres, Paperless Postgres Backup, Paperless Redis, Grocy (9283), Linkwarden (3005), Linkwarden Postgres, Linkwarden Postgres Backup, Backrest (9898) |
 | `llm` | Ollama (11434), Open WebUI (3004) |
