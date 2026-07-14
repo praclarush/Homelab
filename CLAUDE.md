@@ -55,6 +55,16 @@ The host mini PC has two VLAN interfaces. Services bind their host ports to the 
 
 `VLAN61_IP=192.168.61.10` must be reserved in Ubiquiti before deploying `media-gaming`. VLAN 61 is a newly created VLAN.
 
+## Meshnet Bindings
+
+The host also runs NordVPN Meshnet (`nordlynx` interface) for remote access to select services without exposing them publicly or routing a paired device's entire traffic through the house -- Meshnet's "route all traffic through this device" mode has no split-tunnel/subnet-only option (unlike Tailscale's subnet routers), so it's only suitable for all-or-nothing full-gateway access. For scoped access to individual services instead, those services additionally bind to `MESHNET_IP` (the host's own Meshnet address) alongside their normal VLAN binding, the same pattern as `VLAN11_IP`/`VLAN61_IP`:
+
+| Variable | Value | Services bound here |
+|----------|-------|----------------------|
+| `MESHNET_IP` | `100.124.229.64` | `ntfy` (`infrastructure-networking`), `wikijs` + `mealie` + `paperless-ngx` + `grocy` (`tools`), `homeassistant` (`dashboards-automation`), `immich-server` + `jellyfin` + `audiobookshelf` + `kavita` (`media-gaming`) |
+
+This is opt-in per service, not a blanket default like `VLAN11_IP` -- only add it to a service that's intentionally meant to be reachable from a paired Meshnet device (e.g. a phone off the home network), since some services (database admin UIs, tools with no login of their own) shouldn't be remotely reachable without more thought first.
+
 ## Proxy Domain
 
 All services with web interfaces are proxied through Nginx Proxy Manager at `*.home.example.com`. TLS certificates are issued via Let's Encrypt DNS-01 challenge using Cloudflare. Pi-hole resolves `*.home.example.com` internally to `192.168.11.10` via a dnsmasq wildcard entry at `/opt/docker/stacks/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf`.
@@ -89,12 +99,12 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 | Stack | Required Variables |
 |-------|-------------------|
-| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
+| `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
-| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
-| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP` |
+| `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
+| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP`, `MESHNET_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
-| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
+| `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
 | `llm` | `VLAN11_IP` |
 
 All generated runtime data (databases, caches, logs, certificates) is gitignored. Only `compose.yaml` files and static configuration belong in version control.

@@ -15,6 +15,7 @@ services:
       - DB_NAME=${DB_NAME}
     ports:
       - "${VLAN11_IP}:3003:3000"
+      - "${MESHNET_IP}:3003:3000"
     depends_on:
       wikijs-postgres:
         condition: service_healthy
@@ -104,6 +105,7 @@ services:
       - ./mealie:/app/data
     ports:
       - "${VLAN11_IP}:9925:9000"
+      - "${MESHNET_IP}:9925:9000"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
@@ -229,6 +231,7 @@ services:
       - ./paperless/consume:/usr/src/paperless/consume
     ports:
       - "${VLAN11_IP}:8085:8000"
+      - "${MESHNET_IP}:8085:8000"
     depends_on:
       paperless-postgres:
         condition: service_healthy
@@ -252,6 +255,7 @@ services:
       - ./grocy/config:/config
     ports:
       - "${VLAN11_IP}:9283:80"
+      - "${MESHNET_IP}:9283:80"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped

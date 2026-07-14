@@ -73,6 +73,7 @@ services:
       - ./ntfy/lib:/var/lib/ntfy
     ports:
       - "${VLAN11_IP}:8082:80"
+      - "${MESHNET_IP}:8082:80"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
