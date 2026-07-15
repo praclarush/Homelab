@@ -339,3 +339,38 @@ services:
     restart: unless-stopped
     networks:
       - proxy_net
+
+  registry:
+    container_name: docker_registry
+    image: registry:2
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    volumes:
+      - ./registry/data:/var/lib/registry
+    ports:
+      - "${VLAN11_IP}:5555:5000"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  registry-ui:
+    container_name: docker_registry_ui
+    image: joxit/docker-registry-ui:latest
+    environment:
+      - NGINX_PROXY_PASS_URL=http://docker_registry:5000
+      - REGISTRY_TITLE=Homelab Registry
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+      - SINGLE_REGISTRY=true
+    ports:
+      - "${VLAN11_IP}:5556:80"
+    depends_on:
+      - registry
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
