@@ -32,7 +32,7 @@ Before considering a `compose.yaml` edit done, run `docker compose config -q` fr
 
 ## Architecture
 
-Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- the current, deployable state.
+Eight stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- the current, deployable state.
 
 | Stack | Services |
 |-------|----------|
@@ -41,7 +41,8 @@ Seven stacks under `Docker/stacks/`. Each stack has a single `compose.yaml` -- t
 | `infrastructure-networking` | Pi-hole (8080/53), Nginx Proxy Manager (80/81/443), Watchtower, ntfy (8082), Tailscale (host), CrowdSec, Postfix Relay (25) |
 | `media-gaming` | AMP (8081), Immich (2283), Immich Machine Learning, Postgres, Postgres Backup, Redis, Jellyfin (8096), Audiobookshelf (13378), Kavita (5000), Dispatcharr (9191) |
 | `auth` | Authentik (9000/9443), Postgres, Postgres Backup, Redis |
-| `tools` | WikiJS (3003), Postgres, Postgres Backup, pgAdmin (5050), Stirling PDF (8083), Mealie (9925), n8n (5678), IT Tools (8084), Actual Budget (5006), Paperless-ngx (8085), Paperless Postgres, Paperless Postgres Backup, Paperless Redis, Grocy (9283), Linkwarden (3005), Linkwarden Postgres, Linkwarden Postgres Backup, Backrest (9898) |
+| `tools` | WikiJS (3003), Postgres, Postgres Backup, pgAdmin (5050), Stirling PDF (8083), Mealie (9925), n8n (5678), IT Tools (8084), Actual Budget (5006), Paperless-ngx (8085), Paperless Postgres, Paperless Postgres Backup, Paperless Redis, Grocy (9283), Linkwarden (3005), Linkwarden Postgres, Linkwarden Postgres Backup, Backrest (9898), Docker Registry (5555), Registry UI (5556) |
+| `websites` | Pottery (5557) |
 | `llm` | Ollama (11434), Open WebUI (3004) |
 
 ## VLAN Bindings
@@ -61,7 +62,7 @@ The host also runs NordVPN Meshnet (`nordlynx` interface) for remote access to s
 
 | Variable | Value | Services bound here |
 |----------|-------|----------------------|
-| `MESHNET_IP` | `100.124.229.64` | `ntfy` (`infrastructure-networking`), `wikijs` + `mealie` + `paperless-ngx` + `grocy` (`tools`), `homeassistant` (`dashboards-automation`), `immich-server` + `jellyfin` + `audiobookshelf` + `kavita` (`media-gaming`) |
+| `MESHNET_IP` | `100.124.229.64` | `ntfy` (`infrastructure-networking`), `wikijs` + `mealie` + `paperless-ngx` + `grocy` (`tools`), `homeassistant` (`dashboards-automation`), `immich-server` + `jellyfin` + `audiobookshelf` + `kavita` (`media-gaming`), `pottery` (`websites`) |
 
 This is opt-in per service, not a blanket default like `VLAN11_IP` -- only add it to a service that's intentionally meant to be reachable from a paired Meshnet device (e.g. a phone off the home network), since some services (database admin UIs, tools with no login of their own) shouldn't be remotely reachable without more thought first.
 
@@ -105,6 +106,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 | `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP`, `MESHNET_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
 | `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
+| `websites` | `VLAN11_IP`, `MESHNET_IP`, `DOMAIN` |
 | `llm` | `VLAN11_IP` |
 
 All generated runtime data (databases, caches, logs, certificates) is gitignored. Only `compose.yaml` files and static configuration belong in version control.
