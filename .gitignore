@@ -13,6 +13,10 @@
 
 # Docker overrides
 docker-compose.override.yml
+**/compose.local-test.yaml
+
+# Local-test fake NAS data (media-gaming compose.local-test.yaml volume remaps)
+**/test-data/
 
 # Docker runtime data
 **/docker-data/
