@@ -6,6 +6,7 @@ services:
   wikijs:
     container_name: wikijs
     image: ghcr.io/requarks/wiki:2
+    init: true
     environment:
       - DB_TYPE=postgres
       - DB_HOST=wikijs_postgres
