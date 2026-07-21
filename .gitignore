@@ -64,6 +64,7 @@ logs/
 **/amp/datastore/
 
 # Home Assistant runtime/secret files (.storage holds auth tokens, device credentials)
+**/homeassistant/config/.HA_VERSION
 **/homeassistant/config/.storage/
 **/homeassistant/config/home-assistant.log*
 **/homeassistant/config/secrets.yaml
