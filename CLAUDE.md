@@ -68,17 +68,21 @@ This is opt-in per service, not a blanket default like `VLAN11_IP` -- only add i
 
 ## Tailscale Bindings
 
-The host also runs Tailscale (`tailscale` service in `infrastructure-networking`, `network_mode: host`, state persisted under `./tailscale/state`). Unlike Meshnet's all-or-nothing full-gateway mode, Tailscale nodes get their own address on the tailnet without routing all traffic through the house, so any device signed into the same tailnet can reach a service bound to `TAILSCALE_IP` directly -- no pairing step, just tailnet membership. The host's Tailscale node isn't currently advertising subnet routes (`--advertise-routes`), so only services explicitly bound to `TAILSCALE_IP` are reachable this way, the same opt-in pattern as `MESHNET_IP`.
+The host also runs Tailscale (`tailscale` service in `infrastructure-networking`, `network_mode: host`, state persisted under `./tailscale/state`). Unlike Meshnet's all-or-nothing full-gateway mode, Tailscale nodes get their own address on the tailnet without routing all traffic through the house, so any device signed into the same tailnet can reach a service directly -- no pairing step, just tailnet membership.
 
-**Requires kernel networking mode.** The `tailscale/tailscale` image defaults to userspace networking (`TS_USERSPACE` defaults to `true`), which never creates a real `tailscale0` interface -- `docker exec tailscale tailscale ip -4` still reports an address in that mode, but nothing on the host or in another container can actually bind to it. The `tailscale` service must set `TS_USERSPACE=false` and add the `NET_RAW` capability (alongside the existing `NET_ADMIN`/`SYS_MODULE` and the `/dev/net/tun` mount) for `TAILSCALE_IP` port bindings to work at all.
+**Requires kernel networking mode.** The `tailscale/tailscale` image defaults to userspace networking (`TS_USERSPACE` defaults to `true`), which never creates a real `tailscale0` interface -- `docker exec tailscale tailscale ip -4` still reports an address in that mode, but nothing on the host or in another container can actually bind to it. The `tailscale` service sets `TS_USERSPACE=false` and adds the `NET_RAW` capability (alongside `NET_ADMIN`/`SYS_MODULE` and the `/dev/net/tun` mount) for this.
 
-**Requires nftables firewall mode.** This host's kernel only has `nf_tables` loaded, not the legacy `ip_tables`/`iptable_filter` modules, and the container has no `nft` CLI binary -- tailscaled's default legacy-iptables firewall setup fails outright (`can't initialize iptables table 'filter'`), which silently drops inbound traffic from tailnet peers at the kernel's `FORWARD` chain (basic tailnet connectivity like `tailscale ping` still works; TCP to a `TAILSCALE_IP`-bound port just hangs forever). Set `TS_DEBUG_FIREWALL_MODE=nftables` to make tailscaled configure the firewall over netlink directly instead of shelling out to a CLI binary.
+**Requires nftables firewall mode.** This host's kernel only has `nf_tables` loaded, not the legacy `ip_tables`/`iptable_filter` modules, and the container has no `nft` CLI binary -- tailscaled's default legacy-iptables firewall setup fails outright (`can't initialize iptables table 'filter'`). Set `TS_DEBUG_FIREWALL_MODE=nftables` to make tailscaled configure the firewall over netlink directly instead of shelling out to a CLI binary.
 
-| Variable | Value | Services bound here |
-|----------|-------|----------------------|
-| `TAILSCALE_IP` | `100.112.125.67` | `immich-server` (`media-gaming`) |
+**Direct `TAILSCALE_IP` port bindings on services (the `MESHNET_IP` pattern) do not reliably work and should not be used.** This was tried for `immich-server` and failed even with both fixes above applied: SYN packets from a tailnet peer visibly arrive on `tailscale0` (confirmed via `tcpdump`) and Docker's own DNAT rule for the published port fires (confirmed via `nft` rule counters), but the packet never reaches the `filter` table's `FORWARD` chain evaluation, creates no conntrack entry, and gets no response -- traced with `nft`'s built-in packet tracer (`meta nftrace set 1` + `nft monitor trace`) without finding where it's actually dropped. Root cause is an unresolved interaction between Tailscale's policy routing (a separate routing table, `ip rule`-selected) and Docker's nftables-managed port publishing. Not investigated further since a working alternative exists (below); revisit if this needs debugging again.
 
-Find the host's current Tailscale IP with `docker exec tailscale tailscale ip -4` if it ever changes. Same caution as `MESHNET_IP`: opt-in per service, not a blanket default -- anyone on the tailnet reaches a bound service without further auth, so don't bind services that have no login of their own.
+**What actually works: `tailscale serve`.** Instead of publishing a container port and relying on Docker's forwarding path, `tailscale serve` runs inside `tailscaled` itself and proxies directly to a backend over ordinary host networking (since `tailscale` runs with `network_mode: host`), sidestepping the broken path entirely. This requires the tailnet's **Serve** feature to be enabled first (one-time, per-tailnet, in the admin console -- `tailscale serve` prints the exact enable URL if it's off). Configuration lives in `tailscaled`'s own state (persisted under `./tailscale/state`, not in any `compose.yaml`), so it has to be set up manually per service and isn't visible from the repo alone:
+
+```
+docker exec tailscale tailscale serve --bg http://192.168.61.10:2283
+```
+
+This exposes Immich within the tailnet at `https://homelab-server.<tailnet-name>.ts.net/`, proxying to its existing `VLAN61_IP` binding. Find the current tailnet name with `docker exec tailscale tailscale serve status`.
 
 ## Proxy Domain
 
@@ -117,7 +121,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 | `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
 | `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
-| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP`, `MESHNET_IP`, `TAILSCALE_IP` |
+| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP`, `MESHNET_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
 | `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
 | `websites` | `VLAN11_IP`, `MESHNET_IP`, `DOMAIN` |
