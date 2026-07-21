@@ -68,7 +68,9 @@ This is opt-in per service, not a blanket default like `VLAN11_IP` -- only add i
 
 ## Tailscale Bindings
 
-The host also runs Tailscale (`tailscale` service in `infrastructure-networking`, `network_mode: host`, state persisted under `./tailscale/state`). Unlike Meshnet's all-or-nothing full-gateway mode, Tailscale nodes get their own address on the tailnet without routing all traffic through the house, so any device signed into the same tailnet can reach a service bound to `TAILSCALE_IP` directly -- no pairing step, just tailnet membership. The host's Tailscale node isn't currently advertising subnet routes (`--advertise-routes`), so only services explicitly bound to `TAILSCALE_IP` are reachable this way, the same opt-in pattern as `MESHNET_IP`:
+The host also runs Tailscale (`tailscale` service in `infrastructure-networking`, `network_mode: host`, state persisted under `./tailscale/state`). Unlike Meshnet's all-or-nothing full-gateway mode, Tailscale nodes get their own address on the tailnet without routing all traffic through the house, so any device signed into the same tailnet can reach a service bound to `TAILSCALE_IP` directly -- no pairing step, just tailnet membership. The host's Tailscale node isn't currently advertising subnet routes (`--advertise-routes`), so only services explicitly bound to `TAILSCALE_IP` are reachable this way, the same opt-in pattern as `MESHNET_IP`.
+
+**Requires kernel networking mode.** The `tailscale/tailscale` image defaults to userspace networking (`TS_USERSPACE` defaults to `true`), which never creates a real `tailscale0` interface -- `docker exec tailscale tailscale ip -4` still reports an address in that mode, but nothing on the host or in another container can actually bind to it. The `tailscale` service must set `TS_USERSPACE=false` and add the `NET_RAW` capability (alongside the existing `NET_ADMIN`/`SYS_MODULE` and the `/dev/net/tun` mount) for `TAILSCALE_IP` port bindings to work at all.
 
 | Variable | Value | Services bound here |
 |----------|-------|----------------------|

@@ -86,6 +86,7 @@ services:
     network_mode: host
     cap_add:
       - NET_ADMIN
+      - NET_RAW
       - SYS_MODULE
     volumes:
       - ./tailscale/state:/var/lib/tailscale
@@ -93,6 +94,7 @@ services:
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
