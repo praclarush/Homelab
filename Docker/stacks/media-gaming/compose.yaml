@@ -37,7 +37,6 @@ services:
     ports:
       - "${VLAN61_IP}:2283:2283"
       - "${MESHNET_IP}:2283:2283"
-      - "${TAILSCALE_IP}:2283:2283"
     devices:
       - /dev/dri:/dev/dri
     depends_on:

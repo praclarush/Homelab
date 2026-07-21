@@ -216,7 +216,7 @@ and changes pushed elsewhere can be pulled and applied with
 │
 ├── media-gaming/
 │   ├── compose.yaml             # AMP, Immich, Immich Machine Learning, Jellyfin, Audiobookshelf, Kavita
-│   ├── .env                     # Immich database credentials, MESHNET_IP (Immich/Jellyfin/Audiobookshelf/Kavita remote access), TAILSCALE_IP (Immich remote access)
+│   ├── .env                     # Immich database credentials, MESHNET_IP (Immich/Jellyfin/Audiobookshelf/Kavita remote access)
 │   ├── amp/datastore/
 │   ├── immich/postgres/         # Keep on NVMe
 │   ├── immich/redis/
