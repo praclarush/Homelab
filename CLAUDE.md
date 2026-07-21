@@ -72,6 +72,8 @@ The host also runs Tailscale (`tailscale` service in `infrastructure-networking`
 
 **Requires kernel networking mode.** The `tailscale/tailscale` image defaults to userspace networking (`TS_USERSPACE` defaults to `true`), which never creates a real `tailscale0` interface -- `docker exec tailscale tailscale ip -4` still reports an address in that mode, but nothing on the host or in another container can actually bind to it. The `tailscale` service must set `TS_USERSPACE=false` and add the `NET_RAW` capability (alongside the existing `NET_ADMIN`/`SYS_MODULE` and the `/dev/net/tun` mount) for `TAILSCALE_IP` port bindings to work at all.
 
+**Requires nftables firewall mode.** This host's kernel only has `nf_tables` loaded, not the legacy `ip_tables`/`iptable_filter` modules, and the container has no `nft` CLI binary -- tailscaled's default legacy-iptables firewall setup fails outright (`can't initialize iptables table 'filter'`), which silently drops inbound traffic from tailnet peers at the kernel's `FORWARD` chain (basic tailnet connectivity like `tailscale ping` still works; TCP to a `TAILSCALE_IP`-bound port just hangs forever). Set `TS_DEBUG_FIREWALL_MODE=nftables` to make tailscaled configure the firewall over netlink directly instead of shelling out to a CLI binary.
+
 | Variable | Value | Services bound here |
 |----------|-------|----------------------|
 | `TAILSCALE_IP` | `100.112.125.67` | `immich-server` (`media-gaming`) |
