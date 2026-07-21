@@ -66,6 +66,16 @@ The host also runs NordVPN Meshnet (`nordlynx` interface) for remote access to s
 
 This is opt-in per service, not a blanket default like `VLAN11_IP` -- only add it to a service that's intentionally meant to be reachable from a paired Meshnet device (e.g. a phone off the home network), since some services (database admin UIs, tools with no login of their own) shouldn't be remotely reachable without more thought first.
 
+## Tailscale Bindings
+
+The host also runs Tailscale (`tailscale` service in `infrastructure-networking`, `network_mode: host`, state persisted under `./tailscale/state`). Unlike Meshnet's all-or-nothing full-gateway mode, Tailscale nodes get their own address on the tailnet without routing all traffic through the house, so any device signed into the same tailnet can reach a service bound to `TAILSCALE_IP` directly -- no pairing step, just tailnet membership. The host's Tailscale node isn't currently advertising subnet routes (`--advertise-routes`), so only services explicitly bound to `TAILSCALE_IP` are reachable this way, the same opt-in pattern as `MESHNET_IP`:
+
+| Variable | Value | Services bound here |
+|----------|-------|----------------------|
+| `TAILSCALE_IP` | `100.112.125.67` | `immich-server` (`media-gaming`) |
+
+Find the host's current Tailscale IP with `docker exec tailscale tailscale ip -4` if it ever changes. Same caution as `MESHNET_IP`: opt-in per service, not a blanket default -- anyone on the tailnet reaches a bound service without further auth, so don't bind services that have no login of their own.
+
 ## Proxy Domain
 
 All services with web interfaces are proxied through Nginx Proxy Manager at `*.home.example.com`. TLS certificates are issued via Let's Encrypt DNS-01 challenge using Cloudflare. Pi-hole resolves `*.home.example.com` internally to `192.168.11.10` via a dnsmasq wildcard entry at `/opt/docker/stacks/infrastructure-networking/pihole/dnsmasq/02-local-dns.conf`.
@@ -103,7 +113,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 | `dashboards-automation` | `GRAFANA_PASSWORD`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `HOMEPAGE_VAR_IMMICH_KEY`, `HOMEPAGE_VAR_JELLYFIN_KEY`, `HOMEPAGE_VAR_PIHOLE_KEY` |
 | `dockge` | `VLAN11_IP` |
 | `infrastructure-networking` | `PIHOLE_PASSWORD`, `TAILSCALE_AUTHKEY`, `WATCHTOWER_NTFY_TOPIC`, `WATCHTOWER_NTFY_PASS`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `SMTP_RELAY_USERNAME`, `SMTP_RELAY_PASSWORD` |
-| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP`, `MESHNET_IP` |
+| `media-gaming` | `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE_NAME`, `VLAN61_IP`, `VLAN11_IP`, `MESHNET_IP`, `TAILSCALE_IP` |
 | `auth` | `PG_USER`, `PG_PASS`, `PG_DB`, `AUTHENTIK_SECRET_KEY`, `VLAN11_IP` |
 | `tools` | `DB_USER`, `DB_PASS`, `DB_NAME`, `VLAN11_IP`, `MESHNET_IP`, `DOMAIN`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD`, `N8N_ENCRYPTION_KEY`, `PAPERLESS_DB_USER`, `PAPERLESS_DB_PASS`, `PAPERLESS_SECRET_KEY`, `LINKWARDEN_DB_USER`, `LINKWARDEN_DB_PASS`, `LINKWARDEN_SECRET` (Grocy needs no `.env` entries -- its `PUID`/`PGID`/`TZ` are set directly in `compose.yaml`) |
 | `websites` | `VLAN11_IP`, `MESHNET_IP`, `DOMAIN` |
