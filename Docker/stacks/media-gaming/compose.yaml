@@ -44,6 +44,7 @@ services:
         condition: service_healthy
       immich-redis:
         condition: service_healthy
+    mem_limit: 1.5g
     restart: unless-stopped
     networks:
       - proxy_net
@@ -174,6 +175,7 @@ services:
       - "${VLAN11_IP}:9191:9191"
     environment:
       - TZ=America/Chicago
+    mem_limit: 1.5g
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
