@@ -109,7 +109,7 @@ services:
     volumes:
       - ./crowdsec/config:/etc/crowdsec
       - ./crowdsec/data:/var/lib/crowdsec/data
-      - ./npm/logs:/var/log/npm:ro
+      - ./npm/data/logs:/var/log/npm:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "127.0.0.1:8080:8080"
