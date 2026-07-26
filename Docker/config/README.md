@@ -16,6 +16,7 @@ reconstructing it by reading every guide that touches it.
 | `docker-daemon.json` | Docker Engine log rotation default, applied to every container across every stack |
 | `ssh-hardening.conf` | Recommended `sshd_config.d` drop-in from `guides/operations/ssh-management-guide.md` (Section 7) |
 | `resolv.conf` | Static replacement for the dangling `/etc/resolv.conf` symlink left behind after disabling `systemd-resolved`, from `guides/getting-started/homelab-guide.md` (Section 2.1) |
+| `host-firewall-scoping.sh` | Targeted `iptables`/`ip6tables` rules restricting Pi-hole DNS (53), rpcbind (111), and node-exporter (9100) to the networks each is actually meant to serve, found overexposed in the 2026-07-26 security audit |
 
 `config/operations/` holds the one host file from
 [`guides/operations/git-deployment-guide.md`](../guides/operations/git-deployment-guide.md)
@@ -73,6 +74,8 @@ test, and it breaks anything else doing an outbound lookup). Delete
 the symlink and replace it with this file's contents before deploying
 `infrastructure-networking`. If Docker is already running, restart it
 afterward so existing containers regenerate their resolver config.
+
+**`host-firewall-scoping.sh` genuinely is a complete, ready-to-run script**, not a partial override -- but it deliberately bypasses `ufw` rather than using it. `ufw` is installed on this host but was never actually enabled (no default-deny policy, no rule set) -- standing it up properly host-wide would mean enumerating every port across every stack before flipping it on, with real outage risk if any port were missed. This script instead adds a small `iptables`/`ip6tables` rule set for just the three ports the audit flagged, via the `DOCKER-USER` chain (for Pi-hole's Docker-published port) and `INPUT` (for the two bare host-network services), leaving every other port exactly as reachable as it was before. Requires `iptables-persistent` to survive a reboot, installed as part of the script.
 
 **`netplan-00-installer-config.yaml` genuinely is a complete file** --
 the getting-started guide has you replace the whole file's contents,
