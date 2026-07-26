@@ -36,6 +36,21 @@
 # only has nf_tables loaded, not legacy iptables/ip_tables, same
 # constraint documented in CLAUDE.md for the Tailscale/CrowdSec setup.
 #
+# Two things to expect when running this, both hit on the first run
+# (2026-07-26):
+#   - Installing iptables-persistent removes the ufw package as a
+#     dependency conflict. Harmless since ufw was never enabled, but
+#     it means ufw isn't available afterward if you want it back for
+#     something else -- reinstall separately if so.
+#   - `netfilter-persistent save` (and iptables-persistent's own
+#     postinst save) can fail outright with "meta sreg is not an
+#     immediate" / "Parsing nftables rule failed" if the host has a
+#     pending kernel upgrade not yet applied (check `apt list
+#     --upgradable` / a reboot notice) -- the running kernel's
+#     nf_tables module can be out of sync with the installed
+#     iptables-nft userspace tool. Reboot into the current kernel
+#     first if this happens, then re-run just the save step.
+#
 # Ordering matters and is easy to get backwards by hand:
 #   - DOCKER-USER: Docker appends its own default RETURN rule at
 #     chain creation, so new rules MUST be inserted at position 1
@@ -54,10 +69,22 @@ echo "== Pi-hole DNS (53): block Tailscale and Meshnet, leave every VLAN untouch
 # Docker forwards published-container-port traffic through DOCKER-USER
 # before it reaches the container, so this is the correct chain for a
 # port published via `ports:` in compose -- not INPUT.
-iptables  -I DOCKER-USER 1 -p udp --dport 53 -i tailscale0 -j DROP
-iptables  -I DOCKER-USER 1 -p tcp --dport 53 -i tailscale0 -j DROP
-iptables  -I DOCKER-USER 1 -p udp --dport 53 -i nordlynx   -j DROP
-iptables  -I DOCKER-USER 1 -p tcp --dport 53 -i nordlynx   -j DROP
+#
+# Deliberately NOT using `-i tailscale0`/`-i nordlynx` interface
+# matching here: on this host's kernel/iptables-nft combination,
+# interface-match rules (translated to an nftables `meta iifname`
+# expression) silently lose their match condition on insert -- the
+# rule still gets created, but as an unconditional DROP with no
+# interface restriction at all, which took down DNS for the entire
+# network the first time this was tried (2026-07-26). Source-address
+# matching (`-s`) doesn't hit this bug. Tailscale and Meshnet both
+# happen to use the same shared CGNAT range for node addresses
+# (confirmed against this host's actual observed addresses: its own
+# Tailscale IP, several Tailscale peers, and MESHNET_IP all fall
+# inside 100.64.0.0/10), so blocking that range by source achieves the
+# same result without relying on the broken interface match.
+iptables  -I DOCKER-USER 1 -p udp --dport 53 -s 100.64.0.0/10 -j DROP
+iptables  -I DOCKER-USER 1 -p tcp --dport 53 -s 100.64.0.0/10 -j DROP
 
 echo "== rpcbind (111): restrict to VLAN 61 (NAS) and localhost only =="
 # rpcbind is a bare host service (not a container), so INPUT is the
