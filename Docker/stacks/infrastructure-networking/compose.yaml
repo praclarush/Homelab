@@ -47,6 +47,7 @@ services:
     image: nickfedor/watchtower:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home/nbremmer/.docker/config.json:/config.json:ro
     environment:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_POLL_INTERVAL=86400
@@ -109,8 +110,10 @@ services:
     volumes:
       - ./crowdsec/config:/etc/crowdsec
       - ./crowdsec/data:/var/lib/crowdsec/data
-      - ./npm/logs:/var/log/npm:ro
+      - ./npm/data/logs:/var/log/npm:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "127.0.0.1:8080:8080"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
