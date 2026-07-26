@@ -122,6 +122,13 @@ logs/
 **/crowdsec/config/contexts/
 **/crowdsec/config/patterns/
 
+# CrowdSec: stock template files shipped inside the image itself (dev.yaml,
+# user.yaml) -- not hand-authored config, just vendored defaults that were
+# accidentally tracked. The real config lives in config.yaml, acquis.yaml,
+# profiles.yaml, console.yaml, and simulation.yaml, which stay tracked.
+**/crowdsec/config/dev.yaml
+**/crowdsec/config/user.yaml
+
 # Self-managed app data with no separate static-config layer -- everything
 # under these paths is written by the app itself (SQLite DBs, metadata caches,
 # session stores, user-generated content), not hand-authored config
