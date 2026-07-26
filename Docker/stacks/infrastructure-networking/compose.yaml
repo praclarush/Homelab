@@ -47,6 +47,7 @@ services:
     image: nickfedor/watchtower:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home/nbremmer/.docker/config.json:/config.json:ro
     environment:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_POLL_INTERVAL=86400
