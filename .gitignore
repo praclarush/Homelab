@@ -103,6 +103,9 @@ logs/
 **/paperless/media/
 **/paperless/consume/
 
+# Docker registry htpasswd file (bcrypt hash of the registry service credential)
+**/registry/auth/htpasswd
+
 # CrowdSec: cscli-managed hub content (vendored parsers/scenarios, symlinked
 # into the container at /etc/crowdsec/hub -- reinstalled by cscli, not hand-authored),
 # downloaded blocklists/GeoIP databases, and notification profiles (contain
