@@ -1,1 +1,5 @@
-{"source": "file", "filename": "/does/not/exist", "labels": {"type": "syslog"}}
+---
+filenames:
+  - /var/log/npm/*_access.log
+labels:
+  type: nginx

@@ -13,6 +13,10 @@
 
 # Docker overrides
 docker-compose.override.yml
+**/compose.local-test.yaml
+
+# Local-test fake NAS data (media-gaming compose.local-test.yaml volume remaps)
+**/test-data/
 
 # Docker runtime data
 **/docker-data/
@@ -60,6 +64,7 @@ logs/
 **/amp/datastore/
 
 # Home Assistant runtime/secret files (.storage holds auth tokens, device credentials)
+**/homeassistant/config/.HA_VERSION
 **/homeassistant/config/.storage/
 **/homeassistant/config/home-assistant.log*
 **/homeassistant/config/secrets.yaml
@@ -97,6 +102,9 @@ logs/
 # Paperless-ngx ingested/processed documents
 **/paperless/media/
 **/paperless/consume/
+
+# Docker registry htpasswd file (bcrypt hash of the registry service credential)
+**/registry/auth/htpasswd
 
 # CrowdSec: cscli-managed hub content (vendored parsers/scenarios, symlinked
 # into the container at /etc/crowdsec/hub -- reinstalled by cscli, not hand-authored),

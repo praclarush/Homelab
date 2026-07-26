@@ -47,6 +47,7 @@ services:
     image: nickfedor/watchtower:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home/nbremmer/.docker/config.json:/config.json:ro
     environment:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_POLL_INTERVAL=86400
@@ -86,6 +87,7 @@ services:
     network_mode: host
     cap_add:
       - NET_ADMIN
+      - NET_RAW
       - SYS_MODULE
     volumes:
       - ./tailscale/state:/var/lib/tailscale
@@ -93,6 +95,8 @@ services:
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_DEBUG_FIREWALL_MODE=nftables
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped
@@ -106,8 +110,10 @@ services:
     volumes:
       - ./crowdsec/config:/etc/crowdsec
       - ./crowdsec/data:/var/lib/crowdsec/data
-      - ./npm/logs:/var/log/npm:ro
+      - ./npm/data/logs:/var/log/npm:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "127.0.0.1:8080:8080"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     restart: unless-stopped

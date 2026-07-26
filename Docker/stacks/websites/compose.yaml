@@ -1,0 +1,16 @@
+networks:
+  proxy_net:
+    external: true
+
+services:
+  pottery:
+    container_name: pottery
+    image: registry.${DOMAIN}/pottery:latest
+    ports:
+      - "${VLAN11_IP}:5557:80"
+      - "${MESHNET_IP}:5557:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net

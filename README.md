@@ -112,7 +112,8 @@ This file stays a quick-reference companion: service inventory, ports,
 | `infrastructure-networking` | Pi-hole, Nginx Proxy Manager, Watchtower, ntfy, Tailscale, CrowdSec |
 | `media-gaming` | AMP, Immich, Immich Machine Learning, Jellyfin, Audiobookshelf, Kavita |
 | `auth` | Authentik, PostgreSQL, Redis |
-| `tools` | WikiJS, PostgreSQL, pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest |
+| `tools` | WikiJS, PostgreSQL, pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest, Docker Registry, Registry UI |
+| `websites` | Pottery |
 | `llm` | Ollama, Open WebUI |
 
 Each stack in [`Docker/stacks/`](Docker/stacks/) has a single `compose.yaml`
@@ -164,6 +165,9 @@ Internal-only services (no exposed port) are marked with a dash.
 | Linkwarden | `tools` | 3005 | `links.home.example.com` | Bookmark manager with page archiving |
 | Linkwarden PostgreSQL | `tools` | — | — | Linkwarden database (internal) |
 | Backrest | `tools` | 9898 | `backrest.home.example.com` | Restic backup UI, backs up to NAS |
+| Docker Registry | `tools` | 5555 | `registry.home.example.com` | Private registry for custom images, behind Authentik forward auth |
+| Docker Registry UI | `tools` | 5556 | `registry-ui.home.example.com` | Web UI for browsing the private registry |
+| Pottery | `websites` | 5557 | `pottery.home.example.com` | Personal pottery catalog site, built from a custom image pushed to the private registry |
 | Audiobookshelf | `media-gaming` | 13378 | `abs.home.example.com` | Audiobooks and podcasts |
 | Kavita | `media-gaming` | 5000 | `kavita.home.example.com` | Ebook and comic reader |
 | Loki | `dashboards-automation` | 3100 | — | Log aggregation, queried from Grafana (internal) |
@@ -231,7 +235,7 @@ and changes pushed elsewhere can be pulled and applied with
 │   └── certs/
 │
 ├── tools/
-│   ├── compose.yaml             # WikiJS, pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest
+│   ├── compose.yaml             # WikiJS, pgAdmin, Stirling PDF, Mealie, n8n, IT Tools, Actual Budget, Paperless-ngx, Grocy, Linkwarden, Backrest, Docker Registry, Registry UI
 │   ├── .env                     # Stack credentials (gitignored), MESHNET_IP (WikiJS/Mealie/Paperless-ngx/Grocy remote access)
 │   ├── postgres/                # WikiJS database data
 │   ├── pgadmin/                 # pgAdmin data
@@ -242,7 +246,12 @@ and changes pushed elsewhere can be pulled and applied with
 │   ├── paperless/               # Paperless-ngx data, media, postgres, redis
 │   ├── grocy/config/            # Grocy config and database
 │   ├── linkwarden/              # Linkwarden data and postgres
-│   └── backrest/                # Backrest config and metadata
+│   ├── backrest/                # Backrest config and metadata
+│   └── registry/data/           # Private Docker registry image storage
+│
+├── websites/
+│   ├── compose.yaml             # Pottery
+│   └── .env                     # VLAN11_IP, DOMAIN (gitignored)
 │
 └── llm/
     ├── compose.yaml             # Ollama and Open WebUI
@@ -257,7 +266,7 @@ and changes pushed elsewhere can be pulled and applied with
 
 `infrastructure-networking` first (creates the `proxy_net` network every
 other stack but `dockge` joins), then `dockge`, `dashboards-automation`,
-`media-gaming`, `auth`, `tools`, `llm` -- in any order after that. Full
+`media-gaming`, `auth`, `tools`, `websites`, `llm` -- in any order after that. Full
 prerequisites (disabling `systemd-resolved`, mounting the six NAS shares,
 Intel Quick Sync, VLAN trunking) and step-by-step deployment for each
 stack are in [`getting-started/homelab-guide.md`](https://github.com/praclarush/Homelab-wiki/blob/master/getting-started/homelab-guide.md)
