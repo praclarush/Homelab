@@ -34,6 +34,17 @@ for stack in "${STACK_ORDER[@]}"; do
   fi
 done
 
+# nginx-proxy-manager crashes into a restart loop if it starts before the
+# backend containers it reverse-proxies to (auth, media-gaming, tools, ...)
+# are resolvable, since some proxy_host configs use static upstream blocks
+# that nginx resolves once at boot and refuses to start without. Restart it
+# last, after every stack above is up, so its upstreams already exist.
+echo "==> Restarting nginx-proxy-manager (ensures upstreams are resolvable)"
+if ! (cd "$STACKS_DIR/infrastructure-networking" && docker compose restart nginx-proxy-manager); then
+  echo "Failed to restart nginx-proxy-manager" >&2
+  failed+=("nginx-proxy-manager")
+fi
+
 if [[ ${#failed[@]} -gt 0 ]]; then
   echo "Failed to start: ${failed[*]}" >&2
   exit 1
