@@ -1,0 +1,7 @@
+# Add to Docker/stacks/tools/.env (real value) and .env.example (blank).
+# Generate the value with: openssl rand -hex 32
+# Required for BookLogr multi-user mode. If you instead run single-user
+# (SINGLE_USER_MODE=true on the api, BL_SINGLE_USER_MODE=true on the web),
+# this variable is not needed.
+
+BOOKLOGR_AUTH_SECRET_KEY=

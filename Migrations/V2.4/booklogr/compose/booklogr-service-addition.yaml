@@ -1,0 +1,59 @@
+# Add these TWO services to Docker/stacks/tools/compose.yaml
+# (indent to match the existing `services:` block).
+#
+# BookLogr is a two-container app: a Flask API (SQLite) and a browser SPA
+# frontend. Both are pinned to the same version (v1.11.1) and deliberately
+# have NO watchtower.enable label -- API and web are a matched pair, so they
+# must be updated together by bumping both tags here, not auto-bumped
+# independently.
+#
+# BL_API_ENDPOINT MUST be the browser-reachable public URL of the API (its
+# own NPM host), NOT http://booklogr-api:5000 -- the SPA calls the API from
+# the client browser. ${DOMAIN} is the existing tools-stack .env var
+# (e.g. home.bremmer.zone), same one mealie/n8n/linkwarden already use.
+#
+# BOOKLOGR_AUTH_SECRET_KEY is a new .env var (see env-additions.txt);
+# generate with `openssl rand -hex 32`.
+#
+# Host ports 3006 (web) and 8087 (api) are unused by the tools stack. Both
+# containers are dual-bound on VLAN11_IP (NPM-proxied) and MESHNET_IP (direct
+# mesh access), the same way mealie/grocy do.
+#
+# MESH CAVEAT: BL_API_ENDPOINT is a single URL, so a mesh client that opens
+# the web UI directly at MESHNET_IP:3006 still makes its API calls to the
+# ${DOMAIN} host below. Mesh access therefore only works if mesh clients
+# resolve *.${DOMAIN} (i.e. use Pi-hole as their resolver) and can reach NPM.
+# If they can't, reach BookLogr over the mesh via the NPM hostname
+# (booklogr.${DOMAIN}) rather than the raw MESHNET_IP:3006 address.
+# LubeLogger and Homebox have no equivalent constraint.
+
+  booklogr-api:
+    container_name: booklogr-api
+    image: mozzo/booklogr:v1.11.1
+    volumes:
+      - ./booklogr/data:/app/instance
+    ports:
+      - "${VLAN11_IP}:8087:5000"
+      - "${MESHNET_IP}:8087:5000"
+    environment:
+      - AUTH_SECRET_KEY=${BOOKLOGR_AUTH_SECRET_KEY}
+      - DATABASE_URL=sqlite:///books.db
+    restart: unless-stopped
+    networks:
+      - proxy_net
+
+  booklogr-web:
+    container_name: booklogr-web
+    image: mozzo/booklogr-web:v1.11.1
+    ports:
+      - "${VLAN11_IP}:3006:80"
+      - "${MESHNET_IP}:3006:80"
+    environment:
+      - BL_API_ENDPOINT=https://booklogr-api.${DOMAIN}/
+      - BL_GOOGLE_ID=
+      - BL_DEMO_MODE=false
+    depends_on:
+      - booklogr-api
+    restart: unless-stopped
+    networks:
+      - proxy_net

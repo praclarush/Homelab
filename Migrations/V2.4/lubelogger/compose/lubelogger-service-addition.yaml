@@ -1,0 +1,31 @@
+# Add this service to Docker/stacks/tools/compose.yaml
+# (indent to match the existing `services:` block).
+#
+# Personal utility web app. Published on host port 8086 (unused by the
+# tools stack), dual-bound on VLAN11_IP (proxied internally by NPM) and
+# MESHNET_IP (direct access over the mesh network) -- the same dual-binding
+# mealie/grocy/wikijs use. TZ is hardcoded here the same way other
+# tools-stack services do it rather than sourced from .env.
+#
+# Two bind mounts, both required:
+#   ./lubelogger/data  -> /App/data                          (LiteDB + uploads)
+#   ./lubelogger/keys  -> /root/.aspnet/DataProtection-Keys  (login sessions;
+#                         if unmounted, every restart logs everyone out)
+# LiteDB is embedded -- no Postgres/Redis sidecar. Container listens on 8080.
+
+  lubelogger:
+    container_name: lubelogger
+    image: ghcr.io/hargata/lubelogger:latest
+    volumes:
+      - ./lubelogger/data:/App/data
+      - ./lubelogger/keys:/root/.aspnet/DataProtection-Keys
+    ports:
+      - "${VLAN11_IP}:8086:8080"
+      - "${MESHNET_IP}:8086:8080"
+    environment:
+      - TZ=America/Chicago
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net

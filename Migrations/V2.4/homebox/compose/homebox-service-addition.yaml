@@ -1,0 +1,32 @@
+# Add this service to Docker/stacks/tools/compose.yaml
+# (indent to match the existing `services:` block).
+#
+# Personal utility web app. Published on host port 7745 (unused by the
+# tools stack), dual-bound on VLAN11_IP (proxied internally by NPM) and
+# MESHNET_IP (direct access over the mesh network), the same dual-binding
+# mealie/grocy/wikijs use. TZ hardcoded the same way other tools-stack
+# services do it.
+#
+# Use the maintained sysadminsmedia image -- the original hay-kot/homebox is
+# archived. SQLite is the default driver (HBOX_DATABASE_DRIVER=sqlite3), so
+# no DB sidecar; data persists under /data. Container listens on 7745.
+#
+# ALLOW_REGISTRATION starts true so you can create the first account, then
+# flip it to false and re-up to close signups (see this item's README).
+
+  homebox:
+    container_name: homebox
+    image: ghcr.io/sysadminsmedia/homebox:latest
+    volumes:
+      - ./homebox/data:/data
+    ports:
+      - "${VLAN11_IP}:7745:7745"
+      - "${MESHNET_IP}:7745:7745"
+    environment:
+      - TZ=America/Chicago
+      - HBOX_OPTIONS_ALLOW_REGISTRATION=true
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+    networks:
+      - proxy_net
