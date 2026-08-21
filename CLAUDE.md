@@ -108,7 +108,7 @@ All services with web interfaces are proxied through Nginx Proxy Manager at `*.h
 
 **nut-exporter:** Unlike every other exporter in this stack, what it exports (NUT/`upsd`) isn't a container at all -- it's a bare-metal systemd service on the host monitoring a USB-attached UPS (see `Homelab-wiki/hardware-configuration/cyberpower-cp1500pfcrm2u-ups-guide.md`). `nut-exporter` reaches it via `host.docker.internal:3493` using the same `extra_hosts` pattern as node-exporter/Prometheus, and `/etc/nut/upsd.conf` must have `LISTEN 0.0.0.0 3493` (not just localhost) on the host for that connection to succeed -- this is a host-level config change outside `Docker/stacks/`, not something this repo can enforce.
 
-**Immich Postgres image:** On `ghcr.io/immich-app/postgres:14-vectorchord0.4.2-pgvectors0.2.0`, migrated from `tensorchord/pgvecto-rs:pg14-v0.2.0` after Immich v3.0.1 dropped pgvecto.rs support.
+**Immich Postgres image:** On `ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0`, migrated from `tensorchord/pgvecto-rs:pg14-v0.2.0` after Immich v3.0.1 dropped pgvecto.rs support.
 
 **LLM inference is CPU-only:** The mini PC uses Intel UHD integrated graphics. Ollama's GPU acceleration requires NVIDIA or AMD hardware. All inference runs on CPU. Model size ceiling is ~14B parameters (Q4 quantized, ~9 GB) given 16 GB total system RAM. Do not suggest models above 14B for this hardware.
 
